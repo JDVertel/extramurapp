@@ -24,7 +24,7 @@
                         <div class="col-6">
                             <div>
                                 <label for="dateconsulta" class="form-label">Fecha</label>
-                                <select class="form-select" aria-label="Default select example" v-model="dateIDAgenda" @change="agendaActualTomaLab(dateIDAgenda)">
+                                <select id="dateconsulta" name="dateconsulta" class="form-select" aria-label="Default select example" v-model="dateIDAgenda" @change="agendaActualTomaLab(dateIDAgenda)">
                                     <option value="">Disponibles</option>
                                     <option v-for="(fecha, index) in agendas" :value="{ id: fecha.id, fecha: fecha.fecha }" :key="index">
                                         {{ fecha.grupo }} - {{ fecha.fecha }}
@@ -91,7 +91,7 @@
                         <div class="col-6">
                             <div>
                                 <label for="datevisita" class="form-label">Fecha</label>
-                                <select class="form-select" aria-label="Default select example" v-model="dateIDvisita" @change="agendaActualVisita(dateIDvisita)">
+                                <select id="datevisita" name="datevisita" class="form-select" aria-label="Default select example" v-model="dateIDvisita" @change="agendaActualVisita(dateIDvisita)">
                                     <option value="">Disponibles</option>
                                     <option v-for="(fecha, index) in FechasVisitasGrupo" :value="{ id: fecha.id, fecha: fecha.fecha }" :key="index">
                                         {{ fecha.grupo }} - {{ fecha.fecha }}

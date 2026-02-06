@@ -29,10 +29,10 @@
 
                 <div class="row">
                     <div class="col-4">
-                        <input type="number" class="form-control form-control-sm" placeholder="Comuna" v-model="comuna" />
+                        <input type="number" id="comuna" name="comuna" class="form-control form-control-sm" placeholder="Comuna" v-model="comuna" />
                     </div>
                     <div class="col-4">
-                        <input type="text" class="form-control form-control-sm" placeholder="Barrio" v-model="barrio" />
+                        <input type="text" id="barrio" name="barrio" class="form-control form-control-sm" placeholder="Barrio" v-model="barrio" />
                     </div>
                     <div class="col-4">
                         <button type="button" class="btn btn-warning btn-sm" @click="saveComunaBarrio">
@@ -85,7 +85,7 @@
                                 <div class="row">
                                     <div class="col-6">
                                         <div class="mb-3">
-                                            <input type="text" class="form-control form-control-sm" placeholder="Nombre de la Eps" v-model="epsname" />
+                                            <input type="text" id="epsname-di" name="epsname-di" class="form-control form-control-sm" placeholder="Nombre de la Eps" v-model="epsname" />
                                         </div>
                                     </div>
                                     <div class="col-6">
@@ -128,7 +128,7 @@
                                 <div class="row">
                                     <div class="col-6">
                                         <div class="mb-3">
-                                            <input type="text" class="form-control form-control-sm" placeholder="Nombre de la Eps" v-model="epsname" />
+                                            <input type="text" id="epsname-car" name="epsname-car" class="form-control form-control-sm" placeholder="Nombre de la Eps" v-model="epsname" />
                                         </div>
                                     </div>
                                     <div class="col-6">
@@ -193,19 +193,19 @@
                                 <div class="col-6">
                                     <div class="mb-3">
                                         <label f class="form-label">Nombre Procedimiento</label>
-                                        <input type="text" class="form-control" id="exampleFormControlInput1" placeholder="CUP">
+                                        <input type="text" id="cupsNombre" name="cupsNombre" class="form-control" placeholder="CUP">
                                     </div>
                                 </div>
                                 <div class="col-6">
                                     <div class="mb-3">
                                         <label f class="form-label">Codigo CUPS</label>
-                                        <input type="text" class="form-control" id="exampleFormControlInput1" placeholder="CUP">
+                                        <input type="text" id="cupsCodigo" name="cupsCodigo" class="form-control" placeholder="CUP">
                                     </div>
                                 </div>
                                 <div class="col-6">
 
                                     <label f class="form-label">Grupo</label>
-                                    <select class="form-select" aria-label="Default select example">
+                                    <select id="cupsGrupo" name="cupsGrupo" class="form-select" aria-label="Default select example">
 
                                         <option selected>--Seleccione--</option>
                                         <option value="1">One</option>
@@ -214,14 +214,14 @@
                                     </select></div>
                                 <div class="col-6">
                                     <label f class="form-label">Rol(es) Habilitados</label>
-                                    <select class="form-select" aria-label="Default select example">
+                                    <select id="cupsRoles" name="cupsRoles" class="form-select" aria-label="Default select example">
                                         <option selected>--Seleccione--</option>
                                         <option value="1">One</option>
                                         <option value="2">Two</option>
                                         <option value="3">Three</option>
                                     </select></div>
                                 <div class="col-6"> <label f class="form-label">EPS(s) Habilitadas</label>
-                                    <select class="form-select" aria-label="Default select example">
+                                    <select id="cupsEps" name="cupsEps" class="form-select" aria-label="Default select example">
                                         <option selected>--Seleccione--</option>
                                         <option value="1">One</option>
                                         <option value="2">Two</option>

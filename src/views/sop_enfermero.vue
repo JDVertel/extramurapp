@@ -73,11 +73,11 @@
                                     </span>
                                 </div>
                             </div>
-                            <div class="col-6">
+                            <div class="col-6 acciones-col">
                                 <div>
-                                    <button type="button" class="btn btn-danger btn-sm" @click="cupsGestion(encuesta.id)">
-                                        <i class="bi bi-calendar2-heart-fill">
-                                            <small> Gestionar Cups</small></i>
+                                    <button type="button" class="btn btn-danger btn-sm rounded-circle agendar-btn" @click="cupsGestion(encuesta.id)">
+                                        <i class="bi bi-calendar2-heart-fill"></i>
+                                        <span class="agendar-label">Cups</span>
                                     </button>
                                 </div>
                             </div>
@@ -253,5 +253,31 @@ export default {
     margin-top: 20px;
     font-size: 1.2rem;
     color: #333;
+}
+
+.acciones-col {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.agendar-btn {
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    line-height: 1;
+}
+
+.agendar-btn i {
+    font-size: 14px;
+}
+
+.agendar-label {
+    font-size: 9px;
 }
 </style>

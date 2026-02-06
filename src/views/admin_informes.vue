@@ -9,22 +9,23 @@
 
     <h1><i class="bi bi-clipboard2-data h1"></i>Informes Administrativos</h1>
     <div v-if="mostrarFormulario" class="row">
+        <h5>Seleccione:</h5>
         <div class="col-12 col-md-2">
-            <label class="form-label">Seleccione el tipo de informe</label>
-            <select class="form-select" aria-label="Default select example" v-model="tipoinforme" @change="clearFormInformes()">
+
+            <label class="form-label">Tipo de informe</label>
+            <select id="tipoinforme" name="tipoinforme" class="form-select" aria-label="Default select example" v-model="tipoinforme" @change="clearFormInformes()">
                 <option selected>Seleccione</option>
                 <option value="1">Seguimiento</option>
                 <option value="2">General</option>
+                <option value="3">Por profesional</option>
             </select>
             <br>
-            <p v-if="tipoinforme == '2'">*Todas las encuestas registradas entre las fechas seleccionadas independiente del estado</p>
 
-            <p v-if="tipoinforme == '1'">*Todas las encuestas cerradas por la enfermera entre las fechas seleccionadas</p>
         </div>
 
         <div class="col-6 col-md-2" v-if="tipoinforme == '3'">
             <label class="form-label">Profesional</label>
-            <select class="form-select" aria-label="Default select example" v-model="profesionalselect">
+            <select id="profesionalselect" name="profesionalselect" class="form-select" aria-label="Default select example" v-model="profesionalselect">
                 <option selected>Seleccione</option>
                 <option :value="profesional.numDocumento" v-for="profesional in profesionales" :key="profesional.id">({{profesional.cargo}}){{ profesional.nombre }}</option>
             </select>
@@ -43,7 +44,10 @@
             </button>
         </div>
     </div>
+    <p v-if="tipoinforme == '2'">*Todas las encuestas registradas entre las fechas seleccionadas independiente del estado</p>
 
+    <p v-if="tipoinforme == '1'">*Todas las encuestas cerradas por la enfermera entre las fechas seleccionadas</p>
+ <p v-if="tipoinforme == '3'">*Todas las encuestas cerradas por el profesional entre las fechas seleccionadas</p>
     <br>
     <div>
         <h5>Listado de Pacientes finalizados</h5>

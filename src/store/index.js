@@ -39,15 +39,17 @@ export default createStore({
         EncuestasProf: [],
         EncuestasFact: [],
         EncuestasFactAprov: [],
-        datosPaciente:[], // Para manejar la información de CUPS por actividad
+        datosPaciente: [],
+        actividades: []
+        // Para manejar la información de CUPS por actividad
         // Puedes agregar más estados según sea necesario
     },
     // plugins: [persistedState],
 
     actions: {
-        /* ----------------------------------------AUTH------------------------------------- */
+       
 
-        /* ---------------------------------------POST------------------------------------- */
+        /* ---------------------------------------ENCUESTAS (AUXILIAR)------------------------------------ */
 
 
         createNewRegister: async ({ commit }, entradasE) => {
@@ -55,6 +57,7 @@ export default createStore({
                 // ... (desestructuración de entradasE permanece igual)
                 const {
                     bd,
+                    tiporegistro,
                     idMedicoAtiende,
                     idEnfermeroAtiende,
                     fechavisita,
@@ -88,6 +91,7 @@ export default createStore({
                 } = entradasE;
 
                 const DataToSaveE = {
+                    tiporegistro,
                     idMedicoAtiende,
                     idEnfermeroAtiende,
                     fechavisita,
@@ -131,7 +135,7 @@ export default createStore({
 
                 for (const actividad of tipoActividad) {
                     // POST para crear el registro (Firebase genera el id)
-                    const { data: actividadData } = await firebase_api.post(`/${bd}/${mainId}/tipoActividad.json`, {
+                    const { data: actividadData } = await firebase_api.post(`/Actividades/${mainId}/tipoActividad.json`, {
                         ...actividad
                     });
 
@@ -1202,13 +1206,23 @@ export default createStore({
             try {
                 const { data } = await firebase_api.get(`/Encuesta/${idEncuesta}.json`);
                 commit("setEncuesta", data);
+                getActividadesById();
                 return data;
             } catch (error) {
                 console.error("Error en getEncuestaById:", error);
                 throw error;
             }
         },
-
+        getActividadesById: async ({ commit }, idEncuesta) => {
+            try {
+                const { data } = await firebase_api.get(`/Encuesta/${idEncuesta}.json`);
+                commit("setActividades", data);
+                return data;
+            } catch (error) {
+                console.error("Error en getActividadesById:", error);
+                throw error;
+            }
+        },
         getAllComunaBarrios: async ({ commit }) => {
             try {
                 const { data } = await firebase_api.get("/comunasybarrios.json");
@@ -1545,6 +1559,9 @@ export default createStore({
         },
     },
     mutations: {
+        setActividades(state, actividades) {
+            state.actividades = actividades;
+        },
         setUsuarios(state, usuarios) {
             state.usuarios = usuarios;
         },

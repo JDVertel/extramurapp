@@ -93,8 +93,8 @@
                                 <div class="col-8">
                                     <div class="input-group">
                                         <span class="input-group-text">Rango de fechas de la consulta</span>
-                                        <input type="date" aria-label="First name" class="form-control" v-model="fechaInicio" />
-                                        <input type="date" aria-label="Last name" class="form-control" v-model="fechaFin" />
+                                        <input type="date" id="fechaInicio" name="fechaInicio" aria-label="First name" class="form-control" v-model="fechaInicio" />
+                                        <input type="date" id="fechaFin" name="fechaFin" aria-label="Last name" class="form-control" v-model="fechaFin" />
                                     </div>
                                 </div>
                                 <div class="col-4">
@@ -119,7 +119,7 @@
                                         <option value="AS">Adulto sin identificacion</option>
                                         <option value="PT">Permiso por proteccion temporal</option>
                                     </select></div>
-                                <div class="col-4"> <label for="numdoc" class="form-label">Número de Documento</label> <input type="text" aria-label="First name" class="form-control" v-model="numdoc" /></div>
+                                <div class="col-4"> <label for="numdocFact" class="form-label">Número de Documento</label> <input type="text" id="numdocFact" name="numdocFact" aria-label="First name" class="form-control" v-model="numdoc" /></div>
                                 <div class="col-4"><button type="button" class="btn btn-warning mt-5" @click="getdataEncuestasById(tipodoc,numdoc)">
                                         Buscar
                                     </button></div>
@@ -340,7 +340,7 @@
                                                                             </template>
                                                                             <template v-else>
                                                                                 <div class="input-group mb-3">
-                                                                                    <input type="text" class="form-control" :disabled="facturaDisabled[cupId]" v-model="facturaInputs[cupId]" :placeholder="facturaDisabled[cupId] ? facturaInputs[cupId] : '#factura'" aria-label="Recipient’s username" aria-describedby="button-addon2">
+                                                                                    <input type="text" :id="`factura-${cupId}`" :name="`factura-${cupId}`" class="form-control" :disabled="facturaDisabled[cupId]" v-model="facturaInputs[cupId]" :placeholder="facturaDisabled[cupId] ? facturaInputs[cupId] : '#factura'" aria-label="Recipient’s username" aria-describedby="button-addon2">
                                                                                     <button class="btn btn-outline-secondary" type="button" id="button-addon2"
                                                                                         :disabled="!facturaInputs[cupId] || facturaInputs[cupId].length < 6 || facturaDisabled[cupId]"
                                                                                         @click="regFactCup(profesional ,cup.Homolog, facturaInputs[cupId], actividad.id, cup.id)">

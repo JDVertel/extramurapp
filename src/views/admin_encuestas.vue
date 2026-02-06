@@ -79,7 +79,7 @@
                 <div class="col-6">
                     <div class="mb-3">
 
-                        <select class="form-select form-select-sm" aria-label="Small select example">
+                        <select id="proyectoSede" name="proyectoSede" class="form-select form-select-sm" aria-label="Small select example">
                             <option selected>--Seleccione Proyecto--</option>
                             <option value="1">One</option>
                             <option value="2">Two</option>

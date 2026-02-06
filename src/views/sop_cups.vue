@@ -96,11 +96,11 @@
                             </select>
                             <span v-if="cupsEPS.length === 0" class="text-muted">Cargando CUPS...</span>
                             <div class="row mt-2">
-                                <div class="col-2">Cantidad <input type="number" class="form-control" aria-label="Cantidad" v-model="cantidad"></div>
+                                <div class="col-2">Cantidad <input type="number" id="cupCantidad" name="cupCantidad" class="form-control" aria-label="Cantidad" v-model="cantidad"></div>
                                 <div class="col-10">
                                     <div class="input-group">
                                         <span class="input-group-text">Detalle</span>
-                                        <textarea class="form-control" aria-label="With textarea" v-model="detalle"></textarea>
+                                        <textarea id="cupDetalle" name="cupDetalle" class="form-control" aria-label="With textarea" v-model="detalle"></textarea>
                                     </div>
                                 </div>
                             </div>
@@ -183,7 +183,8 @@ export default {
             "encuestas",
             "cupsbyActividad",
             "deleteCUPS",
-            "dataips"
+            "dataips",
+            "actividades"
 
         ]),
 

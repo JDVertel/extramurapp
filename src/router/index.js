@@ -22,109 +22,109 @@ const routes = [
   {
     path: "/sop_encuesta",
     name: "sop_encuesta",
-    component: () => import("../components/soporte/sop_encuesta.vue"),
+    component: () => import("../views/sop_encuesta.vue"),
     meta: { requiresAuth: true },
   },
   {
     path: "/sop_agendas",
     name: "sop_agendas",
-    component: () => import("../components/soporte/sop_agendas.vue"),
+    component: () => import("../views/sop_agendas.vue"),
     meta: { requiresAuth: true },
   },
   {
     path: "/sop_facturacion",
     name: "sop_facturacion",
-    component: () => import("../components/soporte/sop_facturacion.vue"),
+    component: () => import("../views/sop_facturacion.vue"),
     meta: { requiresAuth: true },
   },
 
   {
     path: "/sop_aux",
     name: "sop_aux",
-    component: () => import("../components/soporte/sop_aux.vue"),
+    component: () => import("../views/sop_aux.vue"),
     meta: { requiresAuth: true },
   },
   {
     path: "/sop_agendamiento/:idEncuesta/:tipo",
     name: "sop_agendamiento",
-    component: () => import("../components/soporte/sop_agendamiento.vue"),
+    component: () => import("../views/sop_agendamiento.vue"),
     meta: { requiresAuth: true },
   },
   {
     path: "/sop_profesional",
     name: "sop_profesional",
-    component: () => import("../components/soporte/sop_profesional.vue"),
+    component: () => import("../views/sop_profesional.vue"),
     meta: { requiresAuth: true },
   },
 
   {
     path: "/sop_enfermero",
     name: "sop_enfermero",
-    component: () => import("../components/soporte/sop_enfermero.vue"),
+    component: () => import("../views/sop_enfermero.vue"),
     meta: { requiresAuth: true },
   },
   {
     path: "/sop_caracterizacion/:idEncuesta",
     name: "sop_caracterizacion",
-    component: () => import("../components/soporte/sop_caracterizacion.vue"),
+    component: () => import("../views/sop_caracterizacion.vue"),
     meta: { requiresAuth: true },
   },
 
   {
     path: "/sop_cups/:idEncuesta",
     name: "sop_cups",
-    component: () => import("../components/soporte/sop_cups.vue"),
+    component: () => import("../views/sop_cups.vue"),
     meta: { requiresAuth: true },
   },
   /* Admin */
   {
     path: "/admin_encuestas",
     name: "admin_encuestas",
-    component: () => import("../components/administracion/admin_encuestas.vue"),
+    component: () => import("../views/admin_encuestas.vue"),
     meta: { requiresAuth: true },
   },
   {
     path: "/admin_parametros",
     name: "admin_parametros",
     component: () =>
-      import("../components/administracion/admin_parametros.vue"),
+      import("../views/admin_parametros.vue"),
     meta: { requiresAuth: true },
   },
   {
     path: "/aux_informes",
     name: "aux_informes",
-    component: () => import("../components/administracion/aux_informes.vue"),
+    component: () => import("../views/aux_informes.vue"),
     meta: { requiresAuth: true },
   },
   {
     path: "/admin_informes",
     name: "admin_informes",
-    component: () => import("../components/administracion/admin_informes.vue"),
+    component: () => import("../views/admin_informes.vue"),
     meta: { requiresAuth: true },
   },
   {
     path: "/medico_informes",
     name: "medico_informes",
-    component: () => import("../components/administracion/medico_informes.vue"),
+    component: () => import("../views/medico_informes.vue"),
     meta: { requiresAuth: true },
   },
   {
     path: "/enfermero_informes",
     name: "enfermero_informes",
-    component: () => import("../components/administracion/enfermero_informes.vue"),
+    component: () => import("../views/enfermero_informes.vue"),
     meta: { requiresAuth: true },
   },
   {
     path: "/admin_ips",
     name: "admin_ips",
-    component: () => import("../components/administracion/admin_ips.vue"),
+    component: () => import("../views/admin_ips.vue"),
     meta: { requiresAuth: true },
   },
   {
     path: "/admin_programavisitas",
     name: "admin_programavisitas",
     component: () =>
-      import("../components/administracion/admin_programavisitas.vue"),
+      import("../views/admin_programavisitas.vue"),
     meta: { requiresAuth: true },
   },
   {
@@ -136,13 +136,13 @@ const routes = [
   {
     path: "/admin_caracterizacion",
     name: "admin_caracterizacion",
-    component: () => import("../components/administracion/admin_caracterizacion.vue"),
+    component: () => import("../views/admin_caracterizacion.vue"),
     meta: { requiresAuth: true },
   },
 
 
 
-  
+
   /* Login y registro */
   {
     path: "/login",

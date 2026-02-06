@@ -20,31 +20,7 @@
             </form>
             <p v-if="errorMessage" class="text-danger mt-3">{{ errorMessage }}</p>
 
-        <!--     <div class="row">
-                <div class="col-5">enfermeralinarussoflorez@gmail.com</div>
-                <div class="col-4">Linarusso*2025.</div>
-                <div class="col-3">Admin</div>
-            </div>
-            <div class="row">
-                <div class="col-5">juandavidvertelh@gmail.com</div>
-                <div class="col-4">1234567890</div>
-                <div class="col-3">med</div>
-            </div>
-            <div class="row">
-                <div class="col-5">correolinarussoflorez@hotmail.es</div>
-                <div class="col-4">Linarusso*2025.</div>
-                <div class="col-3">enfermera</div>
-            </div>
-            <div class="row">
-                <div class="col-5">juandavidvertel@hotmail.com</div>
-                <div class="col-4">1111111111</div>
-                <div class="col-3">aux</div>
-            </div>
-            <div class="row">
-                <div class="col-5">Juliettmunoz20@gmail.com</div>
-                <div class="col-4">1096183730ju</div>
-                <div class="col-3">Fact</div>
-            </div> -->
+  
 
         </div>
     </div>
