@@ -1,163 +1,125 @@
 <template>
-<div>
     <div v-if="cargando" class="spinner-overlay">
         <div class="spinner-border text-primary" role="status">
             <span class="visually-hidden">Cargando...</span>
         </div>
         <div class="spinner-message">Por favor espere, cargando información...</div>
     </div>
-    <h1 class="display-6 center">{{ userData.cargo }}</h1>
+    <div v-if="!cargando">
+        <h1 class="display-6 center">{{ userData.cargo }}</h1>
 
-    <div class="row">
-        <div class="col-6 center">
-            <h6 class="display-6">{{ cantEncuestas }}</h6>
-            <p>Abiertas</p>
-        </div>
-        <div class="col-6 center">
-            <h6 class="display-6">{{ encuestasToday.length }}</h6>
-            <p>Diarias</p>
-        </div>
 
-    </div>
-    <ul class="nav nav-tabs" id="myTab" role="tablist">
-        <li class="nav-item" role="presentation">
-            <button class="nav-link active" id="contact-tab" data-bs-toggle="tab" data-bs-target="#contact-tab-pane" type="button" role="tab" aria-controls="contact-tab-pane" aria-selected="false">
-                Abiertas
-            </button>
-        </li>
+        <div class="container-fluid">
+            <h4>Detalle de Actividades ({{ cantEncuestas }}) <small>Pendientes</small></h4>
 
-    </ul>
-    <div class="tab-content" id="myTabContent">
-        <div class="tab-pane fade show active" id="contact-tab-pane" role="tabpanel" aria-labelledby="contact-tab" tabindex="0">
-            <h5>Encuestas Pendientes por gestionar</h5>
-            <br />
-            <div style="max-height: 600px; overflow-y: auto; mt-3">
-                <div v-for="(encuesta, index) in encuestas" :key="index">
-                    <div class="row">
+            <!-- Mensaje cuando no hay registros -->
+            <div v-if="!encuestas || encuestas.length === 0" class="alert alert-success shadow-sm text-center"
+                role="alert">
+                <i class="bi bi-check-circle-fill" style="font-size: 3rem;"></i>
+                <h5 class="mt-3">¡Todo OK!</h5>
+                <p class="mb-0">No hay registros pendientes en este momento.</p>
+            </div>
 
-                        <div class="col-12 col-md-3 paciente">
-
-                            <small>
-                                <strong>Paciente: </strong> {{ encuesta.nombre1 }} {{ encuesta.apellido1 }} <strong>/</strong> <strong>Eps:</strong>
-                                {{ encuesta.eps }}
-                            </small>
-                            /
-                            <small> <strong>F Encuesta: </strong>{{ encuesta.fecha }}</small>
-                            <hr />
-                            <small><strong>Encuestador:</strong> <strong>{{ getNombreEncuestador(encuesta.idEncuestador) }}</strong></small>
-                            /
-                            <small>Fecha Visita: {{ encuesta.fechavisita }}</small>
-                        </div>
-                        <!--  -->
-                        <div class="col-12 col-md-6 Actividades">
-                            <small>
-                                <strong>Actividades:</strong>
-                                {{ this.nombresActividades(encuesta.tipoActividad) }}</small>
-                            <hr>
-                            <small> <strong>P Riesgo:</strong> {{ encuesta.poblacionRiesgo }}</small>
+            <div v-else class="container-fluid" style="max-height: 500px; overflow-y: auto ">
+                <div v-for="(encuesta, index) in encuestas" :key="index" class="container rounded-lg p-2 mb-2"
+                    style="border-radius: 24px;">
+                    <div class="row paciente shadow-sm">
+                        <div class="col-6 col-md-6">
+                            <small class="d-block"><strong>{{ encuesta.nombre1 }} {{ encuesta.apellido1
+                            }}</strong></small>
+                            <small class="text-muted d-block">EPS: {{ encuesta.eps }} | Riesgo: {{
+                                encuesta.poblacionRiesgo }}</small>
+                            <small class="text-muted d-block">Nac: {{ encuesta.fechaNac }} | Enc: {{ encuesta.fecha
+                            }}</small>
+                            <!-- Mostrar actividades si existen -->
 
                         </div>
 
-                        <div class="col-12 col-md-3 ">
-                            <div class="row">
-                                <div class="col-6 col-md-3">
-                                    <div v-if="encuesta.Agenda_tomademuestras?.cita_tomamuestras === false">
-                                        <small>Agenda laboratorios pendiente...</small>
-                                    </div>
-                                    <div v-else-if="
-                          encuesta.Agenda_tomademuestras?.cita_tomamuestras === undefined
-                        ">
-                                        <small>Agenda laboratorios pendiente...</small>
-                                    </div>
+                        <div class="col-6 col-md-6 acciones-col ">
+                            <div class="btn-grid">
+                                <!-- Fila única: Visita, Caracterización y CUPS (3 botones) -->
+                                <div class="btn-row">
+                                    <!-- Visita (solo Auxiliar de enfermeria) -->
+                                    <template v-if="userData.cargo === 'Auxiliar de enfermeria'">
+                                        <div v-if="encuesta.Agenda_Visitamedica?.cita_visitamedica === false">
+                                            <button type="button" class="btn btn-info btn-sm rounded-circle agendar-btn"
+                                                @click="Agendar(encuesta.id, 'visitamedica')">
+                                                <i class="bi bi-houses"></i>
+                                                <span class="agendar-label">Visita</span>
+                                            </button>
+                                        </div>
+                                        <div v-else-if="encuesta.Agenda_Visitamedica?.cita_visitamedica === undefined">
+                                            <button type="button" class="btn btn-info btn-sm rounded-circle agendar-btn"
+                                                @click="Agendar(encuesta.id, 'visitamedica')">
+                                                <i class="bi bi-houses"></i>
+                                                <span class="agendar-label">Visita</span>
+                                            </button>
+                                        </div>
+                                        <div v-else>
+                                            <button type="button"
+                                                class="btn btn-secondary btn-sm rounded-circle agendar-btn" disabled>
+                                                <i class="bi bi-check2-circle"></i>
+                                                <span class="agendar-label">Visita</span>
+                                            </button>
+                                        </div>
+                                    </template>
 
-                                    <div v-else>
-                                        <h6 class="ok">
-                                            <i class="bi bi-check2-circle"></i>Laboratorios ok
-                                        </h6>
-                                    </div>
-                                </div>
-                                <div class="col-6 col-md-3">
-                                    <div v-if="encuesta.Agenda_Visitamedica?.cita_visitamedica === false">
-                                        <small>Agenda visita Pendiente...</small>
-                                    </div>
-                                    <div v-else-if="
-                          encuesta.Agenda_Visitamedica?.cita_visitamedica === undefined
-                        ">
-                                        <small>Agenda visita Pendiente...</small>
-                                    </div>
-                                    <div v-else>
-                                        <h6 class="ok">
-                                            <i class="bi bi-check2-circle"></i>Visita medica ok
-                                        </h6>
-                                    </div>
-                                </div>
-                                <div class="col-6 col-md-3">
-                                    <div v-if="encuesta.status_caracterizacion === false">
-                                        <small>Caracterizacion Pendiente...</small>
-                                    </div>
-                                    <div v-else>
-                                        <h6 class="ok">
-                                            <i class="bi bi-check2-circle"></i> Caracterizacion ok
-                                        </h6>
-                                    </div>
-                                </div>
-                                <div class="col-6 col-md-3 acciones-col">
-                                    <button type="button" class="btn btn-danger btn-sm rounded-circle agendar-btn" @click="cupsGestion(encuesta.id)">
-                                        <i class="bi bi-calendar2-heart-fill"></i>
-                                        <span class="agendar-label">Cups</span>
-                                    </button>
-                                </div>
+                                    <!-- Caracterización (solo Auxiliar de enfermeria) -->
+                                    <template v-if="userData.cargo === 'Auxiliar de enfermeria'">
+                                        <div v-if="encuesta.status_caracterizacion === false">
+                                            <button type="button"
+                                                class="btn btn-warning btn-sm rounded-circle agendar-btn"
+                                                @click="Caracterizar(encuesta.id)">
+                                                <i class="bi bi-calendar2-check"></i>
+                                                <span class="agendar-label">Caract</span>
+                                            </button>
+                                        </div>
+                                        <div v-else>
+                                            <button type="button"
+                                                class="btn btn-secondary btn-sm rounded-circle agendar-btn" disabled>
+                                                <i class="bi bi-check2-circle"></i>
+                                                <span class="agendar-label">Caract</span>
+                                            </button>
+                                        </div>
+                                    </template>
 
+                                    <!-- CUPS (Auxiliar de enfermeria y Medico) -->
+                                    <div
+                                        v-if="encuesta.status_caracterizacion === true && (userData.cargo === 'Auxiliar de enfermeria' || userData.cargo === 'Medico')">
+                                        <button type="button" class="btn btn-danger btn-sm rounded-circle agendar-btn"
+                                            @click="cupsGestion(encuesta.id)">
+                                            <i class="bi bi-calendar2-heart-fill"></i>
+                                            <span class="agendar-label">Cups</span>
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
-                            <div>
-                            </div>
-
                         </div>
-                        <hr>
                     </div>
-
                 </div>
-
             </div>
         </div>
-
     </div>
-</div>
 </template>
 
 <script>
-import {
-    doc,
-    setDoc,
-    collection,
-    getDocs
-} from "firebase/firestore";
-import {
-    db
-} from "@/api/firebase";
-import {
-    mapActions,
-    mapState
-} from "vuex";
+import { mapActions, mapState } from "vuex";
 import moment from "moment";
 export default {
     data() {
         return {
-            fechaActual: "",
-            mapUsuarios: {}, // id -> nombre completo
-            users: [],
             cargando: true,
+            fechaActual: "",
         };
     },
-
     methods: {
         ...mapActions([
             "removeRegEnc",
             "getAllRegistersByFechaStatus",
-            "getAllRegistersByIduserProf",
+            "getAllRegistersByIduser",
             "getAllRegistersByFecha",
-            "SelectExistenteAgendas",
-            "getAllUsers"
+            " SelectExistenteAgendas",
+            "getEncuestasConActividadesMedico",
         ]),
 
         removeRegEncuesta(id) {
@@ -168,9 +130,6 @@ export default {
                 fecha: this.fechaActual,
             });
             this.getAllRegistersByFechaStatus({
-                idUsuario: this.userData.numDocumento,
-            });
-            this.getAllRegistersByIduser({
                 idUsuario: this.userData.numDocumento,
             });
         },
@@ -193,6 +152,7 @@ export default {
         },
 
         cupsGestion(id) {
+            sessionStorage.setItem("rutaAnterior", "/sop_profesional");
             this.$router.push({
                 name: "sop_cups",
                 params: {
@@ -202,116 +162,58 @@ export default {
         },
 
         nombresActividades(act) {
-            // Devuelve un array solo con los nombres
-            return Object.values(act).map((a) => a.nombre);
-        },
-        /* ............................................................ */
-        crearMapaUsuarios() {
-            this.mapUsuarios = {};
-            if (Array.isArray(this.usuarios)) {
-                this.usuarios.forEach(e => {
-                    this.mapUsuarios[e.id] = `${e.nombre1} ${e.apellido1}`;
-                });
-            }
+            if (!act) return [];
+            const lista = Array.isArray(act) ? act : Object.values(act);
+            return lista.map((a) => a?.nombre).filter(Boolean);
         },
 
-        getNombreEncuestador(idEncuestador) {
-            // Buscar en usuarios (users) por id, uid o numDocumento
-            if (Array.isArray(this.users)) {
-                const usuario = this.users.find(u => u.id === idEncuestador || u.uid === idEncuestador || u.numDocumento === idEncuestador);
-                if (usuario) {
-                    // Intenta mostrar nombre completo
-                    return `${usuario.nombre1 || usuario.nombres || usuario.nombre || ''} ${usuario.apellido1 || usuario.apellidos || ''}`.trim() || usuario.nombre || 'No disponible';
-                }
-            }
-            // Fallback a mapUsuarios (de la store)
-            if (this.mapUsuarios && this.mapUsuarios[idEncuestador]) {
-                return this.mapUsuarios[idEncuestador];
-            }
-            return 'No disponible';
+        nombresActividadesEncuesta(actividades) {
+            if (!actividades || typeof actividades !== 'object') return 'Sin actividades';
+
+            // Revisar si hay tipoActividad
+            const tipoActividad = actividades.tipoActividad;
+            if (!tipoActividad || typeof tipoActividad !== 'object') return 'Sin actividades';
+
+            const nombres = Object.values(tipoActividad)
+                .map(act => act?.nombre)
+                .filter(Boolean);
+
+            return nombres.length > 0 ? nombres.join(', ') : 'Sin actividades';
         },
-        /* ............................................................ */
-
-        async fetchUsers() {
-            try {
-                const usersCol = collection(db, "users");
-                const querySnapshot = await getDocs(usersCol);
-                this.users = querySnapshot.docs.map((doc) => ({
-                    uid: doc.id,
-                    ...doc.data(),
-                }));
-            } catch (error) {
-                this.message = `Error al cargar usuarios: ${error.message}`;
-                this.messageType = "error";
-                console.error("Error fetchUsers:", error);
-            }
-        },
-
-        async DataUser(id) {
-
-            if (!id) {
-                console.error("ID is required to fetch user data.");
-                return null;
-            }
-            try {
-                const user = this.users.find(user => user.uid === id);
-                if (user) {
-                    return user;
-                } else {
-                    console.error("No such user!");
-                    return null;
-                }
-            } catch (error) {
-                console.error("Error fetching user data:", error);
-                return null;
-            }
-
-        }
     },
 
     computed: {
-        ...mapState(["encuestas", "userData", "cantEncuestas", "encuestasToday", "usuarios"]),
+        ...mapState(["encuestas", "userData", "cantEncuestas"]),
+
         documento() {
             return this.userData.numDocumento;
         },
+
         totalRegisters() {
             return this.encuestas.length;
-        }
+        },
     },
-
-    watch: {
-        usuarios: {
-            immediate: true,
-            handler() {
-                this.crearMapaUsuarios();
-            }
-        }
-    },
-
-    mounted: async function () {
+    async mounted() {
         this.fechaActual = moment().format("YYYY-MM-DD");
         try {
-            //encuestas diarias + contador
-            await this.getAllRegistersByFecha({
-                idUsuario: this.userData.numDocumento,
-                fecha: this.fechaActual,
-            });
-
-            //encuestas abiertas
-            await this.getAllRegistersByFechaStatus({
+            // Obtener encuestas con status_gest_aux = true para médico y sus actividades
+            const encuestasConActividades = await this.getEncuestasConActividadesMedico({
                 idUsuario: this.userData.numDocumento,
             });
 
-            //total de encuestas del usuario . para contador
-            await this.getAllRegistersByIduserProf({
-                idUsuario: this.userData.numDocumento,
-            });
-            await this.fetchUsers();
+            // Actualizar el store manualmente porque la nueva función no lo hace
+            this.$store.commit('setEncuestas', encuestasConActividades);
+            this.$store.commit('setcantEncuestas', encuestasConActividades.length);
+
+            console.log("Encuestas con actividades (Médico):", encuestasConActividades);
+        } catch (error) {
+            console.error("Error en mounted de sop_profesional:", error);
+            alert("Error cargando encuestas: " + (error?.message || error));
         } finally {
             this.cargando = false;
         }
     },
-}
+};
 </script>
 
 <style>
@@ -321,17 +223,43 @@ export default {
     left: 0;
     width: 100vw;
     height: 100vh;
-    background: rgba(255,255,255,0.8);
+    background: rgba(255, 255, 255, 0.8);
     z-index: 9999;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
 }
+
 .spinner-message {
     margin-top: 20px;
     font-size: 1.2rem;
     color: #333;
+}
+
+.btn-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    align-items: center;
+}
+
+.btn-row {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+}
+
+/* Media query para pantallas grandes (PC/Tablet) */
+@media (min-width: 768px) {
+    .btn-grid {
+        flex-direction: row;
+        flex-wrap: nowrap;
+    }
+
+    .btn-row {
+        gap: 8px;
+    }
 }
 
 .acciones-col {

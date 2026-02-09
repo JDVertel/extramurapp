@@ -7,262 +7,93 @@
   </div>
   <div v-if="!cargando">
     <h1 class="display-6 center">{{ userData.cargo }}</h1>
+    <div class="alert alert-warning shadow-sm  d-flex justify-content-between align-items-center" role="alert">
+      Realizar nueva encuesta <RouterLink class="btn btn-warning btn-sm" to="/sop_encuesta">
+        <i class="bi bi-file-earmark-plus-fill"></i> <br />
 
-    <div class="row">
-      <div class="col-4 center">
-        <h6 class="display-6">{{ cantEncuestas }}</h6>
-        <p>Pendientes</p>
-      </div>
-      <div class="col-4 center">
-        <h6 class="display-6">{{ encuestasToday.length }}</h6>
-        <p>Diarias</p>
-      </div>
-      <div class="col-4 center">
-        <RouterLink class="btn btn-warning btn-sm" to="/sop_encuesta">
-          <i class="bi bi-file-earmark-plus-fill"></i> <br />
-          Agregar
-        </RouterLink>
-      </div>
+      </RouterLink>
     </div>
 
-    <ul class="nav nav-tabs" id="myTab" role="tablist">
-      <li class="nav-item" role="presentation">
-        <button
-          class="nav-link active"
-          id="contact-tab"
-          data-bs-toggle="tab"
-          data-bs-target="#contact-tab-pane"
-          type="button"
-          role="tab"
-          aria-controls="contact-tab-pane"
-          aria-selected="false"
-        >
-          Abiertas
-        </button>
-      </li>
-      <li class="nav-item" role="presentation">
-        <button
-          class="nav-link"
-          id="today-tab"
-          data-bs-toggle="tab"
-          data-bs-target="#today-tab-pane"
-          type="button"
-          role="tab"
-          aria-controls="wait-tab-pane"
-          aria-selected="true"
-        >
-          Diarias
-        </button>
-      </li>
-    </ul>
-    <div class="tab-content" id="myTabContent">
-      <div
-        class="tab-pane fade show active"
-        id="contact-tab-pane"
-        role="tabpanel"
-        aria-labelledby="contact-tab"
-        tabindex="0"
-      >
-        <h5>Encuestas Pendientes x visita</h5>
-        <br />
-        <div class="container-fluid">
-          <h4>Detalle de Actividades</h4>
-          <hr />
-          <div class="container-fluid" style="max-height: 500px; overflow-y: auto">
-            <div v-for="(encuesta, index) in encuestas" :key="index">
-              <div class="row">
-                <div class="col-12 col-md-2 paciente">
-                  <small>
-                    <strong
-                      >Paciente: {{ encuesta.nombre1 }} {{ encuesta.nombre2 }}
-                      {{ encuesta.apellido1 }} {{ encuesta.apellido2 }} </strong
-                    >
-                    <hr />
-                    <strong>Eps:</strong>{{ encuesta.eps }}
-                    <hr />
-                    <strong>F Nacimiento:</strong> {{ encuesta.fechaNac }}
-                  </small>
-                </div>
-                <div class="col-12 col-md-3 Riesgos">
-                  <small
-                    ><strong>F Encuesta:</strong>
-                    <strong>{{ encuesta.fecha }}</strong></small
-                  >
-                  <hr />
-                  <small>
-                    <strong>P Riesgo:</strong> {{ encuesta.poblacionRiesgo }}</small
-                  >
-                </div>
-                <div
-                  class="d-none d-md-block border-start border-1 border-secondary h-100"
-                  style="width: 0; min-height: 80px"
-                ></div>
-                <div class="col-12 col-md-3 Actividades">
-                  <small>
-                    <strong>Actividades:</strong>
-                    {{ this.nombresActividades(encuesta.tipoActividad) }}</small
-                  >
-                </div>
-                <div
-                  class="d-none d-md-block border-start border-1 border-secondary h-100"
-                  style="width: 0; min-height: 80px"
-                ></div>
-                <div class="col-12 col-md-2 acciones-col">
-                  <div class="btn-group" role="group" aria-label="Basic example">
-                    <div
-                      v-if="encuesta.Agenda_tomademuestras?.cita_tomamuestras === false"
-                    >
-                      <button
-                        type="button"
-                        class="btn btn-success btn-sm rounded-circle agendar-btn"
-                        @click="Agendar(encuesta.id, 'tomamuestras')"
-                      >
-                        <i class="bi bi-droplet-half"></i>
-                        <span class="agendar-label">Lab</span>
-                      </button>
-                    </div>
-                    <div
-                      v-else-if="
-                        encuesta.Agenda_tomademuestras?.cita_tomamuestras === undefined
-                      "
-                    >
-                      <button
-                        type="button"
-                        class="btn btn-success btn-sm rounded-circle agendar-btn"
-                        @click="Agendar(encuesta.id, 'tomamuestras')"
-                      >
-                        <i class="bi bi-droplet-half"></i>
-                        <span class="agendar-label">Lab</span>
-                      </button>
-                    </div>
 
-                    <div v-else>
-                      <button
-                        type="button"
-                        class="btn btn-secondary btn-sm rounded-circle agendar-btn"
-                        disabled
-                      >
-                        <i class="bi bi-check2-circle"></i>
-                        <span class="agendar-label">Lab</span>
-                      </button>
-                    </div>
+    <div class="container-fluid">
+      <h4>Detalle de Actividades ({{ cantEncuestas }}) <small>Pendientes</small></h4>
 
+      <!-- Mensaje cuando no hay registros -->
+      <div v-if="!encuestas || encuestas.length === 0" class="alert alert-success shadow-sm text-center" role="alert">
+        <i class="bi bi-check-circle-fill" style="font-size: 3rem;"></i>
+        <h5 class="mt-3">¡Todo OK!</h5>
+        <p class="mb-0">No hay registros pendientes en este momento.</p>
+      </div>
+
+      <div v-else class="container-fluid" style="max-height: 500px; overflow-y: auto ">
+        <div v-for="(encuesta, index) in encuestas" :key="index" class="container rounded-lg p-2 mb-2"
+          style="border-radius: 24px;">
+          <div class="row paciente shadow-sm">
+            <div class="col-6 col-md-6">
+              <small class="d-block"><strong>{{ encuesta.nombre1 }} {{ encuesta.apellido1 }}</strong></small>
+              <small class="text-muted d-block">EPS: {{ encuesta.eps }} | Riesgo: {{ encuesta.poblacionRiesgo }}</small>
+              <small class="text-muted d-block">Nac: {{ encuesta.fechaNac }} | Enc: {{ encuesta.fecha }}</small>
+            </div>
+
+            <div class="col-6 col-md-6 acciones-col ">
+              <div class="btn-grid">
+                <!-- Fila única: Visita, Caracterización y CUPS (3 botones) -->
+                <div class="btn-row">
+                  <!-- Visita (solo Auxiliar de enfermeria) -->
+                  <template v-if="userData.cargo === 'Auxiliar de enfermeria'">
                     <div v-if="encuesta.Agenda_Visitamedica?.cita_visitamedica === false">
-                      <button
-                        type="button"
-                        class="btn btn-info btn-sm rounded-circle agendar-btn"
-                        @click="Agendar(encuesta.id, 'visitamedica')"
-                      >
+                      <button type="button" class="btn btn-info btn-sm rounded-circle agendar-btn"
+                        @click="Agendar(encuesta.id, 'visitamedica')">
                         <i class="bi bi-houses"></i>
                         <span class="agendar-label">Visita</span>
                       </button>
                     </div>
-                    <div
-                      v-else-if="
-                        encuesta.Agenda_Visitamedica?.cita_visitamedica === undefined
-                      "
-                    >
-                      <button
-                        type="button"
-                        class="btn btn-info btn-sm rounded-circle agendar-btn"
-                        @click="Agendar(encuesta.id, 'visitamedica')"
-                      >
+                    <div v-else-if="encuesta.Agenda_Visitamedica?.cita_visitamedica === undefined">
+                      <button type="button" class="btn btn-info btn-sm rounded-circle agendar-btn"
+                        @click="Agendar(encuesta.id, 'visitamedica')">
                         <i class="bi bi-houses"></i>
                         <span class="agendar-label">Visita</span>
                       </button>
                     </div>
                     <div v-else>
-                      <button
-                        type="button"
-                        class="btn btn-secondary btn-sm rounded-circle agendar-btn"
-                        disabled
-                      >
+                      <button type="button" class="btn btn-secondary btn-sm rounded-circle agendar-btn" disabled>
                         <i class="bi bi-check2-circle"></i>
                         <span class="agendar-label">Visita</span>
                       </button>
                     </div>
+                  </template>
 
+                  <!-- Caracterización (solo Auxiliar de enfermeria) -->
+                  <template v-if="userData.cargo === 'Auxiliar de enfermeria'">
                     <div v-if="encuesta.status_caracterizacion === false">
-                      <button
-                        type="button"
-                        class="btn btn-warning btn-sm rounded-circle agendar-btn"
-                        @click="Caracterizar(encuesta.id)"
-                      >
+                      <button type="button" class="btn btn-warning btn-sm rounded-circle agendar-btn"
+                        @click="Caracterizar(encuesta.id)">
                         <i class="bi bi-calendar2-check"></i>
                         <span class="agendar-label">Caract</span>
                       </button>
                     </div>
                     <div v-else>
-                      <button
-                        type="button"
-                        class="btn btn-secondary btn-sm rounded-circle agendar-btn"
-                        disabled
-                      >
+                      <button type="button" class="btn btn-secondary btn-sm rounded-circle agendar-btn" disabled>
                         <i class="bi bi-check2-circle"></i>
                         <span class="agendar-label">Caract</span>
                       </button>
                     </div>
+                  </template>
 
-                    <div>
-                      <button
-                        type="button"
-                        class="btn btn-danger btn-sm rounded-circle agendar-btn"
-                        @click="cupsGestion(encuesta.id)"
-                      >
-                        <i class="bi bi-calendar2-heart-fill"></i>
-                        <span class="agendar-label">Cups</span>
-                      </button>
-                    </div>
+                  <!-- CUPS (Auxiliar de enfermeria y Medico) -->
+                  <div
+                    v-if="encuesta.status_caracterizacion === true && (userData.cargo === 'Auxiliar de enfermeria' || userData.cargo === 'Medico')">
+                    <button type="button" class="btn btn-danger btn-sm rounded-circle agendar-btn"
+                      @click="cupsGestion(encuesta.id)">
+                      <i class="bi bi-calendar2-heart-fill"></i>
+                      <span class="agendar-label">Cups</span>
+                    </button>
                   </div>
                 </div>
               </div>
-              <hr />
             </div>
           </div>
         </div>
-      </div>
-      <div
-        class="tab-pane fade"
-        id="today-tab-pane"
-        role="tabpanel"
-        aria-labelledby="today-tab"
-        tabindex="0"
-      >
-        <h5>Encuestas Diarias</h5>
-
-        <table class="table table-striped table-sm">
-          <thead>
-            <tr>
-              <th scope="col">Detalle</th>
-
-              <th scope="col">Opciones</th>
-            </tr>
-          </thead>
-          <tbody class="table-group-divider">
-            <tr v-for="(encuesta, index) in this.encuestasToday" :key="index">
-              <td>
-                Paciente: {{ encuesta.nombre1 }} {{ encuesta.apellido1 }}
-                <hr />
-                Actividades:{{ this.nombresActividades(encuesta.tipoActividad) }}
-                <hr />
-                P Riesgo: {{ encuesta.poblacionRiesgo }}
-              </td>
-
-              <td>
-                <div class="col-4">
-                  <button
-                    type="button"
-                    class="btn btn-danger btn-sm"
-                    @click="removeRegEncuesta(encuesta.id)"
-                    v-if="encuesta.status_tomamuestras == ''"
-                  >
-                    <i class="bi bi-x-circle"></i>
-                  </button>
-                </div>
-              </td>
-            </tr>
-          </tbody>
-        </table>
       </div>
     </div>
   </div>
@@ -278,7 +109,6 @@ export default {
       fechaActual: "",
     };
   },
-
   methods: {
     ...mapActions([
       "removeRegEnc",
@@ -318,6 +148,7 @@ export default {
     },
 
     cupsGestion(id) {
+      sessionStorage.setItem("rutaAnterior", "/sop_aux");
       this.$router.push({
         name: "sop_cups",
         params: {
@@ -327,13 +158,15 @@ export default {
     },
 
     nombresActividades(act) {
-      // Devuelve un array solo con los nombres
-      return Object.values(act).map((a) => a.nombre);
+      if (!act) return [];
+      const lista = Array.isArray(act) ? act : Object.values(act);
+      return lista.map((a) => a?.nombre).filter(Boolean);
     },
   },
 
   computed: {
     ...mapState(["encuestas", "userData", "cantEncuestas", "encuestasToday"]),
+
     documento() {
       return this.userData.numDocumento;
     },
@@ -346,17 +179,20 @@ export default {
     this.fechaActual = moment().format("YYYY-MM-DD");
     try {
       //encuestas diarias + contador
-      await this.getAllRegistersByFecha({
-        idUsuario: this.userData.numDocumento,
-        fecha: this.fechaActual,
-      });
+      // await this.getAllRegistersByFecha({
+      //   idUsuario: this.userData.numDocumento,
+      // fecha: this.fechaActual,
+      //});
       //encuestas abiertas
       await this.getAllRegistersByFechaStatus({
         idUsuario: this.userData.numDocumento,
       });
+    } catch (error) {
+      console.error("Error en mounted de sop_aux:", error);
+      alert("Error cargando encuestas: " + (error?.message || error));
     } finally {
-      this.cargando = false;
     }
+    this.cargando = false;
   },
 };
 </script>
@@ -382,12 +218,29 @@ export default {
   color: #333;
 }
 
-.btn-group {
-  display: flex !important;
+.btn-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: center;
+}
+
+.btn-row {
+  display: flex;
   justify-content: center;
   gap: 8px;
-  width: auto;
-  /* Hace que el grupo ocupe todo el ancho del contenedor padre */
+}
+
+/* Media query para pantallas grandes (PC/Tablet) */
+@media (min-width: 768px) {
+  .btn-grid {
+    flex-direction: row;
+    flex-wrap: nowrap;
+  }
+
+  .btn-row {
+    gap: 8px;
+  }
 }
 
 .acciones-col {

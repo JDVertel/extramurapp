@@ -31,7 +31,7 @@
     <p v-else>Cargando...</p>
 
     <footer>
-        <p>Propiedad de BigDataManagements.SAS Todos los Derechos Reservados 2025</p>
+        <p>Propiedad de BigDataManagements.SAS Todos los Derechos Reservados 2026</p>
     </footer>
 </div>
 </template>

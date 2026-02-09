@@ -187,6 +187,7 @@ export default {
         },
 
         cupsGestion(id) {
+            sessionStorage.setItem("rutaAnterior", "/sop_enfermero");
             this.$router.push({
                 name: "sop_cups",
                 params: {

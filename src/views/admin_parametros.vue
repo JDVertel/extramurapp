@@ -1,555 +1,1452 @@
 <template>
-<div class="container-fluid">
+  <div class="container-fluid">
     <h3>Admin Parametros</h3>
     <br />
     <nav>
-        <div class="nav nav-tabs" id="nav-tab" role="tablist">
-            <button class="nav-link active" id="nav-home-tab" data-bs-toggle="tab" data-bs-target="#nav-home" type="button" role="tab" aria-controls="nav-home" aria-selected="true">
-                Comunas - Barrios
-            </button>
-            <button class="nav-link" id="nav-profile-tab" data-bs-toggle="tab" data-bs-target="#nav-profile" type="button" role="tab" aria-controls="nav-profile" aria-selected="false">
-                EPS
-            </button>
-            <button class="nav-link" id="nav-contact-tab" data-bs-toggle="tab" data-bs-target="#nav-contact" type="button" role="tab" aria-controls="nav-contact" aria-selected="false">
-                CUPS
-            </button>
-            <button class="nav-link" id="nav-pacientes-tab" data-bs-toggle="tab" data-bs-target="#nav-pacientes" type="button" role="tab" aria-controls="nav-pacientes" aria-selected="false">
-                PACIENTES
-            </button>
-        </div>
+      <div class="nav nav-tabs" id="nav-tab" role="tablist">
+        <button class="nav-link active" id="nav-home-tab" data-bs-toggle="tab" data-bs-target="#nav-home" type="button"
+          role="tab" aria-controls="nav-home" aria-selected="true">
+          Comunas - Barrios
+        </button>
+        <button class="nav-link" id="nav-profile-tab" data-bs-toggle="tab" data-bs-target="#nav-profile" type="button"
+          role="tab" aria-controls="nav-profile" aria-selected="false">
+          EPS
+        </button>
+        <button class="nav-link" id="nav-contact-tab" data-bs-toggle="tab" data-bs-target="#nav-contact" type="button"
+          role="tab" aria-controls="nav-contact" aria-selected="false">
+          CUPS
+        </button>
+        <button class="nav-link" id="nav-pacientes-tab" data-bs-toggle="tab" data-bs-target="#nav-pacientes"
+          type="button" role="tab" aria-controls="nav-pacientes" aria-selected="false">
+          PACIENTES
+        </button>
+        <button class="nav-link" id="nav-contratos-tab" data-bs-toggle="tab" data-bs-target="#nav-contratos"
+          type="button" role="tab" aria-controls="nav-contratos" aria-selected="false">
+          CONTRATOS
+        </button>
+      </div>
     </nav>
     <div class="tab-content" id="nav-tabContent">
-        <!-- Comunas/Barrios -->
-        <div class="tab-pane fade show active" id="nav-home" role="tabpanel" aria-labelledby="nav-home-tab" tabindex="0">
-            <br />
-            <div class="container">
+      <!-- ========== TAB: COMUNAS Y BARRIOS ========== -->
+      <div class="tab-pane fade show active" id="nav-home" role="tabpanel" aria-labelledby="nav-home-tab" tabindex="0">
+        <br />
+        <div class="container">
+          <h6>Opciones disponibles para las encuestas Comunas/Barrios</h6>
+          <br />
 
-                <h6>Opciones disponibles para las encuestas Comunas/Barrios </h6>
-                <br />
-
-                <div class="row">
-                    <div class="col-4">
-                        <input type="number" id="comuna" name="comuna" class="form-control form-control-sm" placeholder="Comuna" v-model="comuna" />
-                    </div>
-                    <div class="col-4">
-                        <input type="text" id="barrio" name="barrio" class="form-control form-control-sm" placeholder="Barrio" v-model="barrio" />
-                    </div>
-                    <div class="col-4">
-                        <button type="button" class="btn btn-warning btn-sm" @click="saveComunaBarrio">
-                            + Guardar
-                        </button>
-                    </div>
-                </div>
+          <div class="row">
+            <div class="col-4">
+              <input type="number" id="comuna" name="comuna" class="form-control form-control-sm" placeholder="Comuna"
+                v-model="comuna" />
             </div>
-            <br />
-            <div class="container">
-                <div style="max-height: 600px; overflow-y: auto;">
-                    <table class="table table-bordered table-sm mb-4">
-                        <thead>
-                            <tr>
-                                <th scope="col">Comuna</th>
-                                <th scope="col">Barrio</th>
-                                <th scope="col">Eliminar</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr v-for="(comuna, index) in comunasBarrios" :key="comuna.id || index">
-                                <td>{{ comuna.comuna }}</td>
-                                <td>{{ comuna.barrio }}</td>
-                                <td>
-                                    <button class="btn btn-danger btn-sm" @click="deleteBarrio(comuna.id)" aria-label="Eliminar barrio" type="button">
-                                        <i class="bi bi-trash"></i>
-                                    </button>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
+            <div class="col-4">
+              <input type="text" id="barrio" name="barrio" class="form-control form-control-sm" placeholder="Barrio"
+                v-model="barrio" />
             </div>
+            <div class="col-4">
+              <button type="button" class="btn btn-warning btn-sm" @click="saveComunaBarrio">
+                {{ comunaBarrioEditId ? 'Actualizar' : '+ Guardar' }}
+              </button>
+              <button v-if="comunaBarrioEditId" type="button" class="btn btn-secondary btn-sm ms-2"
+                @click="clearFormComunaBarrio">
+                Cancelar
+              </button>
+            </div>
+          </div>
         </div>
-        <!-- EPS -->
-        <div class="tab-pane fade" id="nav-profile" role="tabpanel" aria-labelledby="nav-profile-tab" tabindex="0">
-            <br />
-            <div class="container">
-
-                <div class="accordion" id="accordionExample">
-                    <div class="accordion-item">
-                        <h2 class="accordion-header" id="headingOne">
-                            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
-                                Eps disponibles en Demanda Inducida
-                            </button>
-                        </h2>
-                        <div id="collapseOne" class="accordion-collapse collapse show" aria-labelledby="headingOne" data-bs-parent="#accordionExample">
-                            <div class="accordion-body">
-
-                                <div class="row">
-                                    <div class="col-6">
-                                        <div class="mb-3">
-                                            <input type="text" id="epsname-di" name="epsname-di" class="form-control form-control-sm" placeholder="Nombre de la Eps" v-model="epsname" />
-                                        </div>
-                                    </div>
-                                    <div class="col-6">
-                                        <button type="button" class="btn btn-warning btn-sm" @click="saveEps">Guardar</button>
-                                    </div>
-                                </div>
-                                <hr />
-                                <div style="max-height: 300px; overflow-y: auto;">
-                                    <table class="table table-bordered">
-                                        <thead>
-                                            <tr>
-                                                <th>Nombre de EPS</th>
-                                                <th>Opciones</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <tr v-for="(ot, index) in epss" :key="ot.id || index">
-                                                <td>{{ ot.eps }}</td>
-                                                <td>
-                                                    <button class="btn btn-danger btn-sm" @click="EpsDelete(ot.id)" aria-label="Eliminar EPS" type="button">
-                                                        <i class="bi bi-trash"></i>
-                                                    </button>
-                                                </td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="accordion-item">
-                        <h2 class="accordion-header" id="headingTwo">
-                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
-                                Eps disponibles en Caracterizacion
-                            </button>
-                        </h2>
-                        <div id="collapseTwo" class="accordion-collapse collapse" aria-labelledby="headingTwo" data-bs-parent="#accordionExample">
-                            <div class="accordion-body">
-
-                                <div class="row">
-                                    <div class="col-6">
-                                        <div class="mb-3">
-                                            <input type="text" id="epsname-car" name="epsname-car" class="form-control form-control-sm" placeholder="Nombre de la Eps" v-model="epsname" />
-                                        </div>
-                                    </div>
-                                    <div class="col-6">
-                                        <button type="button" class="btn btn-warning btn-sm" @click="saveEps">Guardar</button>
-                                    </div>
-                                </div>
-                                <hr />
-                                <div style="max-height: 300px; overflow-y: auto;">
-                                    <table class="table table-bordered">
-                                        <thead>
-                                            <tr>
-                                                <th>Nombre de EPS</th>
-                                                <th>Opciones</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <tr v-for="(ot, index) in epss" :key="ot.id || index">
-                                                <td>{{ ot.eps }}</td>
-                                                <td>
-                                                    <button class="btn btn-danger btn-sm" @click="EpsDelete(ot.id)" aria-label="Eliminar EPS" type="button">
-                                                        <i class="bi bi-trash"></i>
-                                                    </button>
-                                                </td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                </div>
-
-                <br />
-
-            </div>
+        <br />
+        <div class="container">
+          <div style="max-height: 600px; overflow-y: auto">
+            <table class="table table-bordered table-sm mb-4">
+              <thead>
+                <tr>
+                  <th scope="col">Editar</th>
+                  <th scope="col">Comuna</th>
+                  <th scope="col">Barrio</th>
+                  <th scope="col">Eliminar</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="(comuna, index) in comunasBarrios" :key="comuna.id || index">
+                  <td><button class="btn btn-warning btn-sm" @click="editBarrio(comuna.id)" aria-label="Editar barrio"
+                      type="button">
+                      <i class="bi bi-pencil"></i>
+                    </button></td>
+                  <td>{{ comuna.comuna }}</td>
+                  <td>{{ comuna.barrio }}</td>
+                  <td>
+                    <button class="btn btn-danger btn-sm" @click="deleteBarrio(comuna.id)" aria-label="Eliminar barrio"
+                      type="button">
+                      <i class="bi bi-trash"></i>
+                    </button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
-        <!-- Tipo Actividades -->
-        <div class="tab-pane fade" id="nav-contact" role="tabpanel" aria-labelledby="nav-contact-tab" tabindex="0">
-            <br />
-            <h6>CUPS del sistema</h6>
-            <br />
-            <div class="container-fluid">
-                <!-- boton modal -->
-                <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#staticBackdrop">
-                    + Nuevo CUPS
+      </div>
+
+      <!-- ========== TAB: EPS ========== -->
+      <div class="tab-pane fade" id="nav-profile" role="tabpanel" aria-labelledby="nav-profile-tab" tabindex="0">
+        <br />
+        <div class="container">
+          <div class="accordion" id="accordionExample">
+            <div class="accordion-item">
+              <h2 class="accordion-header" id="headingOne">
+                <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne"
+                  aria-expanded="true" aria-controls="collapseOne">
+                  Eps disponibles en Demanda Inducida
                 </button>
-
-            </div>
-
-            <!-- modal  crear editar CUPS-->
-            <div class="modal fade" id="staticBackdrop" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
-                <div class="modal-dialog">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h1 class="modal-title fs-5" id="staticBackdropLabel">Crear y Editar cups </h1>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                        </div>
-                        <div class="modal-body">
-
-                            <div class="row">
-                                <div class="col-6">
-                                    <div class="mb-3">
-                                        <label f class="form-label">Nombre Procedimiento</label>
-                                        <input type="text" id="cupsNombre" name="cupsNombre" class="form-control" placeholder="CUP">
-                                    </div>
-                                </div>
-                                <div class="col-6">
-                                    <div class="mb-3">
-                                        <label f class="form-label">Codigo CUPS</label>
-                                        <input type="text" id="cupsCodigo" name="cupsCodigo" class="form-control" placeholder="CUP">
-                                    </div>
-                                </div>
-                                <div class="col-6">
-
-                                    <label f class="form-label">Grupo</label>
-                                    <select id="cupsGrupo" name="cupsGrupo" class="form-select" aria-label="Default select example">
-
-                                        <option selected>--Seleccione--</option>
-                                        <option value="1">One</option>
-                                        <option value="2">Two</option>
-                                        <option value="3">Three</option>
-                                    </select></div>
-                                <div class="col-6">
-                                    <label f class="form-label">Rol(es) Habilitados</label>
-                                    <select id="cupsRoles" name="cupsRoles" class="form-select" aria-label="Default select example">
-                                        <option selected>--Seleccione--</option>
-                                        <option value="1">One</option>
-                                        <option value="2">Two</option>
-                                        <option value="3">Three</option>
-                                    </select></div>
-                                <div class="col-6"> <label f class="form-label">EPS(s) Habilitadas</label>
-                                    <select id="cupsEps" name="cupsEps" class="form-select" aria-label="Default select example">
-                                        <option selected>--Seleccione--</option>
-                                        <option value="1">One</option>
-                                        <option value="2">Two</option>
-                                        <option value="3">Three</option>
-                                    </select></div>
-
-                                <div class="col-6"></div>
-                            </div>
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Close</button>
-                            <button type="button" class="btn btn-primary btn-sm">Guardar</button>
-                        </div>
+              </h2>
+              <div id="collapseOne" class="accordion-collapse collapse show" aria-labelledby="headingOne"
+                data-bs-parent="#accordionExample">
+                <div class="accordion-body">
+                  <div class="row">
+                    <div class="col-6">
+                      <div class="mb-3">
+                        <input type="text" id="epsname-di" name="epsname-di" class="form-control form-control-sm"
+                          placeholder="Nombre de la Eps" v-model="epsname" />
+                      </div>
                     </div>
-                </div>
-            </div>
-            <br>
-            <!--  fin modal crear editar cups -->
-            <div v-if="cups && cups.length > 0" style="overflow-x: auto; width: 100%;">
-                <table class="table table-bordered table-sm" style="min-width: 900px;">
-                    <thead>
+                    <div class="col-6">
+                      <button type="button" class="btn btn-warning btn-sm" @click="saveEps">
+                        {{ epsEditId ? 'Actualizar' : 'Guardar' }}
+                      </button>
+                      <button v-if="epsEditId" type="button" class="btn btn-secondary btn-sm ms-2"
+                        @click="clearFormEps">
+                        Cancelar
+                      </button>
+                    </div>
+                  </div>
+                  <hr />
+                  <div style="max-height: 300px; overflow-y: auto">
+                    <table class="table table-bordered">
+                      <thead>
                         <tr>
-                            <th>Editar</th>
-                            <th>ID</th>
-                            <th>Descripción CUP</th>
-                            <th>Grupo</th>
-                            <th>Homolog</th>
-                            <th>Profesional</th>
-                            <th>EPS</th>
+                          <th>Editar</th>
+                          <th>Nombre de EPS</th>
+                          <th>Opciones</th>
                         </tr>
+                      </thead>
+                      <tbody>
+                        <tr v-for="(ot, index) in epss" :key="ot.id || index">
+                          <td><button class="btn btn-warning btn-sm" @click="editEps(ot.id)" aria-label="Editar EPS"
+                              type="button">
+                              <i class="bi bi-pencil"></i>
+                            </button></td>
+                          <td>{{ ot.eps }}</td>
+                          <td>
+                            <button class="btn btn-danger btn-sm" @click="EpsDelete(ot.id)" aria-label="Eliminar EPS"
+                              type="button">
+                              <i class="bi bi-trash"></i>
+                            </button>
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          <br />
+        </div>
+      </div>
+
+      <!-- ========== TAB: CUPS ========== -->
+      <div class="tab-pane fade" id="nav-contact" role="tabpanel" aria-labelledby="nav-contact-tab" tabindex="0">
+        <br />
+        <h6>CUPS del sistema</h6>
+        <br />
+        <div class="container-fluid">
+          <!-- boton modal -->
+          <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#staticBackdrop">
+            + Nuevo CUPS
+          </button>
+        </div>
+
+        <!-- modal  crear editar CUPS-->
+        <div class="modal fade" id="staticBackdrop" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
+          aria-labelledby="staticBackdropLabel" aria-hidden="true">
+          <div class="modal-dialog">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h1 class="modal-title fs-5" id="staticBackdropLabel">
+                  {{ cupsEditId ? "Editar" : "Crear" }} CUPS
+                </h1>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"
+                  @click="clearFormCups"></button>
+              </div>
+              <div class="modal-body">
+                <div class="row">
+                  <div class="col-6">
+                    <div class="mb-3">
+                      <label class="form-label">Nombre del Cup</label>
+                      <input type="text" id="cupsNombre" v-model="cupNombre" class="form-control"
+                        placeholder="Nombre del procedimiento" required />
+                    </div>
+                  </div>
+                  <div class="col-6">
+                    <div class="mb-3">
+                      <label class="form-label">Codigo CUPS</label>
+                      <input type="text" id="cupsCodigo" v-model="cupCodigo" class="form-control"
+                        placeholder="Código CUPS" required />
+                    </div>
+                  </div>
+                  <div class="col-6">
+                    <div class="mb-3">
+                      <label class="form-label">Profesional</label>
+                      <input type="text" id="cupsProfesional" v-model="cupProfesional" class="form-control"
+                        placeholder="Profesional" required />
+                    </div>
+                  </div>
+                  <div class="col-6">
+                    <div class="mb-3">
+                      <label class="form-label">Grupo</label>
+                      <input type="text" id="cupsGrupo" v-model="cupsGrupo" class="form-control" placeholder="Grupo"
+                        required />
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal" @click="clearFormCups">
+                  Cerrar
+                </button>
+                <button type="button" class="btn btn-primary btn-sm" @click="saveCups">
+                  Guardar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <br />
+        <!-- Fin modal crear editar CUPS -->
+        <div v-if="cups && cups.length > 0" style="overflow-x: auto; width: 100%">
+          <table class="table table-bordered table-sm">
+            <thead>
+              <tr>
+                <th>Editar</th>
+                <th>CupHomologado</th>
+                <th>CUP Nombre</th>
+                <th>Profesional</th>
+                <th>Grupo</th>
+                <th>Eliminar</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="cup in cups" :key="cup.id" :class="getColorClassByProfesional(cup.profesional)">
+                <td>
+                  <button type="button" class="btn btn-warning btn-sm" data-bs-toggle="modal"
+                    data-bs-target="#staticBackdrop" @click="editCups(cup.id)">
+                    <i class="bi bi-pencil"></i>
+                  </button>
+                </td>
+                <td>{{ cup.codigo }}</td>
+                <td>{{ cup.DescripcionCUP }}</td>
+                <td>
+                  <strong>{{ cup.profesional }}</strong>
+                </td>
+                <td>{{ cup.Grupo }}</td>
+                <td>
+                  <button type="button" class="btn btn-danger btn-sm" @click="deleteCups(cup.id)">
+                    <i class="bi bi-trash"></i>
+                  </button>
+                </td>
+
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ========== TAB: PACIENTES ========== -->
+      <div class="tab-pane fade" id="nav-pacientes" role="tabpanel" aria-labelledby="nav-pacientes-tab" tabindex="0">
+        <h5>Gestion de Pacientes</h5>
+        <hr />
+        <div class="row">
+          <div class="col-6 col-md-3 mb-3">
+            <label for="tipodoc" class="form-label">Tipo de Documento</label>
+            <select id="tipodoc" v-model="tipodoc" class="form-select" required>
+              <option value="">Seleccione</option>
+              <option value="RC">Registro Civil</option>
+              <option value="TI">Tarjeta de Identidad</option>
+              <option value="CC">Cédula de Ciudadanía</option>
+              <option value="CE">Cédula de Extranjería</option>
+              <option value="NV">Certificado nacido vivo</option>
+              <option value="PA">Pasaporte</option>
+              <option value="PE">Permiso Especial de Permanencia</option>
+              <option value="MS">Menos sin identificacion</option>
+              <option value="AS">Adulto sin identificacion</option>
+              <option value="PT">Permiso por proteccion temporal</option>
+            </select>
+          </div>
+          <div class="col-6 col-md-3 mb-3">
+            <label for="numdoc" class="form-label">Número de Documento</label>
+            <input type="text" id="numdoc" v-model="numdoc" class="form-control" required />
+          </div>
+          <div class="col-6 col-md-2">
+            <button class="btn btn-primary mt-4" :disabled="cargandoPacientes" @click="consultarP">
+              <i class="bi bi-search"></i> Consultar
+            </button>
+          </div>
+        </div>
+        <!-- Spinner de consulta -->
+        <div class="mt-2">
+          <div v-if="cargandoPacientes" class="d-flex align-items-center">
+            <div class="spinner-border text-primary me-2" role="status">
+              <span class="visually-hidden">Consultando...</span>
+            </div>
+            <div>Consultando...</div>
+          </div>
+        </div>
+        <div class="container-fluid">
+          <div v-if="
+            !cargandoPacientes &&
+            searchPerformed &&
+            (!datosPaciente || datosPaciente.length === 0)
+          " class="alert alert-warning">
+            No hay registros para esa consulta.
+          </div>
+          <div v-if="datosPaciente && datosPaciente.length > 0" style="overflow-x: auto; width: 100%">
+            <table class="table table-bordered table-sm" style="min-width: 900px">
+              <thead>
+                <tr>
+                  <th>Campo</th>
+                  <th v-for="paciente in datosPaciente" :key="paciente.id" class="text-center">
+                    <div>
+                      {{ paciente.nombre1 }} {{ paciente.apellido1 }}
+                      {{ paciente.apellido2 }}
+                    </div>
+                    <div>
+                      <small>{{ paciente.tipodoc }}-{{ paciente.numdoc }}</small>
+                    </div>
+                    <div class="btn-group mt-2" role="group">
+                      <!-- <button class="btn btn-warning btn-sm" type="button" @click.stop="editarP(paciente.id)"><i class="bi bi-pencil-square"></i></button> -->
+                      <button class="btn btn-danger btn-sm" type="button" @click.stop="eliminarPaciente(paciente.id)">
+                        <i class="bi bi-trash"></i>
+                      </button>
+                    </div>
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <th>EPS</th>
+                  <td v-for="paciente in datosPaciente" :key="'eps-' + paciente.id">
+                    <div class="cell-content">{{ paciente.eps }}</div>
+                  </td>
+                </tr>
+                <tr>
+                  <th>Fecha Nac.</th>
+                  <td v-for="paciente in datosPaciente" :key="'fnac-' + paciente.id">
+                    <div class="cell-content">{{ paciente.fechaNac }}</div>
+                  </td>
+                </tr>
+                <tr>
+                  <th>Sexo</th>
+                  <td v-for="paciente in datosPaciente" :key="'sexo-' + paciente.id">
+                    <div class="cell-content">{{ paciente.sexo }}</div>
+                  </td>
+                </tr>
+                <tr>
+                  <th>Dirección</th>
+                  <td v-for="paciente in datosPaciente" :key="'dir-' + paciente.id">
+                    <div class="cell-content">{{ paciente.direccion }}</div>
+                  </td>
+                </tr>
+                <tr>
+                  <th>Comuna</th>
+                  <td v-for="paciente in datosPaciente" :key="'comuna-' + paciente.id">
+                    <div class="cell-content">
+                      {{ paciente.barrioVeredacomuna?.comuna }}
+                    </div>
+                  </td>
+                </tr>
+                <tr>
+                  <th>Barrio</th>
+                  <td v-for="paciente in datosPaciente" :key="'barrio-' + paciente.id">
+                    <div class="cell-content">
+                      {{ paciente.barrioVeredacomuna?.barrio }}
+                    </div>
+                  </td>
+                </tr>
+                <tr v-for="item in activityKeys" :key="'act-' + item.key">
+                  <th>{{ item.actividad.nombre }}</th>
+                  <td v-for="paciente in datosPaciente" :key="'actcell-' + paciente.id + '-' + item.key">
+                    <div class="cell-content">
+                      <div v-if="
+                        paciente.tipoActividad &&
+                        paciente.tipoActividad[item.key]
+                      ">
+                        <div>
+                          <strong>Profesionales:</strong>
+                          <span v-for="(prof, pidx) in paciente.tipoActividad[
+                            item.key
+                          ].Profesional || []" :key="prof">
+                            {{ prof
+                            }}<span v-if="
+                              pidx <
+                              (
+                                paciente.tipoActividad[item.key]
+                                  .Profesional || []
+                              ).length -
+                              1
+                            ">,
+                            </span>
+                          </span>
+                        </div>
+                        <div v-if="paciente.tipoActividad[item.key].cups">
+                          <div v-for="(cupsObj, profKey) in paciente.tipoActividad[
+                            item.key
+                          ].cups" :key="profKey">
+                            <strong>{{ profKey }}:</strong>
+                            <ul class="mb-0">
+                              <li v-for="cup in Object.values(cupsObj.cups || {})" :key="cup.id">
+                                <span><strong>{{
+                                  cup.DescripcionCUP
+                                }}</strong></span><br />
+                                EPS:
+                                <span v-for="(eps, eidx) in cup.Eps || []" :key="eps">{{ eps
+                                }}<span v-if="eidx < (cup.Eps || []).length - 1">,
+                                  </span></span><br />
+                                Grupo: {{ cup.Grupo }}<br />
+                                Homolog: {{ cup.Homolog }}<br />
+                                Cantidad: {{ cup.cantidad }}<br />
+                                Detalle: {{ cup.detalle }}
+                              </li>
+                            </ul>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ========== TAB: CONTRATOS ========== -->
+      <div class="tab-pane fade" id="nav-contratos" role="tabpanel" aria-labelledby="nav-contratos-tab" tabindex="0">
+        <h5>Gestion CONTRATOS</h5>
+        <div class="alert alert-warning" role="alert">
+          <div class="row">
+            <div class="col-8">Crear un nuevo contrato</div>
+            <div class="col-2">
+              <button class="btn btn-warning btn-sm" data-bs-toggle="modal" data-bs-target="#crearcontratos">
+                +
+              </button>
+            </div>
+          </div>
+          <div class="mt-2">
+
+          </div>
+        </div>
+
+        <!-- Modal crear contratos -->
+        <div class="modal fade modal-lg" id="crearcontratos" data-bs-backdrop="static" data-bs-keyboard="false"
+          tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+          <div class="modal-dialog">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h1 class="modal-title fs-5" id="staticBackdropLabel">
+                  Crear contrato(s) EPS-CUPS
+                  <span v-if="contratosTemporalesAgrupados.length > 0" class="badge bg-primary ms-2">
+                    {{ contratosTemporalesAgrupados.length }} EPS
+                  </span>
+                </h1>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"
+                  @click="clearFormContratos"></button>
+              </div>
+              <div class="modal-body">
+                <div class="row">
+                  <div class="col-3">
+                    <div class="mb-3">
+                      <label class="form-label">Seleccione EPS</label>
+                      <select class="form-select form-select-sm" aria-label="Small select example" v-model="Seps">
+                        <option value="">Seleccione...</option>
+                        <option :value="eps.id" v-for="(eps, index) in epss" :key="index">
+                          {{ eps.eps }}
+                        </option>
+                      </select>
+                    </div>
+
+                  </div>
+
+
+
+                  <div class="col-6">
+                    <label class="form-label">Actividad Extra</label>
+                    <select class="form-select form-select-sm" aria-label="Small select example" v-model="Sactividad">
+                      <option value="">Seleccione...</option>
+                      <option :value="actividad.id" v-for="(actividad, index) in actividadesExtra" :key="index">
+                        {{ actividad.nombre }}
+                      </option>
+                    </select>
+                  </div>
+                  <div class="col-8">
+                    <label class="form-label">CUPS Habilitados</label>
+                    <select class="form-select form-select-sm" aria-label="Small select example" v-model="Scups">
+                      <option value="">Seleccione...</option>
+                      <option :value="cup.id" v-for="(cup, index) in cupsDisponibles" :key="index">
+                        [{{ cup.profesional }}]-[{{ cup.Grupo }}] {{ cup.DescripcionCUP }}
+                      </option>
+                    </select>
+                    <small v-if="cupsDisponibles.length === 0" class="text-muted d-block mt-1">
+                      Todos los CUPS han sido agregados a esta EPS
+                    </small>
+                  </div>
+                  <div class="col-1">
+                    <button class="btn btn-warning btn-sm mt-4" @click="addCupsContrato"
+                      :disabled="!Seps || !Scups || !Sactividad"> + Agregar</button>
+                  </div>
+                </div>
+
+                <!-- Tabla de CUPS para la EPS seleccionada -->
+                <h6>CUPS agregados a {{Seps ? (epss.find(e => e.id === Seps)?.eps || 'EPS') : 'la EPS seleccionada'}}
+                </h6>
+                <div v-if="!Seps" class="alert alert-warning">
+                  Por favor, seleccione una EPS primero
+                </div>
+                <div v-else-if="contratosFiltrados.length === 0" class="alert alert-info">
+                  No hay CUPS agregados a esta EPS. Seleccione CUPS y presione el botón +
+                </div>
+                <div v-else>
+                  <table class="table table-sm table-bordered mb-3">
+                    <thead>
+                      <tr>
+                        <th>Profesional</th>
+                        <th>Grupo</th>
+                        <th>Actividad Extra</th>
+                        <th>CUPS</th>
+
+                        <th style="width: 80px;">Eliminar</th>
+                      </tr>
                     </thead>
                     <tbody>
-                        <tr v-for="cup in cups" :key="cup.id">
-                            <td>
-                            <th><button type="button" class="btn btn-warning btn-sm" data-bs-toggle="modal" data-bs-target="#staticBackdrop">
-                                    <i class="bi bi-pencil"></i>
-                                </button></th>
-                            </td>
-                            <td>{{ cup.id }}</td>
-                            <td>{{ cup.DescripcionCUP }}</td>
-                            <td>{{ cup.Grupo }}</td>
-                            <td>{{ cup.Homolog }}</td>
-                            <td>{{ cup.Profesional }}</td>
-                            <td>
-                                <span v-for="(eps, eidx) in cup.Eps" :key="eps">
-                                    {{ eps }}<span v-if="eidx < cup.Eps.length - 1">, </span>
-                                </span>
-                            </td>
-                        </tr>
+                      <tr v-for="(contrato, index) in contratosFiltrados" :key="index">
+                        <td>{{ obtenerProfesionalCups(contrato.cupsId, contrato.cupsProfesional) }}</td>
+                        <td>{{ obtenerGrupoCups(contrato.cupsId, contrato.cupsGrupo) || '-' }}</td>
+                        <td>{{ obtenerNombreActividadPorId(contrato.actividadId, contrato.actividadNombre) ||
+                          sinEspecificar }}</td>
+                        <td>{{ obtenerNombreCups(contrato.cupsId, contrato.cupsNombre) }}</td>
+
+                        <td>
+                          <button class="btn btn-danger btn-sm" @click="removeContrato(contrato)">
+                            <i class="bi bi-trash"></i>
+                          </button>
+                        </td>
+                      </tr>
                     </tbody>
-                </table>
-            </div>
-        </div>
-
-<!-- ----------------------------------------------------PACIENTES--------------------------------------------------------------------------- -->
-
-        <div class="tab-pane fade" id="nav-pacientes" role="tabpanel" aria-labelledby="nav-pacientes-tab" tabindex="0">
-        <h5>Gestion de Pacientes</h5>
-        <hr>
-                <div class="row">
-                <div class="col-6 col-md-3 mb-3">
-                    <label for="tipodoc" class="form-label">Tipo de Documento</label>
-                    <select id="tipodoc" v-model="tipodoc" class="form-select" required>
-                        <option value="">Seleccione</option>
-                        <option value="RC">Registro Civil</option>
-                        <option value="TI">Tarjeta de Identidad</option>
-                        <option value="CC">Cédula de Ciudadanía</option>
-                        <option value="CE">Cédula de Extranjería</option>
-                        <option value="NV">Certificado nacido vivo</option>
-                        <option value="PA">Pasaporte</option>
-                        <option value="PE">Permiso Especial de Permanencia</option>
-                        <option value="MS">Menos sin identificacion</option>
-                        <option value="AS">Adulto sin identificacion</option>
-                        <option value="PT">Permiso por proteccion temporal</option>
-                    </select>
-                </div>
-                <div class="col-6 col-md-3 mb-3">
-                    <label for="numdoc" class="form-label">Número de Documento</label>
-                    <input type="text" id="numdoc" v-model="numdoc" class="form-control" required />
-                </div>
-                <div class="col-6 col-md-2">
-                    <button class="btn btn-primary mt-4" :disabled="cargandoPacientes" @click="consultarP"><i class="bi bi-search"></i>
-                        Consultar</button>
+                  </table>
                 </div>
 
-            </div>
-            <!-- Spinner de consulta -->
-            <div class="mt-2">
-                <div v-if="cargandoPacientes" class="d-flex align-items-center">
-                    <div class="spinner-border text-primary me-2" role="status">
-                        <span class="visually-hidden">Consultando...</span>
+                <!-- Resumen de todos los contratos que se guardarán -->
+                <div v-if="contratosTemporalesAgrupados.length > 0" class="mt-4 p-3 bg-light border rounded">
+                  <h6 class="mb-3">
+                    <strong>📋 Resumen de contratos a guardar:</strong>
+                  </h6>
+                  <div v-for="grupo in contratosTemporalesAgrupados" :key="grupo.epsId"
+                    class="mb-3 p-2 bg-white border rounded">
+                    <div class="mb-2">
+                      <strong class="text-primary">{{ obtenerNombreEps(grupo.epsId, grupo.epsNombre) }}</strong>
+                      <span class="badge bg-info ms-2">{{ grupo.cups.length }} CUPS</span>
                     </div>
-                    <div>Consultando...</div>
+                    <ul class="mb-0 ps-3">
+                      <li v-for="cup in grupo.cups" :key="cup.cupsId" class="small">[{{
+                        obtenerProfesionalCups(cup.cupsId, cup.cupsProfesional) }}]-[{{
+                          obtenerGrupoCups(cup.cupsId, cup.cupsGrupo) || "-" }}] {{
+                          obtenerNombreCups(cup.cupsId, cup.cupsNombre) }} | Actividad: {{
+                          obtenerNombreActividadPorId(cup.actividadId, cup.actividadNombre) || sinEspecificar }}</li>
+                    </ul>
+                  </div>
                 </div>
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal"
+                  @click="clearFormContratos">
+                  Cerrar
+                </button>
+                <button type="button" class="btn btn-primary btn-sm" @click="saveContrato">
+                  Guardar
+                </button>
+              </div>
             </div>
-            <div class="container-fluid">
-                <div v-if="!cargandoPacientes && searchPerformed && (!datosPaciente || datosPaciente.length === 0)" class="alert alert-warning">No hay registros para esa consulta.</div>
-                <div v-if="datosPaciente && datosPaciente.length > 0" style="overflow-x: auto; width: 100%;">
-                    <table class="table table-bordered table-sm" style="min-width: 900px;">
-                        <thead>
-                            <tr>
-                                <th>Campo</th>
-                                <th v-for="paciente in datosPaciente" :key="paciente.id" class="text-center">
-                                    <div>{{ paciente.nombre1 }} {{ paciente.apellido1 }} {{ paciente.apellido2 }}</div>
-                                    <div><small>{{ paciente.tipodoc }}-{{ paciente.numdoc }}</small></div>
-                                    <div class="btn-group mt-2" role="group">
-                                        <!-- <button class="btn btn-warning btn-sm" type="button" @click.stop="editarP(paciente.id)"><i class="bi bi-pencil-square"></i></button> -->
-                                        <button class="btn btn-danger btn-sm" type="button" @click.stop="eliminarPaciente(paciente.id)"><i class="bi bi-trash"></i></button>
-                                    </div>
-                                </th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <th>EPS</th>
-                                <td v-for="paciente in datosPaciente" :key="'eps-' + paciente.id"><div class="cell-content">{{ paciente.eps }}</div></td>
-                            </tr>
-                            <tr>
-                                <th>Fecha Nac.</th>
-                                <td v-for="paciente in datosPaciente" :key="'fnac-' + paciente.id"><div class="cell-content">{{ paciente.fechaNac }}</div></td>
-                            </tr>
-                            <tr>
-                                <th>Sexo</th>
-                                <td v-for="paciente in datosPaciente" :key="'sexo-' + paciente.id"><div class="cell-content">{{ paciente.sexo }}</div></td>
-                            </tr>
-                            <tr>
-                                <th>Dirección</th>
-                                <td v-for="paciente in datosPaciente" :key="'dir-' + paciente.id"><div class="cell-content">{{ paciente.direccion }}</div></td>
-                            </tr>
-                            <tr>
-                                <th>Comuna</th>
-                                <td v-for="paciente in datosPaciente" :key="'comuna-' + paciente.id"><div class="cell-content">{{ paciente.barrioVeredacomuna?.comuna }}</div></td>
-                            </tr>
-                            <tr>
-                                <th>Barrio</th>
-                                <td v-for="paciente in datosPaciente" :key="'barrio-' + paciente.id"><div class="cell-content">{{ paciente.barrioVeredacomuna?.barrio }}</div></td>
-                            </tr>
-                            <tr v-for="item in activityKeys" :key="'act-' + item.key">
-                                <th>{{ item.actividad.nombre }}</th>
-                                <td v-for="paciente in datosPaciente" :key="'actcell-' + paciente.id + '-' + item.key">
-                                    <div class="cell-content">
-                                        <div v-if="paciente.tipoActividad && paciente.tipoActividad[item.key]">
-                                            <div>
-                                                <strong>Profesionales:</strong>
-                                                <span v-for="(prof, pidx) in paciente.tipoActividad[item.key].Profesional || []" :key="prof">
-                                                    {{ prof }}<span v-if="pidx < (paciente.tipoActividad[item.key].Profesional || []).length - 1">, </span>
-                                                </span>
-                                            </div>
-                                            <div v-if="paciente.tipoActividad[item.key].cups">
-                                                <div v-for="(cupsObj, profKey) in paciente.tipoActividad[item.key].cups" :key="profKey">
-                                                    <strong>{{ profKey }}:</strong>
-                                                    <ul class="mb-0">
-                                                        <li v-for="cup in Object.values(cupsObj.cups || {})" :key="cup.id">
-                                                            <span><strong>{{ cup.DescripcionCUP }}</strong></span><br>
-                                                            EPS: <span v-for="(eps, eidx) in cup.Eps || []" :key="eps">{{ eps }}<span v-if="eidx < (cup.Eps || []).length - 1">, </span></span><br>
-                                                            Grupo: {{ cup.Grupo }}<br>
-                                                            Homolog: {{ cup.Homolog }}<br>
-                                                            Cantidad: {{ cup.cantidad }}<br>
-                                                            Detalle: {{ cup.detalle }}
-                                                        </li>
-                                                    </ul>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
+          </div>
         </div>
+
+        <!-- Listado de contratos guardados -->
+        <div class="mt-4">
+          <h6>Contratos Guardados</h6>
+          <div v-if="!contratos || contratos.length === 0" class="alert alert-warning">
+            No hay contratos guardados.
+          </div>
+          <div v-else>
+            <div v-for="grupo in contratosAgrupadosPorEps" :key="grupo.epsId" class="card mb-3">
+              <div class="card-header d-flex justify-content-between align-items-center">
+                <div>
+                  <strong>EPS:</strong> {{ obtenerNombreEps(grupo.epsId, grupo.epsNombre) }}
+                  <span class="badge bg-primary ms-2">{{ grupo.cups.length }} CUPS</span>
+                  <span class="badge bg-secondary ms-1">{{ grupo.contratoIds.length }} registro(s)</span>
+                </div>
+                <button class="btn btn-danger btn-sm" @click="eliminarContratosPorEps(grupo.contratoIds)">
+                  <i class="bi bi-trash"></i> Eliminar Todos
+                </button>
+              </div>
+              <div class="card-body">
+                <!-- Agrupar por Profesional -->
+                <div v-for="(profesionalGrupo, profesional) in agruparPorProfesional(grupo.cups)" :key="profesional"
+                  class="mb-2">
+                  <div class="bg-light p-1 rounded small fw-bold">
+                    <i class="bi bi-person-badge"></i> {{ profesional }}
+                    <span class="badge bg-info ms-2">{{ profesionalGrupo.length }} CUPS</span>
+                  </div>
+                  <table class="table table-sm table-bordered mb-0 small">
+                    <thead>
+                      <tr>
+                        <th>Actividad Extramural</th>
+                        <th>CUPS</th>
+                        <th>Grupo</th>
+                        <th style="width: 80px;">Eliminar</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr v-for="(cup, idx) in profesionalGrupo" :key="idx">
+                        <td>{{ obtenerNombreActividadPorId(cup.actividadId, cup.actividadNombre) || sinEspecificar }}
+                        </td>
+                        <td>{{ obtenerNombreCups(cup.cupsId, cup.cupsNombre) }}</td>
+                        <td>{{ obtenerGrupoCups(cup.cupsId, cup.cupsGrupo) || '-' }}</td>
+                        <td class="text-center">
+                          <button class="btn btn-danger btn-sm"
+                            @click="eliminarCupsDeContrato(cup.contratoId, cup.cupsId)" title="Eliminar este CUPS">
+                            <i class="bi bi-trash"></i>
+                          </button>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
-</div>
+  </div>
 </template>
 
 <script>
-import {
-    mapState,
-    mapActions
-} from "vuex";
+import { mapState, mapActions } from "vuex";
 export default {
-    data() {
-        return {
-            comuna: "",
-            barrio: "",
-            epsname: "",
-            cargandoPacientes: false,
-            searchPerformed: false,
-            tipodoc: "",
-            numdoc: "",
+  data() {
+    return {
+      // ===== COMUNAS Y BARRIOS =====
+      comuna: "",
+      barrio: "",
+      comunaBarrioEditId: null,
 
-        };
+      // ===== EPS =====
+      epsnameDemanndaInducida: "",
+      epsname: "",
+      epsEditId: null,
+
+      // ===== CUPS =====
+      cupNombre: "",
+      cupCodigo: "",
+      cupProfesional: "",
+      cupsEditId: null,
+      cupsGrupo: "",
+      cupsRoles: [],
+      cupsEps: [],
+
+      // ===== CONTRATOS =====
+      Seps: "",
+      Scargo: "",
+      Scups: "",
+      Sactividad: "", // Nueva variable para actividad seleccionada
+      contratosTemp: [], // Array temporal para CUPS antes de guardar
+
+      // ===== PACIENTES =====
+      cargandoPacientes: false,
+      searchPerformed: false,
+      tipodoc: "",
+      numdoc: "",
+      sinEspecificar: "Sin especificar",
+    };
+  },
+  computed: {
+    ...mapState(["comunasBarrios", "epss", "cups", "datosPaciente", "contratos", "actividadesExtra"]),
+    activityKeys() {
+      if (!this.datosPaciente || !this.datosPaciente.length) return [];
+      const first = this.datosPaciente[0];
+      if (!first.tipoActividad || typeof first.tipoActividad !== "object")
+        return [];
+      return Object.entries(first.tipoActividad).map(([key, actividad]) => ({
+        key,
+        actividad,
+      }));
     },
-    computed: {
-        ...mapState(["comunasBarrios", "epss", "cups", "datosPaciente"]),
-        activityKeys() {
-            if (!this.datosPaciente || !this.datosPaciente.length) return [];
-            const first = this.datosPaciente[0];
-            if (!first.tipoActividad || typeof first.tipoActividad !== 'object') return [];
-            return Object.entries(first.tipoActividad).map(([key, actividad]) => ({ key, actividad }));
+    // Filtrar contratos por EPS seleccionada
+    contratosFiltrados() {
+      if (!this.Seps) {
+        return [];
+      }
+      // Mostrar solo los CUPS temporales que se están agregando
+      return this.contratosTemp.filter(contrato => contrato.epsId === this.Seps);
+    },
+
+    // Agrupar contratos temporales por EPS para visualización previa antes de guardar
+    contratosTemporalesAgrupados() {
+      if (!this.contratosTemp || this.contratosTemp.length === 0) {
+        return [];
+      }
+
+      const agrupados = {};
+
+      this.contratosTemp.forEach(contrato => {
+        if (!agrupados[contrato.epsId]) {
+          agrupados[contrato.epsId] = {
+            epsId: contrato.epsId,
+            epsNombre: this.obtenerNombreEps(contrato.epsId, contrato.epsNombre),
+            cups: []
+          };
         }
+        agrupados[contrato.epsId].cups.push(contrato);
+      });
+
+      return Object.values(agrupados);
     },
-    methods: {
-        ...mapActions([
-            "getAllComunaBarrios",
-            "crearComunaBarrio",
-            "deleteComunaBarrio",
-            "crearEps",
-            "getAllEps",
-            "deleteEps",
-            "getAllCups",
-            "getAllByPacientesID",
-            "deletePaciente"
-        ]),
 
-        async consultarP() {
-            if (this.tipodoc === "" || this.numdoc === "") {
-                alert("Por favor, complete todos los campos.");
-                return;
-            }
-            this.cargandoPacientes = true;
-            this.searchPerformed = true;
-            try {
-                await this.getAllByPacientesID({
-                    tipodoc: this.tipodoc,
-                    numdoc: this.numdoc
-                });
-            } catch (error) {
-                console.error('[consultarP] Error:', error);
-                alert('Error al consultar pacientes: ' + (error?.message || error));
-            } finally {
-                this.cargandoPacientes = false;
-            }
-        },
+    // Agrupar contratos por EPS para la visualización
+    contratosAgrupadosPorEps() {
+      if (!this.contratos || this.contratos.length === 0) {
+        return [];
+      }
 
-        async editarP(pacienteId) {
-            // Navega a la pantalla de registro/editado de usuarios/ pacientes si existe
-            // Actualmente la vista 'registrousuarios' existe; pasamos query param para que la puedas usar
-            try {
-                if (!pacienteId) return;
-                this.$router.push({ name: 'registrousuarios', query: { editPacienteId: pacienteId } });
-            } catch (error) {
-                console.error('[editarP] Error al navegar:', error);
-            }
-        },
+      const agrupados = {};
 
-        async eliminarPaciente(pacienteId) {
-            if (!pacienteId) return;
-            const confirmed = confirm('¿Confirma que desea eliminar este paciente? Esta acción no se puede deshacer.');
-            if (!confirmed) return;
-            try {
-                await this.deletePaciente(pacienteId);
-                alert('Paciente eliminado correctamente.');
-                // Volver a realizar la búsqueda actual (si existe tipodoc/numdoc)
-                if (this.tipodoc && this.numdoc) {
-                    // re-ejecutar la búsqueda para refrescar datos
-                    await this.consultarP();
-                } else {
-                    // si no hay búsqueda actual, limpiar el estado local
-                    this.$store.commit('setDatosPaciente', []);
-                }
-            } catch (error) {
-                console.error('[eliminarPaciente] Error:', error);
-                alert('Error al eliminar paciente: ' + (error?.message || error));
-            }
-        },
+      this.contratos.forEach(contrato => {
+        const epsId = contrato.epsId;
 
-        saveComunaBarrio() {
-            if (this.comuna === "" || this.barrio === "") {
-                alert("Por favor, complete todos los campos.");
-                return;
-            }
-            let data = {
-                comuna: this.comuna,
-                barrio: this.barrio,
-                bd: "comunasybarrios",
-            };
-            this.crearComunaBarrio(data).then(() => {
-                alert("Comuna y barrio creados exitosamente.");
-                this.getAllComunaBarrios();
-                this.clearform();
+        if (!agrupados[epsId]) {
+          agrupados[epsId] = {
+            epsId: contrato.epsId,
+            epsNombre: this.obtenerNombreEps(contrato.epsId, contrato.epsNombre),
+            cups: [],
+            contratoIds: [],
+            fechas: []
+          };
+        }
+
+        // Agregar los CUPS de este contrato
+        if (contrato.cups && Array.isArray(contrato.cups)) {
+          contrato.cups.forEach(cup => {
+            // Agregar cada CUPS con la referencia del contrato
+            agrupados[epsId].cups.push({
+              ...cup,
+              contratoId: contrato.id // Mantener referencia del contrato original
             });
-        },
+          });
+        }
 
-        saveEps() {
-            if (this.epsname === "") {
-                alert("Por favor, complete todos los campos.");
-                return;
+        // Guardar el ID del contrato para poder eliminarlo
+        agrupados[epsId].contratoIds.push(contrato.id);
+        agrupados[epsId].fechas.push(contrato.fechaCreacion);
+      });
+
+      return Object.values(agrupados);
+    },
+    // Filtrar CUPS disponibles (no agregados a la EPS seleccionada)
+    cupsDisponibles() {
+      if (!this.Seps || !this.cups) {
+        return this.cups || [];
+      }
+
+      // Obtener los IDs de CUPS ya agregados en temporales SOLO PARA ESTA EPS
+      const cupsTemporales = this.contratosTemp
+        .filter(c => c.epsId === this.Seps)  // Filtrar solo para esta EPS
+        .map(c => c.cupsId);
+
+      // Obtener los IDs de CUPS ya en contratos guardados de esta EPS
+      const contratosDeLaEps = this.contratos.filter(c => c.epsId === this.Seps);
+      const cupsEnBD = contratosDeLaEps.flatMap(c => (c.cups || []).map(cup => cup.cupsId));
+
+      // Combinar ambos sets de IDs (solo CUPS no disponibles para esta EPS)
+      const cupsAgregados = new Set([...cupsTemporales, ...cupsEnBD]);
+
+      // Retornar solo los CUPS que no están agregados para esta EPS
+      return this.cups.filter(cup => !cupsAgregados.has(cup.id));
+    },
+  },
+  methods: {
+    ...mapActions([
+      "getAllComunaBarrios",
+      "crearComunaBarrio",
+      "actualizarComunaBarrio",
+      "deleteComunaBarrio",
+      "crearEps",
+      "actualizarEps",
+      "getAllEps",
+      "deleteEps",
+      "getAllCups",
+      "getAllByPacientesID",
+      "deletePaciente",
+      "crearCups",
+      "editarCups",
+      "eliminarCups",
+      "crearContrato",
+      "getAllContratos",
+      "eliminarContrato",
+      "actualizarContrato",
+      "getAllActividadesExtra",
+    ]),
+
+    // ===== COMUNAS Y BARRIOS =====
+    async saveComunaBarrio() {
+      if (this.comuna === "" || this.barrio === "") {
+        alert("Por favor, complete todos los campos.");
+        return;
+      }
+      try {
+        if (this.comunaBarrioEditId) {
+          // Edición
+          const data = {
+            id: this.comunaBarrioEditId,
+            comuna: this.comuna,
+            barrio: this.barrio
+          };
+          await this.actualizarComunaBarrio(data);
+          alert("Comuna y barrio actualizados exitosamente.");
+        } else {
+          // Creación
+          let data = {
+            comuna: this.comuna,
+            barrio: this.barrio,
+            bd: "comunasybarrios",
+          };
+          await this.crearComunaBarrio(data);
+          alert("Comuna y barrio creados exitosamente.");
+        }
+        await this.getAllComunaBarrios();
+        this.clearFormComunaBarrio();
+      } catch (error) {
+        console.error("Error al guardar comuna/barrio:", error);
+        alert("Error al guardar: " + (error?.message || error));
+      }
+    },
+
+    editBarrio(id) {
+      const comunaBarrio = this.comunasBarrios.find(cb => cb.id === id);
+      if (comunaBarrio) {
+        this.comunaBarrioEditId = id;
+        this.comuna = comunaBarrio.comuna;
+        this.barrio = comunaBarrio.barrio;
+      }
+    },
+
+    async deleteBarrio(index) {
+      await this.deleteComunaBarrio(index);
+      alert("Comuna y barrio eliminados exitosamente.");
+      this.getAllComunaBarrios();
+    },
+
+    clearFormComunaBarrio() {
+      this.comuna = "";
+      this.barrio = "";
+      this.comunaBarrioEditId = null;
+    },
+
+    // ===== EPS =====
+    async saveEps() {
+      if (this.epsname === "") {
+        alert("Por favor, complete todos los campos.");
+        return;
+      }
+      try {
+        if (this.epsEditId) {
+          // Edición
+          const data = {
+            id: this.epsEditId,
+            eps: this.epsname
+          };
+          await this.actualizarEps(data);
+          alert("EPS actualizada exitosamente.");
+        } else {
+          // Creación
+          let data = {
+            eps: this.epsname,
+            bd: "eps",
+          };
+          await this.crearEps(data);
+          alert("EPS creada exitosamente.");
+        }
+        await this.getAllEps();
+        this.clearFormEps();
+      } catch (error) {
+        console.error("Error al guardar EPS:", error);
+        alert("Error al guardar: " + (error?.message || error));
+      }
+    },
+
+    editEps(id) {
+      const eps = this.epss.find(e => e.id === id);
+      if (eps) {
+        this.epsEditId = id;
+        this.epsname = eps.eps;
+      }
+    },
+
+    async EpsDelete(epsId) {
+      // Verificar si existen contratos con esta EPS
+      const tieneContratos = this.contratos.some(contrato => contrato.epsId === epsId);
+
+      if (tieneContratos) {
+        alert("No se puede eliminar esta EPS porque tiene contratos asociados. Primero elimine los contratos de esta EPS.");
+        return;
+      }
+
+      if (!confirm("¿Está seguro que desea eliminar esta EPS?")) {
+        return;
+      }
+
+      await this.deleteEps(epsId);
+      alert("EPS eliminado exitosamente.");
+      this.getAllEps();
+    },
+
+    clearFormEps() {
+      this.epsname = "";
+      this.epsEditId = null;
+    },
+
+    // ===== CUPS =====
+    async saveCups() {
+      // Validar que los campos obligatorios tengan valores válidos
+      if (!this.cupNombre || !this.cupNombre.trim()) {
+        alert("El Nombre del CUPS es obligatorio.");
+        return;
+      }
+      if (!this.cupCodigo || !this.cupCodigo.trim()) {
+        alert("El Código CUPS es obligatorio.");
+        return;
+      }
+      if (!this.cupProfesional || !this.cupProfesional.trim()) {
+        alert("El Profesional es obligatorio.");
+        return;
+      }
+      if (!this.cupsGrupo || !this.cupsGrupo.trim()) {
+        alert("El Grupo es obligatorio.");
+        return;
+      }
+
+      try {
+        // Si es edición o creación
+        if (this.cupsEditId) {
+          // Implementar edición
+          const data = {
+            bd: "cups",
+            id: this.cupsEditId,
+            nombre: this.cupNombre.trim(),
+            codigo: this.cupCodigo.trim(),
+            profesional: this.cupProfesional.trim(),
+            grupo: this.cupsGrupo,
+            roles: this.cupsRoles,
+            eps: this.cupsEps,
+          };
+          console.log("Data para editar:", data);
+
+          await this.editarCups(data);
+          console.log("CUPS editado exitosamente");
+
+          // Pequeño delay
+          await new Promise(resolve => setTimeout(resolve, 300));
+
+          // Recargar lista desde Firebase
+          await this.getAllCups();
+          console.log("Lista de CUPS actualizada después de editar:", this.cups);
+
+          alert("CUP editado exitosamente.");
+          this.clearFormCups();
+
+          // Cerrar modal de forma robusta
+          this.closeModal("staticBackdrop");
+        } else {
+          // Implementar creación
+          const data = {
+            nombre: this.cupNombre.trim(),
+            codigo: this.cupCodigo.trim(),
+            profesional: this.cupProfesional.trim(),
+            grupo: this.cupsGrupo.trim(),
+            bd: "cups",
+          };
+          console.log("Data para crear:", data);
+
+          await this.crearCups(data);
+          console.log("CUPS creado exitosamente");
+
+          // Pequeño delay
+          await new Promise(resolve => setTimeout(resolve, 300));
+
+          // Recargar lista desde Firebase
+          await this.getAllCups();
+          console.log("Lista de CUPS actualizada después de crear:", this.cups);
+
+          alert("CUP guardado exitosamente.");
+          this.clearFormCups();
+
+          this.closeModal("staticBackdrop");
+        }
+      } catch (error) {
+        console.error("Error al guardar CUPS:", error);
+        alert("Error al guardar el CUPS: " + (error?.message || error));
+      }
+    },
+
+    closeModal(modalId) {
+      const modal = document.getElementById(modalId);
+      if (modal) {
+        // Intentar obtener la instancia existente
+        const bsModal = window.bootstrap.Modal.getInstance(modal);
+        if (bsModal) {
+          bsModal.hide();
+        } else {
+          // Si no existe instancia, crear una nueva y cerrar
+          const newBsModal = new window.bootstrap.Modal(modal);
+          newBsModal.hide();
+        }
+
+        // Remover el backdrop manualmente por si acaso
+        setTimeout(() => {
+          const backdrop = document.querySelector('.modal-backdrop');
+          if (backdrop) {
+            backdrop.remove();
+          }
+          document.body.classList.remove('modal-open');
+        }, 300);
+      }
+    },
+
+    editCups(cupsId) {
+      // Buscar el CUPS en la lista y cargar en el formulario
+      const cups = this.cups.find((c) => c.id === cupsId);
+      if (cups) {
+        this.cupsEditId = cupsId;
+        this.cupNombre = cups.DescripcionCUP || "";
+        this.cupCodigo = cups.codigo || "";
+        this.cupProfesional = cups.profesional || "";
+        this.cupsGrupo = cups.Grupo || "";
+        this.cupsRoles = Array.isArray(cups.Roles) ? cups.Roles : [];
+        this.cupsEps = Array.isArray(cups.Eps) ? cups.Eps : [];
+
+        // Abrir modal de forma robusta
+        this.$nextTick(() => {
+          const modal = document.getElementById("staticBackdrop");
+          if (modal) {
+            // Obtener instancia existente o crear una nueva
+            let bsModal = window.bootstrap.Modal.getInstance(modal);
+            if (!bsModal) {
+              bsModal = new window.bootstrap.Modal(modal);
             }
-            let data = {
-                eps: this.epsname,
-                bd: "eps",
-            };
-            this.crearEps(data).then(() => {
-                alert("EPS creado exitosamente.");
-                this.getAllEps();
-                this.clearformeps();
-            });
-        },
-        clearform() {
-            this.comuna = "";
-            this.barrio = "";
-        },
-        clearformeps() {
-            this.epsname = "";
-        },
+            bsModal.show();
+          }
+        });
+      }
+    },
 
-        async deleteBarrio(index) {
-            await this.deleteComunaBarrio(index);
-            alert("Comuna y barrio eliminados exitosamente.");
-            this.getAllComunaBarrios();
-        },
-        async EpsDelete(index) {
-            await this.deleteEps(index);
-            alert("EPS eliminado exitosamente.");
-            this.getAllEps();
-        },
+    async deleteCups(cupsId) {
+      if (!confirm("¿Desea eliminar este CUPS?")) return;
+
+      try {
+        console.log("Iniciando eliminación del CUPS:", cupsId);
+
+        // Primero eliminar de Firebase
+        await this.eliminarCups(cupsId);
+        console.log("CUPS eliminado de Firebase:", cupsId);
+
+        // Pequeño delay para asegurar que Firebase procese
+        await new Promise(resolve => setTimeout(resolve, 500));
+
+        // Luego recargar la lista desde Firebase
+        await this.getAllCups();
+        console.log("Lista de CUPS actualizada después de eliminar");
+        console.log("CUPS en store después de cargar:", this.cups);
+
+        alert("CUPS eliminado exitosamente.");
+      } catch (error) {
+        console.error("Error al eliminar CUPS:", error);
+        alert("Error al eliminar el CUPS: " + (error?.message || error));
+      }
     },
-    mounted() {
-        this.getAllComunaBarrios();
-        this.getAllEps();
-        this.getAllCups();
-        /* traer  grupos, profesionales ,epsApp */
-        /* crear epsApp autorizadas en las caracterizacion */
+
+    clearFormCups() {
+      this.cupNombre = "";
+      this.cupCodigo = "";
+      this.cupProfesional = "";
+      this.cupsEditId = null;
+      this.cupsGrupo = "";
+      this.cupsRoles = [];
+      this.cupsEps = [];
     },
+
+    clearFormContratos() {
+      this.Seps = "";
+      this.Scups = "";
+      this.Sactividad = "";
+      this.contratosTemp = [];
+    },
+
+    // ===== CONTRATOS =====
+    addCupsContrato() {
+      if (!this.Seps || !this.Scups) {
+        alert("Por favor, seleccione EPS y CUPS.");
+        return;
+      }
+
+      // Buscar los datos completos de EPS y CUPS
+      const epsSeleccionada = this.epss.find(eps => eps.id === this.Seps);
+      const cupSeleccionado = this.cups.find(cup => cup.id === this.Scups);
+
+      if (!epsSeleccionada || !cupSeleccionado) {
+        alert("Error: No se encontraron los datos seleccionados.");
+        return;
+      }
+
+      // Verificar si ya existe en temporales PARA ESTA EPS específicamente
+      const existeEnTemp = this.contratosTemp.some(
+        contrato => contrato.epsId === this.Seps && contrato.cupsId === this.Scups
+      );
+
+      if (existeEnTemp) {
+        alert("Este CUPS ya fue agregado a este contrato de esta EPS.");
+        return;
+      }
+
+      // Verificar si ya existe en contratos guardados para esta EPS
+      const contratoExistente = this.contratos.find(
+        c => c.epsId === this.Seps
+      );
+      const existeEnBD = contratoExistente && contratoExistente.cups?.some(
+        cup => cup.cupsId === this.Scups
+      );
+
+      if (existeEnBD) {
+        alert("Este CUPS ya existe en un contrato guardado de esta EPS.");
+        return;
+      }
+
+      // Agregar al array temporal
+      this.contratosTemp.push({
+        epsId: this.Seps,
+        cupsId: this.Scups,
+        actividadId: this.Sactividad || null
+      });
+
+      console.log("CUPS agregado a temporal. Temporales actuales:", this.contratosTemp);
+
+      // Limpiar select de CUPS y actividad
+      this.Scups = "";
+      this.Sactividad = "";
+
+      alert("CUPS agregado correctamente al contrato.");
+    },
+
+    removeContrato(contrato) {
+      if (confirm("¿Desea eliminar este CUPS del contrato temporal?")) {
+        // Buscar en temporales para esta EPS específicamente
+        const indexTemp = this.contratosTemp.findIndex(
+          c => c.epsId === contrato.epsId && c.cupsId === contrato.cupsId
+        );
+
+        if (indexTemp !== -1) {
+          // Eliminar de temporales
+          this.contratosTemp.splice(indexTemp, 1);
+          console.log("CUPS eliminado de temporal. Temporales restantes:", this.contratosTemp);
+          alert("CUPS eliminado del contrato temporal.");
+        } else {
+          alert("Error: No se encontró el CUPS en la lista temporal.");
+        }
+      }
+    },
+
+    async saveContrato() {
+      if (this.contratosTemp.length === 0) {
+        alert("Por favor, agregue al menos un CUPS a un contrato.");
+        return;
+      }
+
+      try {
+        console.log("Iniciando guardado de contratos. contratosTemp:", this.contratosTemp);
+
+        // Agrupar contratosTemp por epsId
+        const contratosPorEps = {};
+
+        this.contratosTemp.forEach(contrato => {
+          if (!contratosPorEps[contrato.epsId]) {
+            contratosPorEps[contrato.epsId] = {
+              epsId: contrato.epsId,
+              cups: []
+            };
+          }
+          // Agregar el CUPS a la lista de esta EPS
+          contratosPorEps[contrato.epsId].cups.push({
+            epsId: contrato.epsId,
+            cupsId: contrato.cupsId,
+            actividadId: contrato.actividadId
+          });
+        });
+
+        console.log("Contratos agrupados por EPS:", contratosPorEps);
+
+        // Guardar un contrato para cada EPS
+        const epsArray = Object.keys(contratosPorEps);
+        for (const epsId of epsArray) {
+          const contratoData = contratosPorEps[epsId];
+          console.log(`Guardando contrato para EPS ${epsId}:`, contratoData);
+
+          await this.crearContrato(contratoData);
+        }
+
+        alert(`Se guardaron ${epsArray.length} contrato(s) exitosamente.`);
+
+        // Recargar contratos
+        await this.getAllContratos();
+
+        // Limpiar formulario
+        this.clearFormContratos();
+
+        // Cerrar modal de forma robusta
+        this.closeModal("crearcontratos");
+      } catch (error) {
+        console.error("Error al guardar contrato:", error);
+        alert("Error al guardar el contrato: " + (error?.message || error));
+      }
+    },
+
+    async eliminarCupsDeContrato(contratoId, cupsId) {
+      if (!confirm("¿Desea eliminar este CUPS del contrato?")) return;
+
+      try {
+        // Buscar el contrato actual
+        const contratoActual = this.contratos.find(c => c.id === contratoId);
+
+        if (!contratoActual) {
+          alert("Error: No se encontró el contrato.");
+          return;
+        }
+
+        // Filtrar el CUPS a eliminar
+        const cupsActualizados = contratoActual.cups.filter(cup => cup.cupsId !== cupsId);
+
+        // Si no quedan CUPS, eliminar todo el contrato
+        if (cupsActualizados.length === 0) {
+          await this.eliminarContrato(contratoId);
+          alert("CUPS eliminado. El contrato se eliminó porque no quedaban más CUPS.");
+        } else {
+          // Actualizar el contrato con los CUPS restantes
+          const contratoData = {
+            epsId: contratoActual.epsId,
+            cups: cupsActualizados,
+            fechaCreacion: contratoActual.fechaCreacion
+          };
+
+          await this.actualizarContrato({ contratoId, contratoData });
+          alert("CUPS eliminado exitosamente.");
+        }
+
+        // Recargar contratos
+        await this.getAllContratos();
+      } catch (error) {
+        console.error("Error al eliminar CUPS:", error);
+        alert("Error al eliminar el CUPS: " + (error?.message || error));
+      }
+    },
+
+    // Agrupar CUPS por profesional
+    agruparPorProfesional(cups) {
+      if (!cups || !Array.isArray(cups)) return {};
+
+      const grouped = {};
+      cups.forEach(cup => {
+        const profesional = this.obtenerProfesionalCups(cup.cupsId, cup.cupsProfesional) || 'Sin especificar';
+        if (!grouped[profesional]) {
+          grouped[profesional] = [];
+        }
+        grouped[profesional].push(cup);
+      });
+
+      return grouped;
+    },
+    obtenerNombreEps(epsId, fallback = "") {
+      const eps = this.epss?.find((item) => String(item.id) === String(epsId));
+      return eps?.eps || fallback || "";
+    },
+    obtenerNombreActividadPorId(actividadId, fallback = "") {
+      const actividad = this.actividadesExtra?.find(
+        (item) => String(item.id) === String(actividadId)
+      );
+      return actividad?.nombre || fallback || "";
+    },
+    obtenerCupPorId(cupsId) {
+      return this.cups?.find((cup) => String(cup.id) === String(cupsId)) || null;
+    },
+    obtenerNombreCups(cupsId, fallback = "") {
+      const cup = this.obtenerCupPorId(cupsId);
+      return cup?.DescripcionCUP || fallback || "";
+    },
+    obtenerProfesionalCups(cupsId, fallback = "") {
+      const cup = this.obtenerCupPorId(cupsId);
+      return cup?.profesional || fallback || "";
+    },
+    obtenerGrupoCups(cupsId, fallback = "") {
+      const cup = this.obtenerCupPorId(cupsId);
+      return cup?.Grupo || fallback || "";
+    },
+
+    async eliminarContratosPorEps(contratoIds) {
+      if (!contratoIds || contratoIds.length === 0) return;
+
+      const mensaje = contratoIds.length === 1
+        ? "¿Desea eliminar este contrato con todos sus CUPS?"
+        : `¿Desea eliminar los ${contratoIds.length} contratos de esta EPS con todos sus CUPS?`;
+
+      if (!confirm(mensaje)) return;
+
+      try {
+        // Eliminar todos los contratos uno por uno
+        for (const contratoId of contratoIds) {
+          await this.eliminarContrato(contratoId);
+        }
+
+        alert(`${contratoIds.length} contrato(s) eliminado(s) exitosamente.`);
+
+        // Recargar contratos
+        await this.getAllContratos();
+      } catch (error) {
+        console.error("Error al eliminar contratos:", error);
+        alert("Error al eliminar los contratos: " + (error?.message || error));
+      }
+    },
+
+    // ===== PACIENTES =====
+    async consultarP() {
+      if (this.tipodoc === "" || this.numdoc === "") {
+        alert("Por favor, complete todos los campos.");
+        return;
+      }
+      this.cargandoPacientes = true;
+      this.searchPerformed = true;
+      try {
+        await this.getAllByPacientesID({
+          tipodoc: this.tipodoc,
+          numdoc: this.numdoc,
+        });
+      } catch (error) {
+        console.error("[consultarP] Error:", error);
+        alert("Error al consultar pacientes: " + (error?.message || error));
+      } finally {
+        this.cargandoPacientes = false;
+      }
+    },
+
+    async editarP(pacienteId) {
+      try {
+        if (!pacienteId) return;
+        this.$router.push({
+          name: "registrousuarios",
+          query: { editPacienteId: pacienteId },
+        });
+      } catch (error) {
+        console.error("[editarP] Error al navegar:", error);
+      }
+    },
+
+    async eliminarPaciente(pacienteId) {
+      if (!pacienteId) return;
+      const confirmed = confirm(
+        "¿Confirma que desea eliminar este paciente? Esta acción no se puede deshacer."
+      );
+      if (!confirmed) return;
+      try {
+        await this.deletePaciente(pacienteId);
+        alert("Paciente eliminado correctamente.");
+        if (this.tipodoc && this.numdoc) {
+          await this.consultarP();
+        } else {
+          this.$store.commit("setDatosPaciente", []);
+        }
+      } catch (error) {
+        console.error("[eliminarPaciente] Error:", error);
+        alert("Error al eliminar paciente: " + (error?.message || error));
+      }
+    },
+
+    getColorClassByProfesional(profesional) {
+      if (!profesional) return "";
+      const prof = profesional.toLowerCase().trim();
+
+      if (prof.includes("medico") || prof.includes("médico")) {
+        return "bg-medico";
+      } else if (prof.includes("enfermero") || prof.includes("enfermera")) {
+        return "bg-enfermero";
+      } else if (prof.includes("auxiliar")) {
+        return "bg-auxiliar";
+      }
+      return "bg-otro";
+    },
+  },
+  mounted() {
+    this.getAllComunaBarrios();
+    this.getAllEps();
+    this.getAllCups();
+    this.getAllContratos();
+    this.getAllActividadesExtra();
+    /* traer  grupos, profesionales ,epsApp */
+    /* crear epsApp autorizadas en las caracterizacion */
+  },
 };
 </script>
 
-<!-- no custom styles needed for LTR layout; keep global/app CSS -->
+<style scoped>
+/* Colores de agrupación por profesional */
+.bg-medico {
+  background-color: #e3f2fd !important;
+  /* Azul claro */
+}
+
+.bg-enfermero {
+  background-color: #f3e5f5 !important;
+  /* Púrpura claro */
+}
+
+.bg-auxiliar {
+  background-color: #fff3e0 !important;
+  /* Naranja claro */
+}
+
+.bg-otro {
+  background-color: #f5f5f5 !important;
+  /* Gris claro */
+}
+
+/* Hover effects para mejor UX */
+.bg-medico:hover {
+  background-color: #bbdefb !important;
+}
+
+.bg-enfermero:hover {
+  background-color: #e1bee7 !important;
+}
+
+.bg-auxiliar:hover {
+  background-color: #ffe0b2 !important;
+}
+
+.bg-otro:hover {
+  background-color: #eeeeee !important;
+}
+</style>

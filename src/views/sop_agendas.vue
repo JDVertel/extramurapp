@@ -10,7 +10,7 @@
                     <tr>
                         <th scope="col">Fecha</th>
                         <th scope="col">Grupo</th>
-                        <th scope="col">Toma de muestras</th>
+                
                         <th scope="col">Visitas</th>
 
                     </tr>
@@ -19,35 +19,7 @@
                     <tr v-for="(agenda, index) in agendas" :key="index">
                         <td>{{ agenda.fecha }}</td>
                         <td>{{ agenda.grupo }}</td>
-                        <td>
-                            <table class="table table-sm table-warning">
-                                <thead>
-                                    <tr>
-                                        <th scope="col">Hora</th>
-                                        <th scope="col">Paciente</th>
-                                        <th scope="col">(grupo)Auxiliar</th>
-                                        <th scope="col">Barrio</th>
-                                        <th scope="col">Direccion</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <template v-if="agenda.tomademuestras && agenda.tomademuestras.length">
-                                        <tr v-for="(muestra, i) in agenda.tomademuestras" :key="i">
-                                            <td>{{ muestra.horalab || '-' }}</td>
-                                            <td>{{ muestra.paciente || '-' }}</td>
-                                            <td>({{ muestra.grupo || '-' }})-{{ muestra.encuestador || '-' }} <hr>Medico: {{ muestra.medico || '-' }} </td>
-                                            <td>{{ muestra.barrio || '-' }}</td>
-                                            <td>{{ muestra.direccion || '-' }}</td>
-                                        </tr>
-                                    </template>
-                                    <template v-else>
-                                        <tr>
-                                            <td colspan="3" class="text-center text-muted">Sin registros</td>
-                                        </tr>
-                                    </template>
-                                </tbody>
-                            </table>
-                        </td>
+                  
                         <td>
                             <table class="table table-sm table-success">
                                 <thead>
