@@ -434,6 +434,7 @@
       <!-- ========== TAB: CONTRATOS ========== -->
       <div class="tab-pane fade" id="nav-contratos" role="tabpanel" aria-labelledby="nav-contratos-tab" tabindex="0">
         <h5>Gestion CONTRATOS</h5>
+        
         <div class="alert alert-warning" role="alert">
           <div class="row">
             <div class="col-8">Crear un nuevo contrato</div>
@@ -442,9 +443,6 @@
                 +
               </button>
             </div>
-          </div>
-          <div class="mt-2">
-
           </div>
         </div>
 
@@ -497,13 +495,11 @@
                         [{{ cup.profesional }}]-[{{ cup.Grupo }}] {{ cup.DescripcionCUP }}
                       </option>
                     </select>
-                    <small v-if="cupsDisponibles.length === 0" class="text-muted d-block mt-1">
-                      Todos los CUPS han sido agregados a esta EPS
-                    </small>
+
                   </div>
                   <div class="col-1">
                     <button class="btn btn-warning btn-sm mt-4" @click="addCupsContrato"
-                      :disabled="!Seps || !Scups || !Sactividad"> + Agregar</button>
+                      :disabled="!Seps || !Scups"> + Agregar</button>
                   </div>
                 </div>
 
@@ -524,7 +520,6 @@
                         <th>Grupo</th>
                         <th>Actividad Extra</th>
                         <th>CUPS</th>
-
                         <th style="width: 80px;">Eliminar</th>
                       </tr>
                     </thead>
@@ -532,10 +527,8 @@
                       <tr v-for="(contrato, index) in contratosFiltrados" :key="index">
                         <td>{{ obtenerProfesionalCups(contrato.cupsId, contrato.cupsProfesional) }}</td>
                         <td>{{ obtenerGrupoCups(contrato.cupsId, contrato.cupsGrupo) || '-' }}</td>
-                        <td>{{ obtenerNombreActividadPorId(contrato.actividadId, contrato.actividadNombre) ||
-                          sinEspecificar }}</td>
+                        <td>{{ obtenerNombreActividadPorId(contrato.actividadId, contrato.actividadNombre) || sinEspecificar }}</td>
                         <td>{{ obtenerNombreCups(contrato.cupsId, contrato.cupsNombre) }}</td>
-
                         <td>
                           <button class="btn btn-danger btn-sm" @click="removeContrato(contrato)">
                             <i class="bi bi-trash"></i>
@@ -548,21 +541,14 @@
 
                 <!-- Resumen de todos los contratos que se guardarán -->
                 <div v-if="contratosTemporalesAgrupados.length > 0" class="mt-4 p-3 bg-light border rounded">
-                  <h6 class="mb-3">
-                    <strong>📋 Resumen de contratos a guardar:</strong>
-                  </h6>
-                  <div v-for="grupo in contratosTemporalesAgrupados" :key="grupo.epsId"
-                    class="mb-3 p-2 bg-white border rounded">
-                    <div class="mb-2">
-                      <strong class="text-primary">{{ obtenerNombreEps(grupo.epsId, grupo.epsNombre) }}</strong>
-                      <span class="badge bg-info ms-2">{{ grupo.cups.length }} CUPS</span>
-                    </div>
-                    <ul class="mb-0 ps-3">
-                      <li v-for="cup in grupo.cups" :key="cup.cupsId" class="small">[{{
-                        obtenerProfesionalCups(cup.cupsId, cup.cupsProfesional) }}]-[{{
-                          obtenerGrupoCups(cup.cupsId, cup.cupsGrupo) || "-" }}] {{
-                          obtenerNombreCups(cup.cupsId, cup.cupsNombre) }} | Actividad: {{
-                          obtenerNombreActividadPorId(cup.actividadId, cup.actividadNombre) || sinEspecificar }}</li>
+                  <strong>📋 Resumen de contratos a guardar:</strong>
+                  <div v-for="grupo in contratosTemporalesAgrupados" :key="grupo.epsId" class="mt-2">
+                    <strong>{{ grupo.epsNombre }} ({{ grupo.cups.length }} CUPS)</strong>
+                    <ul>
+                      <li v-for="(cup, idx) in grupo.cups" :key="idx" class="small">
+                        {{ obtenerNombreActividadPorId(cup.actividadId, cup.actividadNombre) || sinEspecificar }}: 
+                        {{ obtenerNombreCups(cup.cupsId, cup.cupsNombre) }}
+                      </li>
                     </ul>
                   </div>
                 </div>
@@ -761,26 +747,9 @@ export default {
 
       return Object.values(agrupados);
     },
-    // Filtrar CUPS disponibles (no agregados a la EPS seleccionada)
+    // Filtrar CUPS disponibles
     cupsDisponibles() {
-      if (!this.Seps || !this.cups) {
-        return this.cups || [];
-      }
-
-      // Obtener los IDs de CUPS ya agregados en temporales SOLO PARA ESTA EPS
-      const cupsTemporales = this.contratosTemp
-        .filter(c => c.epsId === this.Seps)  // Filtrar solo para esta EPS
-        .map(c => c.cupsId);
-
-      // Obtener los IDs de CUPS ya en contratos guardados de esta EPS
-      const contratosDeLaEps = this.contratos.filter(c => c.epsId === this.Seps);
-      const cupsEnBD = contratosDeLaEps.flatMap(c => (c.cups || []).map(cup => cup.cupsId));
-
-      // Combinar ambos sets de IDs (solo CUPS no disponibles para esta EPS)
-      const cupsAgregados = new Set([...cupsTemporales, ...cupsEnBD]);
-
-      // Retornar solo los CUPS que no están agregados para esta EPS
-      return this.cups.filter(cup => !cupsAgregados.has(cup.id));
+      return this.cups || [];
     },
   },
   methods: {
@@ -1101,6 +1070,8 @@ export default {
     },
 
     // ===== CONTRATOS =====
+
+
     addCupsContrato() {
       if (!this.Seps || !this.Scups) {
         alert("Por favor, seleccione EPS y CUPS.");
@@ -1110,6 +1081,7 @@ export default {
       // Buscar los datos completos de EPS y CUPS
       const epsSeleccionada = this.epss.find(eps => eps.id === this.Seps);
       const cupSeleccionado = this.cups.find(cup => cup.id === this.Scups);
+      const actividadSeleccionada = this.actividadesExtra?.find(act => act.id === this.Sactividad);
 
       if (!epsSeleccionada || !cupSeleccionado) {
         alert("Error: No se encontraron los datos seleccionados.");
@@ -1118,7 +1090,7 @@ export default {
 
       // Verificar si ya existe en temporales PARA ESTA EPS específicamente
       const existeEnTemp = this.contratosTemp.some(
-        contrato => contrato.epsId === this.Seps && contrato.cupsId === this.Scups
+        contrato => contrato.epsNombre === epsSeleccionada.eps && contrato.cupsNombre === cupSeleccionado.DescripcionCUP
       );
 
       if (existeEnTemp) {
@@ -1126,40 +1098,31 @@ export default {
         return;
       }
 
-      // Verificar si ya existe en contratos guardados para esta EPS
-      const contratoExistente = this.contratos.find(
-        c => c.epsId === this.Seps
-      );
-      const existeEnBD = contratoExistente && contratoExistente.cups?.some(
-        cup => cup.cupsId === this.Scups
-      );
+      // Agregar al array temporal con valores de texto en lugar de IDs
+      const nuevoContrato = {
+        epsId: this.Seps,  // Mantener ID para compatibilidad interna
+        epsNombre: epsSeleccionada.eps,
+        cupsId: this.Scups,  // Mantener ID para compatibilidad interna
+        cupsNombre: cupSeleccionado.DescripcionCUP,
+        actividadId: this.Sactividad || null,
+        actividadNombre: actividadSeleccionada ? actividadSeleccionada.nombre : null,
+        cupsProfesional: cupSeleccionado.profesional,
+        cupsGrupo: cupSeleccionado.Grupo
+      };
 
-      if (existeEnBD) {
-        alert("Este CUPS ya existe en un contrato guardado de esta EPS.");
-        return;
-      }
-
-      // Agregar al array temporal
-      this.contratosTemp.push({
-        epsId: this.Seps,
-        cupsId: this.Scups,
-        actividadId: this.Sactividad || null
-      });
+      this.contratosTemp.push(nuevoContrato);
 
       console.log("CUPS agregado a temporal. Temporales actuales:", this.contratosTemp);
 
-      // Limpiar select de CUPS y actividad
+      // Limpiar campos
       this.Scups = "";
-      this.Sactividad = "";
-
-      alert("CUPS agregado correctamente al contrato.");
     },
 
     removeContrato(contrato) {
-      if (confirm("¿Desea eliminar este CUPS del contrato temporal?")) {
-        // Buscar en temporales para esta EPS específicamente
+      if (confirm("\u00bfDesea eliminar este CUPS del contrato temporal?")) {
+        // Buscar en temporales para esta EPS específicamente usando nombres
         const indexTemp = this.contratosTemp.findIndex(
-          c => c.epsId === contrato.epsId && c.cupsId === contrato.cupsId
+          c => c.epsNombre === contrato.epsNombre && c.cupsNombre === contrato.cupsNombre
         );
 
         if (indexTemp !== -1) {
@@ -1189,14 +1152,20 @@ export default {
           if (!contratosPorEps[contrato.epsId]) {
             contratosPorEps[contrato.epsId] = {
               epsId: contrato.epsId,
+              epsNombre: contrato.epsNombre,
               cups: []
             };
           }
-          // Agregar el CUPS a la lista de esta EPS
+          // Agregar el CUPS a la lista de esta EPS con toda la información requerida
           contratosPorEps[contrato.epsId].cups.push({
-            epsId: contrato.epsId,
-            cupsId: contrato.cupsId,
-            actividadId: contrato.actividadId
+            epsId: contrato.epsId,                  // eps.id (para compatibilidad)
+            epsNombre: contrato.epsNombre,          // eps.eps (valor de pantalla)
+            cupsId: contrato.cupsId,                // cup.id (para compatibilidad)
+            cupsNombre: contrato.cupsNombre,        // cup.DescripcionCUP (valor de pantalla)
+            actividadId: contrato.actividadId,      // actividad.id (para compatibilidad)
+            actividadNombre: contrato.actividadNombre, // actividad.nombre (valor de pantalla)
+            cupsProfesional: contrato.cupsProfesional,  // cup.profesional (valor requerido)
+            cupsGrupo: contrato.cupsGrupo           // cup.Grupo (valor adicional)
           });
         });
 

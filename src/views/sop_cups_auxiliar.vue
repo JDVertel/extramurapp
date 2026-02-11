@@ -77,7 +77,7 @@
       </button>
     </div>
     <!-- El modal queda igual, puedes mejorar clase 'modal-content' por 'shadow-lg' si gustas -->
-    <div class="modal fade" id="staticBackdrop" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+    <div class="modal fade" id="staticBackdrop" tabindex="-1" aria-labelledby="staticBackdropLabel" @shown.bs.modal="onModalShown" @hidden.bs.modal="onModalHidden">
       <div class="modal-dialog">
         <div class="modal-content shadow-lg">
           <div class="modal-header">
@@ -94,10 +94,13 @@
                 <br />
                 <select v-model="CupsSeleccionadoId" class="form-select" id="cupSelect">
                   <option value="">Seleccione un CUPS</option>
-                  <option v-for="cup in cupsDisponibles" :key="cup.id" :value="cup.id">
-                    {{ cup.DescripcionCUP }}
+                  <option v-for="cup in cupsDisponiblesPorContrato" :key="cup.id" :value="cup.id">
+                    [{{ cup.codigo }}] {{ cup.DescripcionCUP }} - {{ cup.profesional }}
                   </option>
                 </select>
+                <small v-if="cupsDisponiblesPorContrato.length === 0" class="text-muted d-block mt-1">
+                  No hay CUPS disponibles para esta actividad, EPS y profesional.
+                </small>
                 <div class="row mt-2">
                   <div class="col-2">
                     Cantidad
@@ -265,57 +268,58 @@ export default {
       return encuestas.find((enc) => String(enc.id) === String(this.idEncuesta)) || null;
     },
 
-    cupsDisponibles() {
-      if (!this.cups || !this.userEncuesta || !this.userData || !this.contratos || !this.epss) {
-        return [];
-      }
-
-      if (!this.idItem) {
+    // CUPS disponibles filtrados por contrato según profesional, EPS y actividad
+    cupsDisponiblesPorContrato() {
+      if (!this.userEncuesta || !this.contratos || !this.userData || !this.idItem) {
         return [];
       }
 
       const epsDelPaciente = this.userEncuesta.eps;
-      const cargoDUsuario = this.userData.cargo;
-      const actividadSeleccionada = this.idItem;
+      const cargoUsuario = this.userData.cargo;
+      const nombreActividadSeleccionada = this.obtenerNombreActividadDelContrato(this.idItem);
 
-      // Buscar la EPS por nombre
-      const epsEncontrada = this.epss.find((eps) => eps.eps === epsDelPaciente);
-      if (!epsEncontrada) {
+      // Encontrar contratos que coincidan con la EPS del paciente
+      const contratosDelPaciente = this.contratos.filter(contrato => {
+        if (!contrato.cups || typeof contrato.cups !== 'object') return false;
+        
+        // Verificar si tiene CUPS para esta EPS (por nombre de EPS)
+        return Object.values(contrato.cups).some(cupContrato => 
+          cupContrato.epsNombre === epsDelPaciente
+        );
+      });
+
+      if (contratosDelPaciente.length === 0) {
         return [];
       }
 
-      // Buscar el contrato por epsId
-      const contratoDelPaciente = this.contratos.find(
-        (contrato) => contrato.epsId === epsEncontrada.id
-      );
-      if (!contratoDelPaciente || !contratoDelPaciente.cups) {
-        return [];
-      }
+      // Obtener IDs de CUPS que están en contrato y cumplen los criterios
+      const idsPermitidos = new Set();
+      
+      contratosDelPaciente.forEach(contrato => {
+        Object.values(contrato.cups).forEach(cupContrato => {
+          // Verificar todos los criterios
+          const coincideEps = cupContrato.epsNombre === epsDelPaciente;
+          const coincideProfesional = cupContrato.cupsProfesional === cargoUsuario;
+          const coincideActividad = cupContrato.actividadNombre === nombreActividadSeleccionada || 
+                                   cupContrato.actividadNombre === null || 
+                                   cupContrato.actividadNombre === '';
 
-      // Obtener IDs de CUPS del contrato filtrados por actividad seleccionada
-      let cupIdsDelContrato = [];
-      if (typeof contratoDelPaciente.cups === 'object') {
-        Object.values(contratoDelPaciente.cups).forEach((cupContrato) => {
-          // Si actividadId es '0', significa que el CUPS está disponible para todas las actividades
-          // Si actividadId coincide con la actividad seleccionada, también incluirlo
-          if (cupContrato && (cupContrato.actividadId === '0' || cupContrato.actividadId === actividadSeleccionada)) {
-            const cupId = cupContrato.cupsId || cupContrato.id;
-            if (cupId) {
-              cupIdsDelContrato.push(cupId);
+          if (coincideEps && coincideProfesional && coincideActividad) {
+            // Buscar el CUPS por nombre en el catálogo general
+            const cupEnCatalogo = this.cups.find(cup => 
+              cup.DescripcionCUP === cupContrato.cupsNombre && 
+              cup.profesional === cupContrato.cupsProfesional
+            );
+            
+            if (cupEnCatalogo) {
+              idsPermitidos.add(cupEnCatalogo.id);
             }
           }
         });
-      }
-
-      // Filtrar CUPS por contrato, actividad y profesional
-      return this.cups.filter((cup) => {
-        if (!cupIdsDelContrato.includes(cup.id)) return false;
-
-        const cupProfesional = (cup.profesional || cup.Profesional || "").toLowerCase().trim();
-        const cargoUsuario = (cargoDUsuario || "").toLowerCase().trim();
-
-        return cupProfesional === cargoUsuario;
       });
+
+      // Filtrar el catálogo de CUPS para mostrar solo los permitidos
+      return this.cups.filter(cup => idsPermitidos.has(cup.id));
     },
   },
   /* ----------------------------------------------------------------------------------------------- */
@@ -330,6 +334,87 @@ export default {
       "cerrarEncuesta",
       "getAsignacionesByEncuesta",
     ]),
+
+    onModalShown() {
+      // Remover aria-hidden cuando el modal se muestra para solucionar problemas de accesibilidad
+      const modal = document.getElementById('staticBackdrop');
+      if (modal) {
+        modal.removeAttribute('aria-hidden');
+      }
+    },
+
+    onModalHidden() {
+      // Restaurar aria-hidden y limpiar focus cuando el modal se oculta
+      const modal = document.getElementById('staticBackdrop');
+      if (modal) {
+        modal.setAttribute('aria-hidden', 'true');
+      }
+      
+      this.$nextTick(() => {
+        if (document.activeElement && document.activeElement.classList.contains('btn-close')) {
+          document.activeElement.blur();
+        }
+      });
+    },
+
+
+
+    // Función de debugging para diagnosticar problemas de datos
+    debugEpsContratos() {
+      console.log('🔍 === DEBUG DE EPS Y CONTRATOS ===');
+      
+      if (this.userEncuesta) {
+        console.log('👤 Datos del paciente:', {
+          eps: this.userEncuesta.eps,
+          nombre: `${this.userEncuesta.nombre1} ${this.userEncuesta.apellido1}`
+        });
+      }
+
+      if (this.userData) {
+        console.log('👨‍⚕️ Usuario actual:', {
+          cargo: this.userData.cargo,
+          nombre: this.userData.nombre
+        });
+      }
+
+      if (this.idItem) {
+        console.log('🎯 Actividad seleccionada:', {
+          key: this.idItem,
+          nombre: this.obtenerNombreActividadDelContrato(this.idItem)
+        });
+      }
+
+      if (this.epss) {
+        console.log('📋 EPS disponibles:', this.epss.length);
+      }
+
+      if (this.contratos) {
+        console.log('📄 Contratos disponibles:', this.contratos.length);
+        let cupsEncontrados = 0;
+        this.contratos.forEach((contrato, index) => {
+          if (contrato.cups) {
+            const cupsDelContrato = Object.values(contrato.cups);
+            cupsEncontrados += cupsDelContrato.length;
+            console.log(`Contrato ${index}:`, {
+              totalCups: cupsDelContrato.length,
+              esemploeps: cupsDelContrato[0]?.epsNombre,
+              ejemmploprofesional: cupsDelContrato[0]?.cupsProfesional,
+              ejemploActividad: cupsDelContrato[0]?.actividadNombre
+            });
+          }
+        });
+        console.log(`📊 Total CUPS en todos los contratos: ${cupsEncontrados}`);
+      }
+
+      if (this.cupsDisponiblesPorContrato) {
+        console.log('✅ CUPS filtrados disponibles:', this.cupsDisponiblesPorContrato.length);
+        console.log('📝 CUPS filtrados:', this.cupsDisponiblesPorContrato.map(cup => ({
+          codigo: cup.codigo,
+          nombre: cup.DescripcionCUP,
+          profesional: cup.profesional
+        })));
+      }
+    },
 
     edadActual(x) {
       if (!x) return null; // valida que haya fecha
@@ -390,7 +475,7 @@ export default {
       return cup?.id || cup?.Homolog || cup?.cupsId || "";
     },
     addCups(cupsId, cant, detalle) {
-      const cupSeleccionado = this.cupsDisponibles.find(
+      const cupSeleccionado = this.cupsDisponiblesPorContrato.find(
         (cup) => String(cup.id) === String(cupsId)
       );
 
@@ -446,6 +531,9 @@ export default {
       } else {
         this.keyActividad = this.userData.cargo;
       }
+
+      // Debug para diagnosticar filtrado de CUPS
+      this.debugEpsContratos();
 
       await this.cargarCupsGuardados(this.idItem);
     },
@@ -595,9 +683,22 @@ export default {
         return false;
       }
 
-      const contratoDelPaciente = this.contratos.find(
-        (contrato) => contrato.epsId === epsEncontrada.id
+      // Búsqueda mejorada del contrato - primero por ID de EPS
+      let contratoDelPaciente = this.contratos.find(
+        (contrato) => String(contrato.epsId) === String(epsEncontrada.id)
       );
+
+      // Si no encuentra por ID, intentar búsqueda por nombre de EPS
+      if (!contratoDelPaciente) {
+        const contratasPorNombre = this.contratos.filter((contrato) => {
+          const epsDelContrato = this.epss.find((eps) => String(eps.id) === String(contrato.epsId));
+          return epsDelContrato && epsDelContrato.eps === epsDelPaciente;
+        });
+        
+        if (contratasPorNombre.length > 0) {
+          contratoDelPaciente = contratasPorNombre[0];
+        }
+      }
 
       if (!contratoDelPaciente || !contratoDelPaciente.cups) {
         return false;
@@ -671,23 +772,11 @@ export default {
     },
 
     puedeEliminarCups(cup) {
-      // Verificar si el usuario actual es el creador del CUPS
+      // Solo permitir eliminar si el cargo del usuario coincide con quien asignó el CUPS
       if (!this.userData || !cup) return false;
 
-      // Si el CUPS tiene información del creador, verificar que coincida
-      // Verificar por cargo (key) del profesional que lo agregó
-      if (cup.key && cup.key !== this.userData.cargo) {
-        return false;
-      }
-
-      // Verificar por nombre del profesional si está disponible
-      if (cup.nombreProf && cup.nombreProf !== this.userData.nombre) {
-        return false;
-      }
-
-      // Si no hay información del creador, permitir eliminar (retrocompatibilidad)
-      // O si coincide el cargo y nombre, permitir eliminar
-      return true;
+      // Verificar que el cargo (key) del profesional que lo agregó coincida con el usuario actual
+      return cup.key === this.userData.cargo;
     },
 
     async recargar() {
@@ -787,6 +876,9 @@ export default {
       this.getAllContratos(),
       this.getAllEpss()
     ]);
+    
+    // Llamar función de debugging para diagnosticar problemas de datos
+    this.debugEpsContratos();
   },
 
   /* ----------------------------------------------------------------------------------------------- */
