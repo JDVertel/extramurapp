@@ -6,7 +6,7 @@
       <div class="nav nav-tabs" id="nav-tab" role="tablist">
         <button class="nav-link active" id="nav-home-tab" data-bs-toggle="tab" data-bs-target="#nav-home" type="button"
           role="tab" aria-controls="nav-home" aria-selected="true">
-          Comunas - Barrios
+          COMUNAS Y BARRIOS
         </button>
         <button class="nav-link" id="nav-profile-tab" data-bs-toggle="tab" data-bs-target="#nav-profile" type="button"
           role="tab" aria-controls="nav-profile" aria-selected="false">
@@ -573,14 +573,16 @@
             No hay contratos guardados.
           </div>
           <div v-else>
-            <div v-for="grupo in contratosAgrupadosPorEps" :key="grupo.epsId" class="card mb-3">
+            <div v-for="(grupo, index) in contratosAgrupadosPorEps" :key="grupo.epsId" 
+                 class="card mb-3" 
+                 :class="getColorClassByEps(index)">
               <div class="card-header d-flex justify-content-between align-items-center">
                 <div>
                   <strong>EPS:</strong> {{ obtenerNombreEps(grupo.epsId, grupo.epsNombre) }}
-                  <span class="badge bg-primary ms-2">{{ grupo.cups.length }} CUPS</span>
-                  <span class="badge bg-secondary ms-1">{{ grupo.contratoIds.length }} registro(s)</span>
+                  <span class="badge bg-white text-dark ms-2">{{ grupo.cups.length }} CUPS</span>
+                  <span class="badge bg-white text-dark ms-1">{{ grupo.contratoIds.length }} registro(s)</span>
                 </div>
-                <button class="btn btn-danger btn-sm" @click="eliminarContratosPorEps(grupo.contratoIds)">
+                <button class="btn btn-outline-light btn-sm" @click="eliminarContratosPorEps(grupo.contratoIds)">
                   <i class="bi bi-trash"></i> Eliminar Todos
                 </button>
               </div>
@@ -588,9 +590,9 @@
                 <!-- Agrupar por Profesional -->
                 <div v-for="(profesionalGrupo, profesional) in agruparPorProfesional(grupo.cups)" :key="profesional"
                   class="mb-2">
-                  <div class="bg-light p-1 rounded small fw-bold">
+                  <div class="bg-white text-dark p-1 rounded small fw-bold border">
                     <i class="bi bi-person-badge"></i> {{ profesional }}
-                    <span class="badge bg-info ms-2">{{ profesionalGrupo.length }} CUPS</span>
+                    <span class="badge bg-primary ms-2">{{ profesionalGrupo.length }} CUPS</span>
                   </div>
                   <table class="table table-sm table-bordered mb-0 small">
                     <thead>
@@ -774,6 +776,20 @@ export default {
       "actualizarContrato",
       "getAllActividadesExtra",
     ]),
+
+    // ===== FUNCIÓN PARA COLORES DE EPS =====
+    getColorClassByEps(index) {
+      const colors = [
+        'border-primary bg-primary text-white',
+        'border-success bg-success text-white',
+        'border-warning bg-warning text-dark',
+        'border-info bg-info text-white',
+        'border-danger bg-danger text-white',
+        'border-secondary bg-secondary text-white',
+        'border-dark bg-dark text-white'
+      ];
+      return colors[index % colors.length];
+    },
 
     // ===== COMUNAS Y BARRIOS =====
     async saveComunaBarrio() {
