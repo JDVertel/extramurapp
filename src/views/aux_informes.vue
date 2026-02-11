@@ -86,8 +86,8 @@
                         <td>{{ usuario.barrioVeredacomuna?.barrio }}</td>
                         <td>{{ usuario.desplazamiento }}</td>
                         <!-- TIPO ACTIVIDAD REALIZADA -->
-                        <td v-for="col in columnasTipoActividad" :key="col" style="text-align: center">
-                            <span v-if="obtenerNombresTipoActividad(usuario).includes(col)">X</span>
+                        <td  style="text-align: center">
+                          x
                         </td>
                         <!-- POBLACIÓN DE RIESGO -->
                         <td v-for="col in columnasPoblacionRiesgo" :key="col" style="text-align: center">
@@ -111,12 +111,14 @@ import {
     mapState,
     mapActions
 } from "vuex";
+import firebase_api from "@/api/ApiFirebase";
 export default {
     data() {
         return {
             fechaInicio: "",
             fechaFin: "",
             activacion: false,
+            actividadesPorEncuesta: {},
             columnasTipoActividad: [
                 "Consulta PYMS",
                 "Consulta Morbilidad",
@@ -141,17 +143,19 @@ export default {
         };
     },
     methods: {
-        ...mapActions(["GetAllRegistersbyRangeAux"]),
+        ...mapActions(["GetAllRegistersbyRangeAux", "getAllActividadesExtra"]),
 
         /* metodo para cargar los datos del profesional, y los datos de la ips */
-        generarInforme() {
+        async generarInforme() {
             let rango = {
                 fechaInicio: this.fechaInicio,
                 fechaFin: this.fechaFin,
                 idempleado: this.userData.numDocumento,
                 cargo: this.userData.cargo,
             };
-            this.GetAllRegistersbyRangeAux(rango);
+            await this.GetAllRegistersbyRangeAux(rango);
+            await this.getAllActividadesExtra();
+            await this.cargarActividadesPorEncuesta();
             this.activacion = true;
         },
         copiarTabla() {
@@ -181,14 +185,46 @@ export default {
                 alert('Tabla copiada al portapapeles');
             }
         },
+        async cargarActividadesPorEncuesta() {
+            const mapa = {};
+            const encuestas = this.encuestasFiltradas || [];
+
+            await Promise.all(
+                encuestas.map(async (encuesta) => {
+                    try {
+                        const { data } = await firebase_api.get(`/Actividades/${encuesta.id}/tipoActividad.json`);
+                        const actividades = data ? Object.values(data) : [];
+                        mapa[encuesta.id] = actividades;
+                    } catch (error) {
+                        mapa[encuesta.id] = [];
+                    }
+                })
+            );
+
+            this.actividadesPorEncuesta = mapa;
+        },
         obtenerNombresTipoActividad(encuesta) {
-            if (!encuesta.tipoActividad) return [];
-            return Object.values(encuesta.tipoActividad).map(item => item.nombre);
+            const actividades = this.actividadesPorEncuesta[encuesta.id] || [];
+            const claves = actividades
+                .map((item) => item?.key)
+                .filter(Boolean);
+
+            return claves
+                .map((key) => this.obtenerNombreActividadExtra(key))
+                .filter(Boolean);
+        },
+        obtenerNombreActividadExtra(key) {
+            if (!key || !this.actividadesExtra) return "";
+            const encontrada = this.actividadesExtra.find((act) => String(act.id) === String(key));
+            return encontrada ? encontrada.nombre : "";
+        },
+        actividadRealizada(encuesta, nombreColumna) {
+            return this.obtenerNombresTipoActividad(encuesta).includes(nombreColumna);
         }
 
     },
     computed: {
-        ...mapState(["encuestasFiltradas", "dataips", "userData"]),
+        ...mapState(["encuestasFiltradas", "dataips", "userData", "actividadesExtra"]),
 
     },
 

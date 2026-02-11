@@ -1,6 +1,6 @@
 <template>
     <div>
-        <div v-if="enviando" class="overlay-guardando">
+        <div v-if="enviando" class="overlay-guardando active">
             <div class="spinner-border text-primary" role="status">
                 <span class="visually-hidden">Guardando...</span>
             </div>
@@ -472,6 +472,19 @@ export default {
             }
         },
 
+        // Método para asegurar que la página se pueda desplazar
+        ensureScrollability() {
+            // Remover cualquier clase que pueda estar bloqueando el scroll
+            document.body.classList.remove('modal-open');
+            document.body.style.overflow = '';
+            document.body.style.paddingRight = '';
+            
+            // Asegurar que el documento sea desplazable
+            if (document.body.scrollHeight <= window.innerHeight) {
+                document.body.style.minHeight = (window.innerHeight + 100) + 'px';
+            }
+        },
+
         ...mapActions([
             "createNewRegister",
             "getAllComunaBarrios",
@@ -693,6 +706,14 @@ export default {
         this.getAllEnfermerosbyGrupo({
             grupo: this.userData.grupo,
         });
+        
+        // Asegurar que la página sea desplazable al montar el componente
+        this.ensureScrollability();
+    },
+    
+    beforeUnmount() {
+        // Limpiar cualquier estilo que pueda interferir al salir del componente
+        this.ensureScrollability();
     },
 };
 </script>
@@ -708,11 +729,30 @@ body,
     padding: 1.5rem;
     max-width: 1200px;
     margin: 0 auto;
+    position: relative;
+    z-index: 1;
+}
+
+.container-fluid[aria-busy="true"] {
+    opacity: 0.7;
+    pointer-events: none;
+}
+
+.container-fluid[aria-busy="false"],
+.container-fluid:not([aria-busy]) {
+    opacity: 1;
+    pointer-events: auto;
 }
 
 form {
     display: flex;
     flex-direction: column;
+}
+
+/* Asegurar que el formulario no se quede pegado */
+body.modal-open {
+    overflow: auto !important;
+    padding-right: 0 !important;
 }
 
 .form-section {
@@ -721,6 +761,8 @@ form {
     border: 1px solid #ccc;
     padding: 1.5rem;
     margin-bottom: 2rem;
+    position: relative;
+    z-index: 1;
 }
 
 .row {
@@ -755,7 +797,16 @@ form {
     flex-direction: column;
     align-items: center;
     justify-content: center;
+    pointer-events: none;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+.overlay-guardando.active {
     pointer-events: all;
+    opacity: 1;
+    visibility: visible;
 }
 
 .texto-guardando {

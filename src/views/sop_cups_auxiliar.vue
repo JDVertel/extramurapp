@@ -7,7 +7,6 @@
     </div>
     <div class="texto-guardando">Guardando listado, por favor espere...</div>
 </div>
-
 <div class="container-fluid rounded shadow-sm py-3 mb-3 paciente p-1" v-if="userEncuesta">
     <div class="row align-items-stretch  p-1">
       <div class="col-12 mb-md-0 p-1 text-center">
@@ -25,7 +24,7 @@
     </div>
 </div>
 <div v-if="InfoEncuestasById && InfoEncuestasById[0]" class="mb-4" :aria-busy="guardando">
-    <div style="max-height: 600px; overflow-y: auto">
+    <div>
         <div class="container-fluid bg-light rounded shadow-sm p-3">
             <h5 class="fw-bold text-success mb-3">
                 <i class="bi bi-person-check-fill"></i> Actividades del paciente
@@ -356,6 +355,13 @@ export default {
             if (modal) {
                 modal.setAttribute('aria-hidden', 'true');
             }
+
+            // Forzar restaurar el scroll si Bootstrap deja el body bloqueado
+            document.body.classList.remove('modal-open');
+            document.body.style.overflow = '';
+            document.body.style.paddingRight = '';
+            const backdrops = document.querySelectorAll('.modal-backdrop');
+            backdrops.forEach((backdrop) => backdrop.remove());
 
             this.$nextTick(() => {
                 if (document.activeElement && document.activeElement.classList.contains('btn-close')) {
@@ -823,10 +829,34 @@ export default {
                     }
                     // Si el usuario es Enfermero, verificar que las actividades de Auxiliar y Médico ya estén cerradas
                     else if (cargo === "Enfermero") {
-                        if (
-                            this.InfoEncuestasById[0].status_gest_aux === true &&
-                            this.InfoEncuestasById[0].status_gest_medica === true
-                        ) {
+                        const normalizarEstado = (valor) => {
+                            if (valor === true || valor === 1) return true;
+                            if (typeof valor === "string") {
+                                const limpio = valor.trim().toLowerCase();
+                                return limpio === "true" || limpio === "1";
+                            }
+                            return false;
+                        };
+
+                        let statusAux = null;
+                        let statusMedica = null;
+
+                        try {
+                            const { default: firebase_api } = await import('../api/ApiFirebase.js');
+                            const { data: encuestaActual } = await firebase_api.get(`/Encuesta/${this.idEncuesta}.json`);
+                            statusAux = encuestaActual?.status_gest_aux;
+                            statusMedica = encuestaActual?.status_gest_medica;
+                        } catch (error) {
+                            const encuestaBase = this.InfoEncuestasById?.[0] || this.userEncuesta || null;
+                            statusAux = encuestaBase?.status_gest_aux;
+                            statusMedica = encuestaBase?.status_gest_medica;
+                            console.warn('No se pudo leer Encuesta actualizada, usando datos locales:', error);
+                        }
+
+                        const auxCerrado = normalizarEstado(statusAux);
+                        const medicoCerrado = normalizarEstado(statusMedica);
+
+                        if (auxCerrado && medicoCerrado) {
                             await this.cerrarEncuesta({
                                 id: this.idEncuesta,
                                 cargo: cargo,
@@ -921,6 +951,16 @@ export default {
     margin-top: 1rem;
     font-size: 1.2rem;
     color: #333;
+}
+
+/* Evitar bloqueo de scroll cuando Bootstrap deja modal-open activo */
+body.modal-open {
+    overflow: auto !important;
+    padding-right: 0 !important;
+}
+
+.modal {
+    overflow-y: auto;
 }
 
 select {
