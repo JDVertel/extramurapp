@@ -44,10 +44,10 @@
                 v-model="barrio" />
             </div>
             <div class="col-4">
-              <button type="button" class="btn btn-warning btn-sm" @click="saveComunaBarrio">
+              <button type="button" class="btn btn-warning" @click="saveComunaBarrio">
                 {{ comunaBarrioEditId ? 'Actualizar' : '+ Guardar' }}
               </button>
-              <button v-if="comunaBarrioEditId" type="button" class="btn btn-secondary btn-sm ms-2"
+              <button v-if="comunaBarrioEditId" type="button" class="btn btn-secondary ms-2"
                 @click="clearFormComunaBarrio">
                 Cancelar
               </button>
@@ -68,14 +68,14 @@
               </thead>
               <tbody>
                 <tr v-for="(comuna, index) in comunasBarrios" :key="comuna.id || index">
-                  <td><button class="btn btn-warning btn-sm" @click="editBarrio(comuna.id)" aria-label="Editar barrio"
+                  <td><button class="btn btn-warning" @click="editBarrio(comuna.id)" aria-label="Editar barrio"
                       type="button">
                       <i class="bi bi-pencil"></i>
                     </button></td>
                   <td>{{ comuna.comuna }}</td>
                   <td>{{ comuna.barrio }}</td>
                   <td>
-                    <button class="btn btn-danger btn-sm" @click="deleteBarrio(comuna.id)" aria-label="Eliminar barrio"
+                    <button class="btn btn-danger" @click="deleteBarrio(comuna.id)" aria-label="Eliminar barrio"
                       type="button">
                       <i class="bi bi-trash"></i>
                     </button>
@@ -110,10 +110,10 @@
                       </div>
                     </div>
                     <div class="col-6">
-                      <button type="button" class="btn btn-warning btn-sm" @click="saveEps">
+                      <button type="button" class="btn btn-warning" @click="saveEps">
                         {{ epsEditId ? 'Actualizar' : 'Guardar' }}
                       </button>
-                      <button v-if="epsEditId" type="button" class="btn btn-secondary btn-sm ms-2"
+                      <button v-if="epsEditId" type="button" class="btn btn-secondary ms-2"
                         @click="clearFormEps">
                         Cancelar
                       </button>
@@ -131,13 +131,13 @@
                       </thead>
                       <tbody>
                         <tr v-for="(ot, index) in epss" :key="ot.id || index">
-                          <td><button class="btn btn-warning btn-sm" @click="editEps(ot.id)" aria-label="Editar EPS"
+                          <td><button class="btn btn-warning" @click="editEps(ot.id)" aria-label="Editar EPS"
                               type="button">
                               <i class="bi bi-pencil"></i>
                             </button></td>
                           <td>{{ ot.eps }}</td>
                           <td>
-                            <button class="btn btn-danger btn-sm" @click="EpsDelete(ot.id)" aria-label="Eliminar EPS"
+                            <button class="btn btn-danger" @click="EpsDelete(ot.id)" aria-label="Eliminar EPS"
                               type="button">
                               <i class="bi bi-trash"></i>
                             </button>
@@ -163,7 +163,7 @@
         <br />
         <div class="container-fluid">
           <!-- boton modal -->
-          <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#staticBackdrop">
+          <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#staticBackdrop">
             + Nuevo CUPS
           </button>
         </div>
@@ -213,10 +213,10 @@
                 </div>
               </div>
               <div class="modal-footer">
-                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal" @click="clearFormCups">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" @click="clearFormCups">
                   Cerrar
                 </button>
-                <button type="button" class="btn btn-primary btn-sm" @click="saveCups">
+                <button type="button" class="btn btn-primary" @click="saveCups">
                   Guardar
                 </button>
               </div>
@@ -240,7 +240,7 @@
             <tbody>
               <tr v-for="cup in cups" :key="cup.id" :class="getColorClassByProfesional(cup.profesional)">
                 <td>
-                  <button type="button" class="btn btn-warning btn-sm" data-bs-toggle="modal"
+                  <button type="button" class="btn btn-warning" data-bs-toggle="modal"
                     data-bs-target="#staticBackdrop" @click="editCups(cup.id)">
                     <i class="bi bi-pencil"></i>
                   </button>
@@ -252,7 +252,7 @@
                 </td>
                 <td>{{ cup.Grupo }}</td>
                 <td>
-                  <button type="button" class="btn btn-danger btn-sm" @click="deleteCups(cup.id)">
+                  <button type="button" class="btn btn-danger" @click="deleteCups(cup.id)">
                     <i class="bi bi-trash"></i>
                   </button>
                 </td>
@@ -326,7 +326,7 @@
                     </div>
                     <div class="btn-group mt-2" role="group">
                       <!-- <button class="btn btn-warning btn-sm" type="button" @click.stop="editarP(paciente.id)"><i class="bi bi-pencil-square"></i></button> -->
-                      <button class="btn btn-danger btn-sm" type="button" @click.stop="eliminarPaciente(paciente.id)">
+                      <button class="btn btn-danger" type="button" @click.stop="eliminarPaciente(paciente.id)">
                         <i class="bi bi-trash"></i>
                       </button>
                     </div>
@@ -439,7 +439,7 @@
           <div class="row">
             <div class="col-8">Crear un nuevo contrato</div>
             <div class="col-2">
-              <button class="btn btn-warning btn-sm" data-bs-toggle="modal" data-bs-target="#crearcontratos">
+              <button class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#crearcontratos">
                 +
               </button>
             </div>
@@ -498,7 +498,7 @@
 
                   </div>
                   <div class="col-1">
-                    <button class="btn btn-warning btn-sm mt-4" @click="addCupsContrato"
+                    <button class="btn btn-warning mt-4" @click="addCupsContrato"
                       :disabled="!Seps || !Scups"> + Agregar</button>
                   </div>
                 </div>
@@ -530,7 +530,7 @@
                         <td>{{ obtenerNombreActividadPorId(contrato.actividadId, contrato.actividadNombre) || sinEspecificar }}</td>
                         <td>{{ obtenerNombreCups(contrato.cupsId, contrato.cupsNombre) }}</td>
                         <td>
-                          <button class="btn btn-danger btn-sm" @click="removeContrato(contrato)">
+                          <button class="btn btn-danger" @click="removeContrato(contrato)">
                             <i class="bi bi-trash"></i>
                           </button>
                         </td>
@@ -554,11 +554,11 @@
                 </div>
               </div>
               <div class="modal-footer">
-                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal"
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"
                   @click="clearFormContratos">
                   Cerrar
                 </button>
-                <button type="button" class="btn btn-primary btn-sm" @click="saveContrato">
+                <button type="button" class="btn btn-primary" @click="saveContrato">
                   Guardar
                 </button>
               </div>
@@ -582,7 +582,7 @@
                   <span class="badge bg-white text-dark ms-2">{{ grupo.cups.length }} CUPS</span>
                   <span class="badge bg-white text-dark ms-1">{{ grupo.contratoIds.length }} registro(s)</span>
                 </div>
-                <button class="btn btn-outline-light btn-sm" @click="eliminarContratosPorEps(grupo.contratoIds)">
+                <button class="btn btn-outline-light" @click="eliminarContratosPorEps(grupo.contratoIds)">
                   <i class="bi bi-trash"></i> Eliminar Todos
                 </button>
               </div>
@@ -610,7 +610,7 @@
                         <td>{{ obtenerNombreCups(cup.cupsId, cup.cupsNombre) }}</td>
                         <td>{{ obtenerGrupoCups(cup.cupsId, cup.cupsGrupo) || '-' }}</td>
                         <td class="text-center">
-                          <button class="btn btn-danger btn-sm"
+                          <button class="btn btn-danger"
                             @click="eliminarCupsDeContrato(cup.contratoId, cup.cupsId)" title="Eliminar este CUPS">
                             <i class="bi bi-trash"></i>
                           </button>

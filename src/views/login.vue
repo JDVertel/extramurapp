@@ -1,8 +1,7 @@
 <template>
 <div class="login-layout">
-    <div class="login-left-panel"></div>
-    <div class="login-right-panel">
-        <div class="card p-4 shadow" style="max-width: 400px; width: 100%">
+    <div class="login-container">
+        <div class="card p-4 shadow login-card">
             <img src="@/assets/images/logo_extramurapp.png" alt="Logo Extramuralapp" class="login-logo-bg" />
             <h2 class="text-center mb-4">Iniciar Sesión</h2>
             <form @submit.prevent="handleLogin">
@@ -19,9 +18,6 @@
                 <button type="submit" class="buttonLogin mb-3 w-100">Entrar</button>
             </form>
             <p v-if="errorMessage" class="text-danger mt-3">{{ errorMessage }}</p>
-
-  
-
         </div>
     </div>
 </div>
@@ -126,60 +122,61 @@ body {
     left: 0;
     width: 100vw;
     height: 100vh;
-    display: flex;
-}
-
-.login-left-panel {
-    width: 70vw;
-    height: 100vh;
     background: url("@/assets/images/fondo_extramurapp.jpg");
     background-size: cover;
     background-position: center center;
     background-repeat: no-repeat;
     background-attachment: fixed;
-}
-
-.login-right-panel {
-    width: 30vw;
-    height: 100vh;
     display: flex;
     align-items: center;
     justify-content: center;
-    background: #fff;
 }
 
-.login-right-panel .card {
-    margin-right: 2vw;
+.login-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+}
+
+.login-card {
+    max-width: 400px;
+    width: 90%;
+    background: #fff;
+    border-radius: 15px;
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    opacity: 0.8;
+}
+
+.login-logo-bg {
+    display: block;
+    margin: 0 auto 20px auto;
+    max-width: 150px;
+    height: auto;
+}
+
+.login-card i.bi {
+    margin-right: 8px;
 }
 
 @media (max-width: 767px) {
-    .login-left-panel {
-        display: none !important;
+    .login-layout {
+        background-position: 20% center;
+        align-items: flex-end;
+        padding-bottom: 20px;
     }
-
-    .login-right-panel {
-        width: 100vw;
-        height: 100vh;
-        background: url("@/assets/images/fondo_extramurapp.jpg");
-        background-size: cover;
-        background-position: center center;
-        background-repeat: no-repeat;
-        background-attachment: fixed;
-        display: flex;
-        align-items: center;
+    
+    .login-container {
+        align-items: flex-end;
         justify-content: center;
-        overflow: hidden !important;
     }
-
-    .login-right-panel .card {
-        margin: 0;
-        background: rgba(255, 255, 255, 0.95);
-        box-shadow: 0 0 24px 0 rgba(0, 0, 0, 0.12);
-        width: 90vw;
-        max-width: 400px;
-        position: relative;
-        left: 0;
-        right: 0;
+    
+    .login-card {
+        width: 95%;
+        max-width: 350px;
+        margin: 0 20px 20px 20px;
     }
 }
 </style>

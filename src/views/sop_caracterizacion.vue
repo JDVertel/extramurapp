@@ -145,7 +145,7 @@
         <div class="row p-1">
             <div class="col-6 p-1">
                 <h4>Grupo Familiar</h4>
-                <button class="btn btn-warning btn-sm" data-bs-toggle="modal" data-bs-target="#staticBackdrop">
+                <button class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#staticBackdrop">
                     <i class="bi bi-person-plus"></i> Agregar
                 </button>
             </div>
@@ -219,7 +219,7 @@
                                             {{ eps.eps }}
                                         </option>
                                     </select>
-                                    <button class="btn btn-warning btn-sm" @click="updateEps" :disabled="cargandoEps">
+                                    <button class="btn btn-warning" @click="updateEps" :disabled="cargandoEps">
                                         <i class="bi bi-arrow-repeat"></i>
                                         <span v-if="cargandoEps">Cargando...</span>
                                     </button>
@@ -290,7 +290,7 @@
                         <td>{{ miembro.parentesco }}</td>
                         <td>{{ miembro.nombres }} {{ miembro.apellidos }}</td>
                         <td>
-                            <button class="btn btn-danger btn-sm" @click="eliminarMiembro(index)">
+                            <button class="btn btn-danger rounded-circle" @click="eliminarMiembro(index)">
                                 <i class="bi bi-trash3"></i>
                             </button>
                         </td>
@@ -1058,5 +1058,21 @@ export default {
     margin-top: 1rem;
     font-size: 1.2rem;
     color: #333;
+}
+
+/* Estilos para botones redondeados */
+.btn.rounded-circle {
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.btn.rounded-circle:hover {
+  transform: scale(1.05);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 </style>

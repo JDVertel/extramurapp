@@ -8,7 +8,7 @@
   <div v-if="!cargando">
     <h1 class="display-6 center">{{ userData.cargo }}</h1>
     <div class="alert alert-warning shadow-sm  d-flex justify-content-between align-items-center" role="alert">
-      Realizar nueva encuesta <RouterLink class="btn btn-warning btn-sm" to="/sop_encuesta">
+      Realizar nueva encuesta <RouterLink class="btn btn-warning" to="/sop_encuesta">
         <i class="bi bi-file-earmark-plus-fill"></i> <br />
 
       </RouterLink>
@@ -42,21 +42,21 @@
                   <!-- Visita (solo Auxiliar de enfermeria) -->
                   <template v-if="userData.cargo === 'Auxiliar de enfermeria'">
                     <div v-if="encuesta.Agenda_Visitamedica?.cita_visitamedica === false">
-                      <button type="button" class="btn btn-info btn-sm rounded-circle agendar-btn"
+                      <button type="button" class="btn btn-info rounded-circle agendar-btn"
                         @click="Agendar(encuesta.id, 'visitamedica')">
                         <i class="bi bi-houses"></i>
                         <span class="agendar-label">Visita</span>
                       </button>
                     </div>
                     <div v-else-if="encuesta.Agenda_Visitamedica?.cita_visitamedica === undefined">
-                      <button type="button" class="btn btn-info btn-sm rounded-circle agendar-btn"
+                      <button type="button" class="btn btn-info rounded-circle agendar-btn"
                         @click="Agendar(encuesta.id, 'visitamedica')">
                         <i class="bi bi-houses"></i>
                         <span class="agendar-label">Visita</span>
                       </button>
                     </div>
                     <div v-else>
-                      <button type="button" class="btn btn-secondary btn-sm rounded-circle agendar-btn" disabled>
+                      <button type="button" class="btn btn-secondary rounded-circle agendar-btn" disabled>
                         <i class="bi bi-check2-circle"></i>
                         <span class="agendar-label">Visita</span>
                       </button>
@@ -66,14 +66,14 @@
                   <!-- Caracterización (solo Auxiliar de enfermeria) -->
                   <template v-if="userData.cargo === 'Auxiliar de enfermeria'">
                     <div v-if="encuesta.status_caracterizacion === false">
-                      <button type="button" class="btn btn-warning btn-sm rounded-circle agendar-btn"
+                      <button type="button" class="btn btn-warning rounded-circle agendar-btn"
                         @click="Caracterizar(encuesta.id)">
                         <i class="bi bi-calendar2-check"></i>
                         <span class="agendar-label">Caract</span>
                       </button>
                     </div>
                     <div v-else>
-                      <button type="button" class="btn btn-secondary btn-sm rounded-circle agendar-btn" disabled>
+                      <button type="button" class="btn btn-secondary rounded-circle agendar-btn" disabled>
                         <i class="bi bi-check2-circle"></i>
                         <span class="agendar-label">Caract</span>
                       </button>
@@ -83,12 +83,26 @@
                   <!-- CUPS (Auxiliar de enfermeria y Medico) -->
                   <div
                     v-if="encuesta.status_caracterizacion === true && (userData.cargo === 'Auxiliar de enfermeria' || userData.cargo === 'Medico')">
-                    <button type="button" class="btn btn-danger btn-sm rounded-circle agendar-btn"
+                    <button type="button" class="btn btn-danger rounded-circle agendar-btn"
                       @click="cupsGestion(encuesta.id)">
                       <i class="bi bi-calendar2-heart-fill"></i>
                       <span class="agendar-label">Cups</span>
                     </button>
                   </div>
+
+                  <!-- Botón Eliminar (solo Auxiliar de enfermeria) -->
+                  <template v-if="userData.cargo === 'Auxiliar de enfermeria'">
+                    <div>
+                      <button type="button" class="btn btn-outline-danger rounded-circle agendar-btn"
+                        @click="eliminarRegistro(encuesta.id)"
+                        :disabled="eliminandoRegistro === encuesta.id"
+                        :title="'Eliminar registro'">
+                        <i class="bi bi-trash" v-if="eliminandoRegistro !== encuesta.id"></i>
+                        <i class="bi bi-hourglass-split" v-else></i>
+                        <span class="agendar-label">{{ eliminandoRegistro === encuesta.id ? 'Verif' : 'Elim' }}</span>
+                      </button>
+                    </div>
+                  </template>
                 </div>
               </div>
             </div>
@@ -107,6 +121,7 @@ export default {
     return {
       cargando: true,
       fechaActual: "",
+      eliminandoRegistro: null, // Para mostrar estado de carga durante eliminación
     };
   },
   methods: {
@@ -116,6 +131,7 @@ export default {
       "getAllRegistersByIduser",
       "getAllRegistersByFecha",
       " SelectExistenteAgendas",
+      "getAsignacionesByEncuesta", // Añadimos la acción para consultar asignaciones
     ]),
 
     removeRegEncuesta(id) {
@@ -128,6 +144,41 @@ export default {
       this.getAllRegistersByFechaStatus({
         idUsuario: this.userData.numDocumento,
       });
+    },
+
+    // Nueva función para eliminar registro con validación
+    async eliminarRegistro(idEncuesta) {
+      if (!confirm('¿Está seguro de que desea eliminar este registro?\n\nEsta acción eliminará el registro de actividades y la encuesta asociada.')) {
+        return;
+      }
+
+      this.eliminandoRegistro = idEncuesta;
+
+      try {
+        // Verificar si el registro tiene asignaciones
+        const asignaciones = await this.getAsignacionesByEncuesta(idEncuesta);
+        
+        if (asignaciones && Object.keys(asignaciones).length > 0) {
+          alert('â ️ No se puede eliminar el registro\n\nEste registro tiene asignaciones activas. Debe eliminar primero todas las asignaciones antes de eliminar el registro principal.');
+          return;
+        }
+
+        // Si no tiene asignaciones, proceder con la eliminación
+        await this.removeRegEnc(idEncuesta);
+        
+        alert('✅ Registro eliminado exitosamente\n\nSe ha eliminado el registro de actividades y la encuesta asociada.');
+        
+        // Recargar los datos
+        await this.getAllRegistersByFechaStatus({
+          idUsuario: this.userData.numDocumento,
+        });
+
+      } catch (error) {
+        console.error('Error al eliminar registro:', error);
+        alert('⚠️ Error al eliminar el registro\n\n' + (error.message || 'Error desconocido. Intente nuevamente.'));
+      } finally {
+        this.eliminandoRegistro = null;
+      }
     },
     Agendar(id, tipo) {
       this.$router.push({
@@ -218,40 +269,26 @@ export default {
   color: #333;
 }
 
-.btn-grid {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  align-items: center;
-}
-
-.btn-row {
-  display: flex;
-  justify-content: center;
-  gap: 8px;
-}
-
-/* Media query para pantallas grandes (PC/Tablet) */
-@media (min-width: 768px) {
-  .btn-grid {
-    flex-direction: row;
-    flex-wrap: nowrap;
-  }
-
-  .btn-row {
-    gap: 8px;
-  }
-}
-
 .acciones-col {
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
+/* Layout horizontal para botones */
+.btn-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+/* Estilos para botones redondeados */
 .agendar-btn {
-  width: 44px;
-  height: 44px;
+  width: 50px;
+  height: 50px;
   padding: 0;
   display: inline-flex;
   flex-direction: column;
@@ -259,13 +296,21 @@ export default {
   justify-content: center;
   gap: 2px;
   line-height: 1;
+  border: none;
+  transition: all 0.2s ease;
+}
+
+.agendar-btn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
 .agendar-btn i {
-  font-size: 14px;
+  font-size: 16px;
 }
 
 .agendar-label {
   font-size: 9px;
+  font-weight: 600;
 }
 </style>

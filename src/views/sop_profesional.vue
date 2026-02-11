@@ -42,14 +42,14 @@
                                     <!-- Visita (solo Auxiliar de enfermeria) -->
                                     <template v-if="userData.cargo === 'Auxiliar de enfermeria'">
                                         <div v-if="encuesta.Agenda_Visitamedica?.cita_visitamedica === false">
-                                            <button type="button" class="btn btn-info btn-sm rounded-circle agendar-btn"
+                                            <button type="button" class="btn btn-info rounded-circle agendar-btn"
                                                 @click="Agendar(encuesta.id, 'visitamedica')">
                                                 <i class="bi bi-houses"></i>
                                                 <span class="agendar-label">Visita</span>
                                             </button>
                                         </div>
                                         <div v-else-if="encuesta.Agenda_Visitamedica?.cita_visitamedica === undefined">
-                                            <button type="button" class="btn btn-info btn-sm rounded-circle agendar-btn"
+                                            <button type="button" class="btn btn-info rounded-circle agendar-btn"
                                                 @click="Agendar(encuesta.id, 'visitamedica')">
                                                 <i class="bi bi-houses"></i>
                                                 <span class="agendar-label">Visita</span>
@@ -57,7 +57,7 @@
                                         </div>
                                         <div v-else>
                                             <button type="button"
-                                                class="btn btn-secondary btn-sm rounded-circle agendar-btn" disabled>
+                                                class="btn btn-secondary rounded-circle agendar-btn" disabled>
                                                 <i class="bi bi-check2-circle"></i>
                                                 <span class="agendar-label">Visita</span>
                                             </button>
@@ -68,7 +68,7 @@
                                     <template v-if="userData.cargo === 'Auxiliar de enfermeria'">
                                         <div v-if="encuesta.status_caracterizacion === false">
                                             <button type="button"
-                                                class="btn btn-warning btn-sm rounded-circle agendar-btn"
+                                                class="btn btn-warning rounded-circle agendar-btn"
                                                 @click="Caracterizar(encuesta.id)">
                                                 <i class="bi bi-calendar2-check"></i>
                                                 <span class="agendar-label">Caract</span>
@@ -76,7 +76,7 @@
                                         </div>
                                         <div v-else>
                                             <button type="button"
-                                                class="btn btn-secondary btn-sm rounded-circle agendar-btn" disabled>
+                                                class="btn btn-secondary rounded-circle agendar-btn" disabled>
                                                 <i class="bi bi-check2-circle"></i>
                                                 <span class="agendar-label">Caract</span>
                                             </button>
@@ -86,7 +86,7 @@
                                     <!-- CUPS (Auxiliar de enfermeria y Medico) -->
                                     <div
                                         v-if="encuesta.status_caracterizacion === true && (userData.cargo === 'Auxiliar de enfermeria' || userData.cargo === 'Medico')">
-                                        <button type="button" class="btn btn-danger btn-sm rounded-circle agendar-btn"
+                                        <button type="button" class="btn btn-danger rounded-circle agendar-btn"
                                             @click="cupsGestion(encuesta.id)">
                                             <i class="bi bi-calendar2-heart-fill"></i>
                                             <span class="agendar-label">Cups</span>
@@ -237,40 +237,26 @@ export default {
     color: #333;
 }
 
-.btn-grid {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    align-items: center;
-}
-
-.btn-row {
-    display: flex;
-    justify-content: center;
-    gap: 8px;
-}
-
-/* Media query para pantallas grandes (PC/Tablet) */
-@media (min-width: 768px) {
-    .btn-grid {
-        flex-direction: row;
-        flex-wrap: nowrap;
-    }
-
-    .btn-row {
-        gap: 8px;
-    }
-}
-
 .acciones-col {
     display: flex;
     align-items: center;
     justify-content: center;
 }
 
+/* Layout horizontal para botones */
+.btn-row {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+/* Estilos para botones redondeados */
 .agendar-btn {
-    width: 44px;
-    height: 44px;
+    width: 50px;
+    height: 50px;
     padding: 0;
     display: inline-flex;
     flex-direction: column;
@@ -278,13 +264,21 @@ export default {
     justify-content: center;
     gap: 2px;
     line-height: 1;
+    border: none;
+    transition: all 0.2s ease;
+}
+
+.agendar-btn:hover {
+    transform: scale(1.05);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
 .agendar-btn i {
-    font-size: 14px;
+    font-size: 16px;
 }
 
 .agendar-label {
     font-size: 9px;
+    font-weight: 600;
 }
 </style>

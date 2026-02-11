@@ -3,7 +3,7 @@
     <div><i class="bi bi-fingerprint"></i></div>
     <h4 class="mt-3">Sesión cerrada correctamente</h4>
     <router-link to="/">
-      <button class="btn btn-success btn-sm mt-3">Cerrar</button>
+      <button class="btn btn-success mt-3">Cerrar</button>
     </router-link>
   </div>
 </template>

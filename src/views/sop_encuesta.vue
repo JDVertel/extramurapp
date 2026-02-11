@@ -143,7 +143,7 @@
                                     </select>
                                 </div>
                                 <div class="col-2">
-                                    <button type="button" class="btn btn-warning btn-sm w-100"
+                                    <button type="button" class="btn btn-warning w-100"
                                         v-if="poblacionRiesgo !== ''" @click="addRiesgo">+</button>
                                 </div>
                             </div>
@@ -152,7 +152,7 @@
                                     <li class="list-group-item d-flex justify-content-between align-items-center"
                                         v-for="(list, index) in ListpoblacionRiesgo" :key="index">
                                         <span>{{ list }}</span>
-                                        <button type="button" class="btn btn-danger btn-sm"
+                                        <button type="button" class="btn btn-danger rounded-circle"
                                             @click="removeRiesgo(index)">
                                             <i class="bi bi-trash"></i>
                                         </button>
@@ -181,7 +181,7 @@
                                     </select>
                                 </div>
                                 <div class="col-2">
-                                    <button type="button" class="btn btn-warning btn-sm w-100"
+                                    <button type="button" class="btn btn-warning w-100"
                                         v-if="tipoActividad !== ''" @click="addActividad">+</button>
                                 </div>
                             </div>
@@ -191,7 +191,7 @@
                                     <li class="list-group-item d-flex justify-content-between align-items-center"
                                         v-for="(list, index) in ListtipoActividad" :key="index">
                                         <span>{{ list.nombre }}</span>
-                                        <button type="button" class="btn btn-danger btn-sm"
+                                        <button type="button" class="btn btn-danger rounded-circle"
                                             @click="removeActividad(index)">
                                             <i class="bi bi-trash"></i>
                                         </button>
@@ -797,5 +797,21 @@ html {
     .form-section {
         padding: 1rem;
     }
+}
+
+/* Estilos para botones redondeados */
+.btn.rounded-circle {
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.btn.rounded-circle:hover {
+  transform: scale(1.05);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 </style>

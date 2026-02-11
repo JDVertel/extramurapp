@@ -15,13 +15,13 @@
                 <input type="date" id="fechaFin" class="form-control" v-model="fechaFin" required />
             </div>
             <div class="col-12 col-md-4">
-                <button type="button" class="btn btn-warning btn-sm mt-4" @click="generarInforme()">
+                <button type="button" class="btn btn-warning mt-4" @click="generarInforme()">
                     Generar Informe
                 </button>
             </div>
         </div>
         <br />
-        <button class="btn btn-primary btn-sm mb-2" v-if="activacion" @click="copiarTabla">
+        <button class="btn btn-primary mb-2" v-if="activacion" @click="copiarTabla">
             <i class="bi bi-clipboard"></i> Copiar tabla
         </button>
         <div class="table-responsive" v-if="activacion" style="max-height: 70vh; overflow-y: auto;">

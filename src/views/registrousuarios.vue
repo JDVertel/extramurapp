@@ -37,33 +37,72 @@
         <div class="tab-pane fade show active" id="nav-home" role="tabpanel" aria-labelledby="nav-home-tab"
           tabindex="0">
           <h1>Listado de usuarios del sistema</h1>
-          <!--       {{ this.users }} -->
 
-          <div style="max-height: 700px; overflow-y: auto">
-            <table class="table">
-              <thead>
-                <tr>
-                  <th>nombre</th>
-                  <!--    <th>rol</th> -->
-                  <th>cargo</th>
-                  <th>Grupo</th>
-                  <th>opciones</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr v-for="(user, index) in this.users" :key="index">
-                  <td>{{ user.nombre }}</td>
-                  <!--    <td>{{ user.rol }}</td> -->
-                  <td>{{ user.cargo }}</td>
-                  <td>{{ user.grupo }}</td>
-                  <td>
-                    <button class="btn btn-warning btn-sm" @click="resetPassword(user.email)">
-                      <i class="bi bi-key-fill"></i>
-                    </button>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+          <div style="max-height: 700px; overflow-y: auto" class="p-2">
+            <!-- Mostrar mensaje si no hay usuarios -->
+            <div v-if="!users || users.length === 0" class="alert alert-warning">
+              No hay usuarios registrados en el sistema.
+            </div>
+            
+            <!-- Cards agrupadas por grupo -->
+            <div v-else class="row">
+              <div v-for="(usuariosGrupo, grupo) in usuariosAgrupadosPorGrupo" :key="grupo" 
+                   class="col-12 col-md-6 col-lg-4 mb-4">
+                <div class="card h-100" :class="getColorClassByGrupo(grupo)">
+                  <div class="card-header d-flex justify-content-between align-items-center">
+                    <div>
+                      <h5 class="card-title mb-0 text-white">
+                        <i class="bi bi-people-fill me-2"></i>
+                        {{ grupo === 'sin-grupo' ? 'Sin Grupo Asignado' : `Grupo ${grupo}` }}
+                      </h5>
+                      <small class="text-white-50">{{ usuariosGrupo.length }} usuario(s)</small>
+                    </div>
+                    <span class="badge bg-white text-dark fs-6">{{ usuariosGrupo.length }}</span>
+                  </div>
+                  <div class="card-body p-0">
+                    <div class="list-group list-group-flush">
+                      <div v-for="(user, index) in usuariosGrupo" :key="index" 
+                           class="list-group-item d-flex justify-content-between align-items-center py-3">
+                        <div>
+                          <h6 class="mb-1 fw-bold">{{ user.nombre }}</h6>
+                          <div class="d-flex flex-column">
+                            <small class="text-muted">
+                              <i class="bi bi-briefcase me-1"></i>
+                              <strong>Cargo:</strong> {{ user.cargo }}
+                            </small>
+                            <small class="text-muted mt-1">
+                              <i class="bi bi-envelope me-1"></i>
+                              {{ user.email }}
+                            </small>
+                            <small class="text-muted mt-1">
+                              <i class="bi bi-card-text me-1"></i>
+                              <strong>Doc:</strong> {{ user.numDocumento || 'N/A' }}
+                            </small>
+                          </div>
+                        </div>
+                        <div class="d-flex flex-column align-items-end">
+                          <div class="btn-group-vertical" role="group">
+                            <button class="btn btn-warning mb-1" 
+                                    @click="resetPassword(user.email)"
+                                    title="Restablecer contraseña">
+                              <i class="bi bi-key-fill"></i>
+                            </button>
+                            <button class="btn btn-danger" 
+                                    @click="deleteUser(user)"
+                                    title="Eliminar usuario">
+                              <i class="bi bi-trash-fill"></i>
+                            </button>
+                          </div>
+                          <span class="badge mt-2" :class="getCargoColorClass(user.cargo)">
+                            {{ getCargoShortName(user.cargo) }}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
         <div class="tab-pane fade" id="nav-profile" role="tabpanel" aria-labelledby="nav-profile-tab" tabindex="0">
@@ -105,7 +144,7 @@
               </div>
             </div>
 
-            <button type="submit" :disabled="loading" class="btn btn-warning btn-sm">
+            <button type="submit" :disabled="loading" class="btn btn-warning">
               {{ loading ? "Creando..." : "Crear Usuario y Enviar Enlace de Contraseña" }}
             </button>
           </form>
@@ -128,7 +167,7 @@ import {
   sendPasswordResetEmail,
   updateProfile,
 } from "firebase/auth";
-import { doc, setDoc, collection, getDocs } from "firebase/firestore";
+import { doc, setDoc, collection, getDocs, deleteDoc } from "firebase/firestore";
 import { mapActions } from "vuex";
 
 export default {
@@ -148,7 +187,109 @@ export default {
       ips: 1,
     };
   },
+  computed: {
+    usuariosAgrupadosPorGrupo() {
+      if (!this.users || this.users.length === 0) return {};
+      
+      const grupos = {};
+      
+      this.users.forEach(user => {
+        const grupoKey = user.grupo || 'sin-grupo';
+        
+        if (!grupos[grupoKey]) {
+          grupos[grupoKey] = [];
+        }
+        grupos[grupoKey].push(user);
+      });
+      
+      // Ordenar usuarios dentro de cada grupo por nombre
+      Object.keys(grupos).forEach(key => {
+        grupos[key].sort((a, b) => a.nombre.localeCompare(b.nombre));
+      });
+      
+      return grupos;
+    }
+  },
   methods: {
+    getColorClassByGrupo(grupo) {
+      const colors = [
+        'bg-primary',    // Azul
+        'bg-success',    // Verde
+        'bg-warning',    // Amarillo
+        'bg-info',       // Cyan
+        'bg-danger',     // Rojo
+        'bg-secondary',  // Gris
+        'bg-dark'        // Negro
+      ];
+      
+      if (grupo === 'sin-grupo') {
+        return 'bg-secondary';
+      }
+      
+      // Usar el número del grupo para determinar el color
+      const grupoNum = parseInt(grupo) || 0;
+      return colors[grupoNum % colors.length];
+    },
+    
+    getCargoColorClass(cargo) {
+      const cargoColors = {
+        'Auxiliar de enfermeria': 'bg-success text-white',
+        'Enfermero': 'bg-info text-white',
+        'Medico': 'bg-primary text-white',
+        'Fact': 'bg-warning text-dark',
+        'admin': 'bg-danger text-white',
+        'Psicologo': 'bg-purple text-white',
+        'Nutricionista': 'bg-orange text-white',
+        'Tsocial': 'bg-teal text-white'
+      };
+      
+      return cargoColors[cargo] || 'bg-secondary text-white';
+    },
+    
+    getCargoShortName(cargo) {
+      const shortNames = {
+        'Auxiliar de enfermeria': 'AUX',
+        'Enfermero': 'ENF',
+        'Medico': 'MED',
+        'Fact': 'FACT',
+        'admin': 'ADMIN',
+        'Psicologo': 'PSI',
+        'Nutricionista': 'NUT',
+        'Tsocial': 'TS'
+      };
+      
+      return shortNames[cargo] || cargo.substring(0, 3).toUpperCase();
+    },
+    
+    // Eliminar usuario de la base de datos
+    async deleteUser(user) {
+      if (!confirm(`¿Estás seguro de que deseas eliminar al usuario ${user.nombre}?
+
+Esta acción eliminará el usuario de la base de datos.`)) {
+        return;
+      }
+      
+      this.loading = true;
+      
+      try {
+        // Eliminar documento del usuario de Firestore
+        await deleteDoc(doc(db, "users", user.uid));
+        
+        this.message = `Usuario ${user.nombre} eliminado exitosamente de la base de datos.`;
+        this.messageType = "success";
+        
+        // Recargar lista de usuarios
+        await this.fetchUsers();
+        
+      } catch (error) {
+        this.message = `Error al eliminar usuario: ${error.message}`;
+        this.messageType = "error";
+        console.error("Error al eliminar usuario:", error);
+      } finally {
+        this.loading = false;
+      }
+    },
+    
     closeMessage() {
       this.message = "";
       this.messageType = "";
@@ -358,31 +499,6 @@ export default {
   text-align: right;
   background: #f8f9fa;
   border-top: 1px solid #dee2e6;
-}
-
-.btn-close-modal {
-  background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%);
-  color: white;
-  border: none;
-  padding: 10px 20px;
-  border-radius: 8px;
-  cursor: pointer;
-  font-weight: 500;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  transition: all 0.3s ease;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-}
-
-.btn-close-modal:hover {
-  background: linear-gradient(135deg, #5a6268 0%, #545b62 100%);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
-  transform: translateY(-2px);
-}
-
-.btn-close-modal i {
-  font-size: 1.1rem;
 }
 
 /* Responsive */

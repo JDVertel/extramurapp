@@ -41,7 +41,7 @@
                 </thead>
                 <tbody>
                     <tr v-for="(item, key) in InfoEncuestasById[0].tipoActividad" :key="key">
-                        <td> <button class="btn btn-sm btn-primary btn-sm" v-if="item && puedeMostrarActividad(item.key)" type="button" data-bs-toggle="modal" data-bs-target="#staticBackdrop" @click="integrarCup(item)">
+                        <td> <button class="btn btn-primary rounded-pill" v-if="item && puedeMostrarActividad(item.key)" type="button" data-bs-toggle="modal" data-bs-target="#staticBackdrop" @click="integrarCup(item)">
                                 <i class="bi bi-plus-circle"></i>
                             </button>
                         </td>
@@ -62,7 +62,7 @@
                         }">{{ cup.key || 'Rol desconocido' }}</span>
                                         </small>
                                     </div>
-                                    <button v-if="puedeEliminarCups(cup)" class="btn btn-danger btn-sm ms-2" @click="eliminarCupsAsignado(cup, item.key)" title="Eliminar CUPS">
+                                    <button v-if="puedeEliminarCups(cup)" class="btn btn-danger rounded-circle ms-2" @click="eliminarCupsAsignado(cup, item.key)" title="Eliminar CUPS">
                                         <i class="bi bi-trash"></i>
                                     </button>
                                     <span v-else class="badge bg-secondary ms-2" title="Solo el creador puede eliminar">
@@ -81,7 +81,7 @@
         </div>
     </div>
     <div class="footer my-3 text-end">
-        <button class="btn btn-success btn-sm" @click="cerrarVisita()" v-if="InfoEncuestasById !== ''">
+        <button class="btn btn-success rounded-pill" @click="cerrarVisita()" v-if="InfoEncuestasById !== ''">
             <i class="bi bi-clipboard2-check"></i> Cerrar Visita
         </button>
     </div>
@@ -91,7 +91,8 @@
             <div class="modal-content shadow-lg">
                 <div class="modal-header">
                     <h1 class="modal-title fs-5" id="staticBackdropLabel">
-                        Añadir Cup a la actividad
+                        <i class="bi bi-plus-circle-fill me-2"></i>
+                        Añadir CUPS a la actividad
                     </h1>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
@@ -122,7 +123,7 @@
                                     </div>
                                 </div>
                             </div>
-                            <button class="btn btn-warning btn-sm mt-2" @click="addCups(this.CupsSeleccionadoId, this.cantidad, this.detalle)" :disabled="!CupsSeleccionadoId || cantidad < 1 || !detalle.trim()">
+                            <button class="btn btn-warning rounded-pill mt-2" @click="addCups(this.CupsSeleccionadoId, this.cantidad, this.detalle)" :disabled="!CupsSeleccionadoId || cantidad < 1 || !detalle.trim()">
                                 <i class="bi bi-plus-circle-dotted"></i> Agregar al listado
                             </button>
                         </div>
@@ -148,7 +149,7 @@
                                 <td>{{ cup.cantidad }}</td>
                                 <td>{{ cup.Grupo }}</td>
                                 <td>
-                                    <button class="btn btn-sm btn-danger" @click="eliminarDelListado(index)">
+                                    <button class="btn btn-danger rounded-circle" @click="eliminarDelListado(index)">
                                         <i class="bi bi-trash"></i>
                                     </button>
                                 </td>
@@ -157,10 +158,10 @@
                     </table>
                     <div v-if="cupsArray.length === 0">No hay CUPS seleccionados.</div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-danger btn-sm" data-bs-dismiss="modal">
+                        <button type="button" class="btn btn-danger rounded-pill" data-bs-dismiss="modal">
                             <i class="bi bi-x-square"></i> Cancelar
                         </button>
-                        <button type="button" class="btn btn-primary btn-sm" @click="confirmarSeleccion(userEncuesta?.id)" data-bs-dismiss="modal" v-if="cupsArray.length !== 0">
+                        <button type="button" class="btn btn-primary rounded-pill" @click="confirmarSeleccion(userEncuesta?.id)" data-bs-dismiss="modal" v-if="cupsArray.length !== 0">
                             <i class="bi bi-floppy"></i> Guardar Listado
                         </button>
                     </div>
@@ -956,4 +957,49 @@ select {
     font-size: 1.2rem;
     color: #333;
 }
-</style>
+
+/* Estilos mejorados para el modal */
+.modal-header {
+    background: linear-gradient(135deg, #4e73df 0%, #224abe 100%);
+    color: white;
+    border-bottom: none;
+}
+
+.modal-header .modal-title {
+    color: white;
+    font-weight: 600;
+}
+
+.modal-content {
+    border: none;
+    border-radius: 15px;
+    overflow: hidden;
+}
+
+/* Estilos para botones redondeados */
+.btn.rounded-circle {
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    transition: all 0.2s ease;
+}
+
+.btn.rounded-circle:hover {
+    transform: scale(1.05);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.btn.rounded-pill {
+    border-radius: 50px;
+    padding: 8px 16px;
+    transition: all 0.2s ease;
+}
+
+.btn.rounded-pill:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}</style>

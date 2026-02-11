@@ -4,7 +4,7 @@
       <img :src="logo" alt="Logo Extramuralapp" class="logo" />
       <p class="text-center">Facilitando la salud, mejorando vidas</p>
       <div>
-        <button class="btn btn-success btn-sm" @click="$router.push({ name: 'login' })">
+        <button class="btn btn-success" @click="$router.push({ name: 'login' })">
           Ir a Login
         </button>
       </div>

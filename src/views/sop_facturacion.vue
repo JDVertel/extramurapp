@@ -65,7 +65,7 @@
                                 <td>{{ paciente.fecha }}</td>
                                 <td>{{ paciente.fechagestEnfermera }}</td>
                                 <td>
-                                    <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#staticBackdrop" @click="setPacienteId(paciente.id)">
+                                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#staticBackdrop" @click="setPacienteId(paciente.id)">
                                         <i class="bi bi-bookmark-check-fill"></i>
                                     </button>
                                 </td>
@@ -174,7 +174,7 @@
                                 <td>{{ paciente.fechagestEnfermera }}</td>
                                 <td>{{ paciente.requiereRemision }}</td>
                                 <td>
-                                    <button type="button" class="btn btn-warning btn-sm" :disabled="aprovDisabled[paciente.id]" @click="
+                                    <button type="button" class="btn btn-warning" :disabled="aprovDisabled[paciente.id]" @click="
                         AprovisionarPaciente(
                           (idEncuesta = paciente.id),
                           (idProf = userData.numDocumento)

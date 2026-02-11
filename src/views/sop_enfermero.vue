@@ -75,7 +75,7 @@
                             </div>
                             <div class="col-6 acciones-col">
                                 <div>
-                                    <button type="button" class="btn btn-danger btn-sm rounded-circle agendar-btn" @click="cupsGestion(encuesta.id)">
+                                    <button type="button" class="btn btn-danger rounded-circle agendar-btn" @click="cupsGestion(encuesta.id)">
                                         <i class="bi bi-calendar2-heart-fill"></i>
                                         <span class="agendar-label">Cups</span>
                                     </button>
@@ -262,9 +262,20 @@ export default {
     justify-content: center;
 }
 
+/* Layout horizontal para botones */
+.btn-row {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+/* Estilos para botones redondeados */
 .agendar-btn {
-    width: 44px;
-    height: 44px;
+    width: 50px;
+    height: 50px;
     padding: 0;
     display: inline-flex;
     flex-direction: column;
@@ -272,13 +283,21 @@ export default {
     justify-content: center;
     gap: 2px;
     line-height: 1;
+    border: none;
+    transition: all 0.2s ease;
+}
+
+.agendar-btn:hover {
+    transform: scale(1.05);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
 .agendar-btn i {
-    font-size: 14px;
+    font-size: 16px;
 }
 
 .agendar-label {
     font-size: 9px;
+    font-weight: 600;
 }
 </style>

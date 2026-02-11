@@ -45,7 +45,7 @@
                                 </select>
                             </div>
 
-                            <button class="btn btn-sm btn-warning mb-3 mt-3" @click="guardarAgendamientoTomaLab"
+                            <button class="btn btn-warning mb-3 mt-3" @click="guardarAgendamientoTomaLab"
                                 v-if="userData.grupo && dateIDAgenda && horalab !== ''" :disabled="guardando">
                                 {{ guardando ? 'Guardando...' : 'Guardar Agendamiento' }}
                             </button>
@@ -70,7 +70,7 @@
                                         <td>{{ muestra?.horalab || '-' }}</td>
                                         <td>{{ muestra?.grupo || '-' }}</td>
                                         <td>
-                                            <button class="btn btn-danger btn-sm"
+                                            <button class="btn btn-danger rounded-circle"
                                                 @click="eliminarItemAgenda({ indice: i, encuestaID: item.id, lista: 'tomademuestras' })"
                                                 v-if="
                                                     userData &&
@@ -118,7 +118,7 @@
                                     </option>
                                 </select>
                             </div>
-                            <button class="btn btn-sm btn-warning mb-3 mt-3" @click="guardarAgendamientoVisitas"
+                            <button class="btn btn-warning mb-3 mt-3" @click="guardarAgendamientoVisitas"
                                 v-if="userData.grupo && dateIDvisita && horavisita !== ''" :disabled="guardando">
                                 {{ guardando ? 'Guardando...' : 'Guardar Agendamiento' }}
                             </button>
@@ -143,7 +143,7 @@
                                         <td>{{ muestras?.horavisita || '-' }}</td>
                                         <td>{{ muestras?.grupo || '-' }}</td>
                                         <td>
-                                            <button class="btn btn-danger btn-sm"
+                                            <button class="btn btn-danger rounded-circle"
                                                 @click="eliminarItemAgenda({ indice: i, encuestaID: iten.id, lista: 'visitamedica' })"
                                                 v-if="
                                                     userData &&
@@ -461,5 +461,21 @@ export default {
     background-color: #5F24BD;
     border-radius: 5px;
     color: white;
+}
+
+/* Estilos para botones redondeados */
+.btn.rounded-circle {
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.btn.rounded-circle:hover {
+  transform: scale(1.05);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 </style>

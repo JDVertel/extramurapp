@@ -67,7 +67,7 @@
                         </div>
                     </div>
                     <div class="col-4">
-                        <button type="button" class="btn btn-primary btn-sm">Crear</button>
+                        <button type="button" class="btn btn-primary">Crear</button>
                     </div>
                 </div>
             </div>
@@ -98,7 +98,7 @@
 
                 <textarea class="form-control" id="exampleFormControlTextarea1" rows="3" placeholder="Descripcion o detalle de la sede"></textarea>
             </div>
-            <button type="button" class="btn btn-primary btn-sm">Guardar</button>
+            <button type="button" class="btn btn-primary">Guardar</button>
         </div>
 
     </div>

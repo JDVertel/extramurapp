@@ -31,7 +31,7 @@
                                     </div>
 
                                     <div class="col-1">
-                                        <button type="button" class="btn btn-primary btn-sm" @click="asignar">
+                                        <button type="button" class="btn btn-primary" @click="asignar">
                                             Asignar
                                         </button>
                                     </div>
@@ -117,7 +117,7 @@
                                     </table>
                                 </td>
                                 <td>
-                                    <button v-if="(!agenda.tomademuestras || agenda.tomademuestras.length === 0) && (!agenda.visitamedica || agenda.visitamedica.length === 0)" class="btn btn-danger btn-sm">eliminar</button>
+                                    <button v-if="(!agenda.tomademuestras || agenda.tomademuestras.length === 0) && (!agenda.visitamedica || agenda.visitamedica.length === 0)" class="btn btn-danger">eliminar</button>
                                 </td>
                             </tr>
                         </tbody>

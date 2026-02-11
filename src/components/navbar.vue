@@ -294,22 +294,6 @@ export default {
   vertical-align: middle;
 }
 
-.logout-btn {
-  color: #fff !important;
-  background: #dc3545;
-  border: none;
-  border-radius: 6px;
-  padding: 0.5em 1.2em;
-  font-size: 1.1rem;
-  font-weight: 600;
-  box-shadow: 1px 1px 6px #0002;
-  transition: background 0.2s;
-}
-
-.logout-btn:hover {
-  background: #b52a37;
-}
-
 .sidebar-version {
   color: #bbb !important;
 }
