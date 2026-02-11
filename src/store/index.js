@@ -1885,24 +1885,70 @@ export default createStore({
      */
     GetRegistersbyRangeGeneralFact: async ({ commit }, parametros) => {
       try {
-        const { data } = await firebase_api.get("/Asignaciones.json");
+        const { finicial, ffinal } = parametros;
+        
+        console.log("📋 Parámetros de búsqueda:");
+        console.log("   finicial:", finicial, "| tipo:", typeof finicial);
+        console.log("   ffinal:", ffinal, "| tipo:", typeof ffinal);
+        
+        const { data } = await firebase_api.get("/Encuesta.json");
+        
+        if (!data) {
+          console.warn("⚠️ No hay datos en /Encuesta.json");
+          commit("setEncuestasFact", []);
+          return [];
+        }
+        
         const encuestas = Object.entries(data).map(([key, value]) => ({
           id: key,
           ...value,
         }));
+        
+        console.log(`📊 Total de encuestas en BD: ${encuestas.length}`);
+
+        // Mostrar ejemplos de fechagestEnfermera en la BD
+        if (encuestas.length > 0) {
+          console.log("🗓️ Ejemplos de fechagestEnfermera en BD:");
+          for (let i = 0; i < Math.min(3, encuestas.length); i++) {
+            console.log(
+              `   Encuesta ${i + 1}: "${encuestas[i].fechagestEnfermera}" (tipo: ${typeof encuestas[i].fechagestEnfermera})`
+            );
+          }
+        }
 
         const encuestasFiltradas = encuestas.filter(
-          (encuesta) =>
-            encuesta.fechagestEnfermera >= parametros.finicial &&
-            encuesta.fechagestEnfermera <= parametros.ffinal &&
-            (encuesta.asigfact === "" ||
-              encuesta.asigfact === null ||
-              encuesta.asigfact === undefined)
+          (encuesta) => {
+            const fechaBD = encuesta.fechagestEnfermera;
+            
+            // Comparar fechas extrayendo solo la fecha (sin hora)
+            const fechaBDSolo = fechaBD ? fechaBD.split(" ")[0] : null;
+            
+            const cumpleFecha = 
+              fechaBDSolo >= finicial &&
+              fechaBDSolo <= ffinal;
+            
+            if (encuesta.id === encuestas[0].id) {
+              console.log(`🔍 Comparación para primera encuesta:`);
+              console.log(`   fechaBD: "${fechaBD}"`);
+              console.log(`   fechaBDSolo: "${fechaBDSolo}"`);
+              console.log(`   finicial: "${finicial}"`);
+              console.log(`   ffinal: "${ffinal}"`);
+              console.log(`   ${fechaBDSolo} >= ${finicial}: ${fechaBDSolo >= finicial}`);
+              console.log(`   ${fechaBDSolo} <= ${ffinal}: ${fechaBDSolo <= ffinal}`);
+              console.log(`   cumpleFecha: ${cumpleFecha}`);
+            }
+            
+            return cumpleFecha;
+          }
         );
+        
+        console.log(`✅ Encuestas filtradas por fecha: ${encuestasFiltradas.length}`);
+        console.log("📄 JSON de resultados:", JSON.stringify(encuestasFiltradas, null, 2));
+        
         commit("setEncuestasFact", encuestasFiltradas);
         return encuestasFiltradas;
       } catch (error) {
-        console.error("Error en Action_GetRegistersbyRangeGeneralFact:", error);
+        console.error("❌ Error en Action_GetRegistersbyRangeGeneralFact:", error);
         throw error;
       }
     },
@@ -1939,6 +1985,7 @@ export default createStore({
      */
     GetRegistersbyRangeGeneralFactAprov: async ({ commit }, iduser) => {
       try {
+        
         const { data } = await firebase_api.get("/Encuesta.json");
         const encuestas = Object.entries(data).map(([key, value]) => ({
           id: key,
