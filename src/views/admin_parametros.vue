@@ -44,10 +44,10 @@
                 v-model="barrio" />
             </div>
             <div class="col-4">
-              <button type="button" class="btn btn-warning" @click="saveComunaBarrio">
+              <button type="button" class="btn btn-sm btn-warning" @click="saveComunaBarrio">
                 {{ comunaBarrioEditId ? 'Actualizar' : '+ Guardar' }}
               </button>
-              <button v-if="comunaBarrioEditId" type="button" class="btn btn-secondary ms-2"
+              <button v-if="comunaBarrioEditId" type="button" class="btn btn-sm btn-secondary ms-2"
                 @click="clearFormComunaBarrio">
                 Cancelar
               </button>
@@ -68,14 +68,14 @@
               </thead>
               <tbody>
                 <tr v-for="(comuna, index) in comunasBarrios" :key="comuna.id || index">
-                  <td><button class="btn btn-warning" @click="editBarrio(comuna.id)" aria-label="Editar barrio"
+                  <td><button class="btn btn-sm btn-warning" @click="editBarrio(comuna.id)" aria-label="Editar barrio"
                       type="button">
                       <i class="bi bi-pencil"></i>
                     </button></td>
                   <td>{{ comuna.comuna }}</td>
                   <td>{{ comuna.barrio }}</td>
                   <td>
-                    <button class="btn btn-danger" @click="deleteBarrio(comuna.id)" aria-label="Eliminar barrio"
+                    <button class="btn btn-sm btn-danger" @click="deleteBarrio(comuna.id)" aria-label="Eliminar barrio"
                       type="button">
                       <i class="bi bi-trash"></i>
                     </button>
@@ -110,10 +110,10 @@
                       </div>
                     </div>
                     <div class="col-6">
-                      <button type="button" class="btn btn-warning" @click="saveEps">
+                      <button type="button" class="btn btn-sm btn-warning" @click="saveEps">
                         {{ epsEditId ? 'Actualizar' : 'Guardar' }}
                       </button>
-                      <button v-if="epsEditId" type="button" class="btn btn-secondary ms-2"
+                      <button v-if="epsEditId" type="button" class="btn btn-sm btn-secondary ms-2"
                         @click="clearFormEps">
                         Cancelar
                       </button>
@@ -131,13 +131,13 @@
                       </thead>
                       <tbody>
                         <tr v-for="(ot, index) in epss" :key="ot.id || index">
-                          <td><button class="btn btn-warning" @click="editEps(ot.id)" aria-label="Editar EPS"
+                          <td><button class="btn btn-sm btn-warning" @click="editEps(ot.id)" aria-label="Editar EPS"
                               type="button">
                               <i class="bi bi-pencil"></i>
                             </button></td>
                           <td>{{ ot.eps }}</td>
                           <td>
-                            <button class="btn btn-danger" @click="EpsDelete(ot.id)" aria-label="Eliminar EPS"
+                            <button class="btn btn-sm btn-danger" @click="EpsDelete(ot.id)" aria-label="Eliminar EPS"
                               type="button">
                               <i class="bi bi-trash"></i>
                             </button>
@@ -163,7 +163,7 @@
         <br />
         <div class="container-fluid">
           <!-- boton modal -->
-          <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#staticBackdrop">
+          <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#staticBackdrop">
             + Nuevo CUPS
           </button>
         </div>
@@ -213,10 +213,10 @@
                 </div>
               </div>
               <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" @click="clearFormCups">
+                <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal" @click="clearFormCups">
                   Cerrar
                 </button>
-                <button type="button" class="btn btn-primary" @click="saveCups">
+                <button type="button" class="btn btn-sm btn-primary" @click="saveCups">
                   Guardar
                 </button>
               </div>
@@ -240,7 +240,7 @@
             <tbody>
               <tr v-for="cup in cups" :key="cup.id" :class="getColorClassByProfesional(cup.profesional)">
                 <td>
-                  <button type="button" class="btn btn-warning" data-bs-toggle="modal"
+                  <button type="button" class="btn btn-sm btn-warning" data-bs-toggle="modal"
                     data-bs-target="#staticBackdrop" @click="editCups(cup.id)">
                     <i class="bi bi-pencil"></i>
                   </button>
@@ -252,7 +252,7 @@
                 </td>
                 <td>{{ cup.Grupo }}</td>
                 <td>
-                  <button type="button" class="btn btn-danger" @click="deleteCups(cup.id)">
+                  <button type="button" class="btn btn-sm btn-danger" @click="deleteCups(cup.id)">
                     <i class="bi bi-trash"></i>
                   </button>
                 </td>
@@ -289,7 +289,7 @@
             <input type="text" id="numdoc" v-model="numdoc" class="form-control" required />
           </div>
           <div class="col-6 col-md-2">
-            <button class="btn btn-primary mt-4" :disabled="cargandoPacientes" @click="consultarP">
+            <button class="btn btn-sm btn-primary mt-4" :disabled="cargandoPacientes" @click="consultarP">
               <i class="bi bi-search"></i> Consultar
             </button>
           </div>
@@ -326,7 +326,7 @@
                     </div>
                     <div class="btn-group mt-2" role="group">
                       <!-- <button class="btn btn-warning btn-sm" type="button" @click.stop="editarP(paciente.id)"><i class="bi bi-pencil-square"></i></button> -->
-                      <button class="btn btn-danger" type="button" @click.stop="eliminarPaciente(paciente.id)">
+                      <button class="btn btn-sm btn-danger" type="button" @click.stop="eliminarPaciente(paciente.id)">
                         <i class="bi bi-trash"></i>
                       </button>
                     </div>
@@ -408,7 +408,7 @@
                               <li v-for="cup in Object.values(cupsObj.cups || {})" :key="cup.id">
                                 <span><strong>{{
                                   cup.DescripcionCUP
-                                }}</strong></span><br />
+                                    }}</strong></span><br />
                                 EPS:
                                 <span v-for="(eps, eidx) in cup.Eps || []" :key="eps">{{ eps
                                 }}<span v-if="eidx < (cup.Eps || []).length - 1">,
@@ -434,12 +434,12 @@
       <!-- ========== TAB: CONTRATOS ========== -->
       <div class="tab-pane fade" id="nav-contratos" role="tabpanel" aria-labelledby="nav-contratos-tab" tabindex="0">
         <h5>Gestion CONTRATOS</h5>
-        
+
         <div class="alert alert-warning" role="alert">
           <div class="row">
             <div class="col-8">Crear un nuevo contrato</div>
             <div class="col-2">
-              <button class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#crearcontratos">
+              <button class="btn btn-sm btn-warning" data-bs-toggle="modal" data-bs-target="#crearcontratos">
                 +
               </button>
             </div>
@@ -498,8 +498,8 @@
 
                   </div>
                   <div class="col-1">
-                    <button class="btn btn-warning mt-4" @click="addCupsContrato"
-                      :disabled="!Seps || !Scups"> + Agregar</button>
+                    <button class="btn btn-sm btn-warning mt-4" @click="addCupsContrato" :disabled="!Seps || !Scups"> +
+                      Agregar</button>
                   </div>
                 </div>
 
@@ -527,10 +527,11 @@
                       <tr v-for="(contrato, index) in contratosFiltrados" :key="index">
                         <td>{{ obtenerProfesionalCups(contrato.cupsId, contrato.cupsProfesional) }}</td>
                         <td>{{ obtenerGrupoCups(contrato.cupsId, contrato.cupsGrupo) || '-' }}</td>
-                        <td>{{ obtenerNombreActividadPorId(contrato.actividadId, contrato.actividadNombre) || sinEspecificar }}</td>
+                        <td>{{ obtenerNombreActividadPorId(contrato.actividadId, contrato.actividadNombre) ||
+                          sinEspecificar }}</td>
                         <td>{{ obtenerNombreCups(contrato.cupsId, contrato.cupsNombre) }}</td>
                         <td>
-                          <button class="btn btn-danger" @click="removeContrato(contrato)">
+                          <button class="btn btn-sm btn-danger" @click="removeContrato(contrato)">
                             <i class="bi bi-trash"></i>
                           </button>
                         </td>
@@ -546,7 +547,7 @@
                     <strong>{{ grupo.epsNombre }} ({{ grupo.cups.length }} CUPS)</strong>
                     <ul>
                       <li v-for="(cup, idx) in grupo.cups" :key="idx" class="small">
-                        {{ obtenerNombreActividadPorId(cup.actividadId, cup.actividadNombre) || sinEspecificar }}: 
+                        {{ obtenerNombreActividadPorId(cup.actividadId, cup.actividadNombre) || sinEspecificar }}:
                         {{ obtenerNombreCups(cup.cupsId, cup.cupsNombre) }}
                       </li>
                     </ul>
@@ -554,11 +555,11 @@
                 </div>
               </div>
               <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"
+                <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal"
                   @click="clearFormContratos">
                   Cerrar
                 </button>
-                <button type="button" class="btn btn-primary" @click="saveContrato">
+                <button type="button" class="btn btn-sm btn-primary" @click="saveContrato">
                   Guardar
                 </button>
               </div>
@@ -573,51 +574,60 @@
             No hay contratos guardados.
           </div>
           <div v-else>
-            <div v-for="(grupo, index) in contratosAgrupadosPorEps" :key="grupo.epsId" 
-                 class="card mb-3" 
-                 :class="getColorClassByEps(index)">
-              <div class="card-header d-flex justify-content-between align-items-center">
-                <div>
-                  <strong>EPS:</strong> {{ obtenerNombreEps(grupo.epsId, grupo.epsNombre) }}
-                  <span class="badge bg-white text-dark ms-2">{{ grupo.cups.length }} CUPS</span>
-                  <span class="badge bg-white text-dark ms-1">{{ grupo.contratoIds.length }} registro(s)</span>
-                </div>
-                <button class="btn btn-outline-light" @click="eliminarContratosPorEps(grupo.contratoIds)">
-                  <i class="bi bi-trash"></i> Eliminar Todos
-                </button>
-              </div>
-              <div class="card-body">
-                <!-- Agrupar por Profesional -->
-                <div v-for="(profesionalGrupo, profesional) in agruparPorProfesional(grupo.cups)" :key="profesional"
-                  class="mb-2">
-                  <div class="bg-white text-dark p-1 rounded small fw-bold border">
-                    <i class="bi bi-person-badge"></i> {{ profesional }}
-                    <span class="badge bg-primary ms-2">{{ profesionalGrupo.length }} CUPS</span>
+            <div class="accordion" id="contratosAccordion">
+              <div v-for="(grupo, index) in contratosAgrupadosPorEps" :key="grupo.epsId" class="accordion-item">
+                <h2 class="accordion-header" :id="'heading' + index">
+                  <button class="accordion-button" :class="{ collapsed: index !== 0 }" type="button"
+                    data-bs-toggle="collapse" :data-bs-target="'#collapse' + index"
+                    :aria-expanded="index === 0 ? 'true' : 'false'" :aria-controls="'collapse' + index">
+                    <strong>EPS:</strong> {{ obtenerNombreEps(grupo.epsId, grupo.epsNombre) }}
+                    <span class="badge bg-primary ms-2">{{ grupo.cups.length }} CUPS</span>
+                    <span class="badge bg-secondary ms-1">{{ grupo.contratoIds.length }} registro(s)</span>
+                  </button>
+                </h2>
+                <div :id="'collapse' + index" class="accordion-collapse collapse" :class="{ show: index === 0 }"
+                  :aria-labelledby="'heading' + index" data-bs-parent="#contratosAccordion">
+                  <div class="accordion-body p-3">
+                    <div class="text-end mb-2">
+                      <button class="btn btn-sm btn-outline-danger"
+                        @click="confirmarEliminarContratos(grupo.contratoIds)">
+                        <i class="bi bi-trash"></i> Eliminar Todos
+                      </button>
+                    </div>
+                    <!-- Agrupar por Profesional -->
+                    <div v-for="(profesionalGrupo, profesional) in agruparPorProfesional(grupo.cups)" :key="profesional"
+                      class="mb-3">
+                      <div class="bg-light text-dark p-2 rounded small fw-bold border">
+                        <i class="bi bi-person-badge"></i> {{ profesional }}
+                        <span class="badge bg-primary ms-2">{{ profesionalGrupo.length }} CUPS</span>
+                      </div>
+                      <table class="table table-sm table-bordered mb-0 small">
+                        <thead>
+                          <tr>
+                            <th>Actividad Extramural</th>
+                            <th>CUPS</th>
+                            <th>Grupo</th>
+                            <th style="width: 80px;">Eliminar</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr v-for="(cup, idx) in profesionalGrupo" :key="idx">
+                            <td>{{ obtenerNombreActividadPorId(cup.actividadId, cup.actividadNombre) || sinEspecificar
+                            }}
+                            </td>
+                            <td>{{ obtenerNombreCups(cup.cupsId, cup.cupsNombre) }}</td>
+                            <td>{{ obtenerGrupoCups(cup.cupsId, cup.cupsGrupo) || '-' }}</td>
+                            <td class="text-center">
+                              <button class="btn btn-sm btn-danger"
+                                @click="eliminarCupsDeContrato(cup.contratoId, cup.cupsId)" title="Eliminar este CUPS">
+                                <i class="bi bi-trash"></i>
+                              </button>
+                            </td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
                   </div>
-                  <table class="table table-sm table-bordered mb-0 small">
-                    <thead>
-                      <tr>
-                        <th>Actividad Extramural</th>
-                        <th>CUPS</th>
-                        <th>Grupo</th>
-                        <th style="width: 80px;">Eliminar</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr v-for="(cup, idx) in profesionalGrupo" :key="idx">
-                        <td>{{ obtenerNombreActividadPorId(cup.actividadId, cup.actividadNombre) || sinEspecificar }}
-                        </td>
-                        <td>{{ obtenerNombreCups(cup.cupsId, cup.cupsNombre) }}</td>
-                        <td>{{ obtenerGrupoCups(cup.cupsId, cup.cupsGrupo) || '-' }}</td>
-                        <td class="text-center">
-                          <button class="btn btn-danger"
-                            @click="eliminarCupsDeContrato(cup.contratoId, cup.cupsId)" title="Eliminar este CUPS">
-                            <i class="bi bi-trash"></i>
-                          </button>
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
                 </div>
               </div>
             </div>
@@ -1292,6 +1302,19 @@ export default {
       return cup?.Grupo || fallback || "";
     },
 
+    confirmarEliminarContratos(contratoIds) {
+      if (!contratoIds || contratoIds.length === 0) return;
+
+      const cantidadContratos = contratoIds.length;
+      const mensaje = cantidadContratos === 1
+        ? "⚠️ ¿Está seguro de que desea eliminar este contrato con todos sus CUPS? Esta acción no se puede deshacer."
+        : `⚠️ ¿Está seguro de que desea eliminar los ${cantidadContratos} contratos de esta EPS con todos sus CUPS? Esta acción no se puede deshacer.`;
+
+      if (confirm(mensaje)) {
+        this.eliminarContratosPorEps(contratoIds);
+      }
+    },
+
     async eliminarContratosPorEps(contratoIds) {
       if (!contratoIds || contratoIds.length === 0) return;
 
@@ -1352,13 +1375,40 @@ export default {
 
     async eliminarPaciente(pacienteId) {
       if (!pacienteId) return;
-      const confirmed = confirm(
-        "¿Confirma que desea eliminar este paciente? Esta acción no se puede deshacer."
-      );
+
+      const mensaje = `⚠️ ATENCIÓN: Esta acción eliminará:
+      
+1. El paciente del sistema
+2. Todos sus registros de encuestas
+3. Todas sus actividades asociadas
+4. Todas las asignaciones de esas actividades
+
+¿Está seguro de que desea continuar? Esta acción NO se puede deshacer.`;
+
+      const confirmed = confirm(mensaje);
       if (!confirmed) return;
+
       try {
+        // Confirmación adicional para mayor seguridad
+        const confirmacionFinal = confirm("Esta es su última oportunidad para cancelar. ¿Desea eliminar este paciente y TODOS sus datos asociados?");
+        if (!confirmacionFinal) return;
+
+        // 1. Eliminar el paciente de la tabla encuestas
         await this.deletePaciente(pacienteId);
-        alert("Paciente eliminado correctamente.");
+
+        // 2. Eliminar actividades del paciente
+        if (this.$store._actions.deleteActividadesByPacienteId) {
+          await this.$store.dispatch('deleteActividadesByPacienteId', pacienteId);
+        }
+
+        // 3. Eliminar asignaciones asociadas del paciente
+        if (this.$store._actions.deleteAsignacionesByPacienteId) {
+          await this.$store.dispatch('deleteAsignacionesByPacienteId', pacienteId);
+        }
+
+        alert("✓ Paciente y todos sus datos asociados han sido eliminados correctamente.");
+
+        // Recargar la consulta
         if (this.tipodoc && this.numdoc) {
           await this.consultarP();
         } else {

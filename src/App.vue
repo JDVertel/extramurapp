@@ -21,18 +21,20 @@ export default {
         }
     },
 
-  
+
 
 }
 </script>
 
 <template>
-<div id="app">
-    <Navbar v-if="!$route.meta.hideNavbar" />
-    <transition name="fade" mode="out-in">
-        <router-view />
-    </transition>
-</div>
+    <div id="app">
+        <Navbar v-if="!$route.meta.hideNavbar" />
+        <router-view v-slot="{ Component }">
+            <transition name="fade" mode="out-in">
+                <component :is="Component" />
+            </transition>
+        </router-view>
+    </div>
 </template>
 
 <style>
@@ -40,7 +42,8 @@ export default {
     box-sizing: border-box;
 }
 
-html, body {
+html,
+body {
     margin: 0;
     padding: 0;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
@@ -56,11 +59,13 @@ html, body {
 }
 
 /* Transiciones para cambio de rutas */
-.fade-enter-active, .fade-leave-active {
+.fade-enter-active,
+.fade-leave-active {
     transition: opacity 0.3s ease;
 }
 
-.fade-enter-from, .fade-leave-to {
+.fade-enter-from,
+.fade-leave-to {
     opacity: 0;
 }
 
@@ -114,6 +119,7 @@ html, body {
         opacity: 0;
         transform: translateY(20px);
     }
+
     to {
         opacity: 1;
         transform: translateY(0);

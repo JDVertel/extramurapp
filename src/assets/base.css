@@ -44,96 +44,221 @@
 
 body {
   background: var(--gris-claro);
-  font-family: "Segoe UI", Arial, sans-serif;
+  font-family:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue",
+    Arial, sans-serif;
+  font-size: 14px;
+  line-height: 1.6;
+  letter-spacing: 0.3px;
   margin: 0;
   padding: 0;
+  color: #2c3e50;
+  font-weight: 400;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Encabezados profesionales */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-weight: 600;
+  line-height: 1.4;
+  letter-spacing: -0.5px;
+  color: #1a202c;
+  margin-bottom: 0.75rem;
+  margin-top: 0;
 }
 
 h1 {
-  color: var(--morado-principal);
-  margin-bottom: 0.5em;
+  font-size: 2rem;
+  font-weight: 700;
+}
+
+h2 {
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
 }
 
 h4 {
-  color: var(--morado-oscuro);
-  margin-top: 2em;
-  margin-bottom: 0.6em;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+h5 {
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+h6 {
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+/* Párrafos y texto */
+p {
+  margin-bottom: 1rem;
+  font-size: 14px;
+  line-height: 1.65;
+}
+
+a {
+  color: #2563eb;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+a:hover {
+  color: #1d4ed8;
+  text-decoration: underline;
+}
+
+/* Label y formularios */
+label {
+  font-weight: 500;
+  font-size: 13px;
+  color: #374151;
+  margin-bottom: 0.35rem;
+  display: block;
+}
+
+input,
+textarea,
+select {
+  font-family: inherit;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+button {
+  font-weight: 500;
+  letter-spacing: 0.3px;
+  transition: all 0.2s ease;
+}
+
+/* Tablas profesionales */
+table {
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+th {
+  font-weight: 600;
+  color: #2c3e50;
+  background-color: #f3f4f6;
+}
+
+/* Código y snippets */
+code,
+pre {
+  font-family: "Courier New", monospace;
+  font-size: 13px;
+}
+
+h1 {
+  color: #1a202c;
+  margin-bottom: 1rem;
+  font-size: 2rem;
+}
+
+h4 {
+  color: #2c3e50;
+  margin-top: 1.5rem;
+  margin-bottom: 1rem;
+  font-size: 1.1rem;
 }
 
 p {
-  color: var(--morado-oscuro);
-  margin-bottom: 1em;
-  font-size: 1em;
+  color: #4a5568;
+  margin-bottom: 1rem;
+  font-size: 14px;
 }
 
 input[type="text"],
 input[type="number"],
 input[type="email"],
 input[type="password"],
-input[type="date"] {
+input[type="date"],
+textarea,
+select {
   width: 100%;
-  padding: 0.3em;
-  margin: 0.5em 0;
-  border: 1px solid var(--morado-claro);
-  border-radius: 3px;
-  background: var(--gris);
-  font-size: 0.9em;
-  color: var(--morado-oscuro);
+  padding: 0.6rem 0.75rem;
+  margin: 0.5rem 0;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  background: #fff;
+  font-size: 14px;
+  color: #2c3e50;
   outline: none;
-  transition: border-color 0.2s;
+  transition: all 0.2s ease;
+  font-family: inherit;
 }
-input[type="password"] {
-  width: 100%;
-  padding: 0.3em;
-  margin: 0.5em 0;
-  border: 1px solid var(--morado-claro);
-  border-radius: 3px;
-  background: var(--gris);
-  font-size: 0.9em;
-  color: var(--morado-oscuro);
-  outline: none;
-  transition: border-color 0.2s;
-}
-input[type="date"]:focus,
+
 input[type="text"]:focus,
-input[type="email"]:focus,
 input[type="number"]:focus,
-input[type="password"]:focus {
-  border-color: var(--morado-principal);
+input[type="email"]:focus,
+input[type="password"]:focus,
+input[type="date"]:focus,
+textarea:focus,
+select:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+textarea {
+  resize: vertical;
+  min-height: 100px;
 }
 
 .buttonLogin {
   width: 95%;
-  padding: 0.8em 0;
-  background: var(--morado-principal);
-  color: var(--blanco);
+  padding: 0.8rem;
+  background: #2563eb;
+  color: #fff;
   border: none;
   border-radius: 8px;
-  font-size: 1.1em;
-  font-weight: bold;
+  font-size: 1rem;
+  font-weight: 600;
   cursor: pointer;
-  margin-top: 1em;
-  transition: background 0.2s;
-  box-shadow: 0 2px 8px rgba(124, 58, 237, 0.08);
+  margin-top: 1rem;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.12);
+  letter-spacing: 0.3px;
 }
 
 .buttonLogin:hover {
-  background: var(--morado-oscuro);
+  background: #1d4ed8;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.15);
+}
+
+.buttonLogin:active {
+  transform: translateY(1px);
 }
 
 .app {
-  padding: 1px !important;
-  margin: 1px !important;
+  padding: 8px !important;
+  margin: 0 !important;
 }
+
 .navbar {
   background: linear-gradient(
     to top,
     var(--morado-principal),
     var(--morado-oscuro)
-  ) !important; /* Morado suave */
+  ) !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
+
 .offcanvas {
-  width: 160px !important; /* Ajusta el ancho a tu preferencia */
+  width: 160px !important;
   background: linear-gradient(
     to top,
     var(--gris),
@@ -141,10 +266,11 @@ input[type="password"]:focus {
   ) !important;
   color: #fff !important;
 }
-/* Ajusta el color de los enlaces al pasar el mouse */
+
 .navbar .nav-link:hover,
 .navbar .navbar-brand:hover {
   color: #e0e0e0 !important;
+  transition: color 0.2s ease;
 }
 
 .loginc {
@@ -168,7 +294,7 @@ input[type="password"]:focus {
   cursor: pointer;
 }
 
-.textRed{
+.textRed {
   color: red;
   font-weight: bold;
   font-size: 0.9rem;
@@ -201,13 +327,13 @@ footer {
   padding-left: 0;
 }
 
-.offcanvas-body ul.navbar-nav>li.nav-item {
+.offcanvas-body ul.navbar-nav > li.nav-item {
   width: 100%;
 }
 
 /* Estilo común para enlaces y botón logout */
-.offcanvas-body ul.navbar-nav>li.nav-item>a.nav-link,
-.offcanvas-body ul.navbar-nav>li.nav-item>button.logout-btn {
+.offcanvas-body ul.navbar-nav > li.nav-item > a.nav-link,
+.offcanvas-body ul.navbar-nav > li.nav-item > button.logout-btn {
   width: 100%;
   padding: 0.75rem 1rem;
   display: flex;
@@ -221,13 +347,15 @@ footer {
   font-size: 1rem;
   cursor: pointer;
   border-radius: 0.25rem;
-  transition: background-color 0.2s, color 0.2s;
+  transition:
+    background-color 0.2s,
+    color 0.2s;
   text-align: left;
 }
 
 /* Hover para enlaces y botón */
-.offcanvas-body ul.navbar-nav>li.nav-item>a.nav-link:hover,
-.offcanvas-body ul.navbar-nav>li.nav-item>button.logout-btn:hover {
+.offcanvas-body ul.navbar-nav > li.nav-item > a.nav-link:hover,
+.offcanvas-body ul.navbar-nav > li.nav-item > button.logout-btn:hover {
   background-color: #e9ecef;
   color: #0d6efd;
 }
@@ -253,17 +381,17 @@ footer {
   white-space: normal; /* Permite que el texto pase a otro renglón */
   /* text-overflow: ellipsis; */ /* Elimina esta línea */
 }
-.horizontal{
+.horizontal {
   display: flex;
   align-items: center;
   justify-content: space-between;
 }
-.ok{
+.ok {
   color: rgb(6, 114, 255);
   text-shadow: 1px 0 0 1px rgba(2, 2, 2, 0.5);
   font-size: small;
 }
-.pendiente{
+.pendiente {
   color: rgb(241, 11, 45);
   text-shadow: 1px 0 0 1px rgba(2, 2, 2, 0.5);
   font-size: small;
@@ -277,11 +405,11 @@ footer {
 
 /*  */
 
-
 .fila-con-columnas > div {
   border-left: 1px solid #4e4e4e; /* Línea izquierda para separar columnas */
-  padding: 10px;}
-  
+  padding: 10px;
+}
+
 .fila-con-columnas > div:first-child {
   border-left: none; /* Quita línea a la primera columna */
 }
@@ -289,19 +417,19 @@ footer {
 .fila-con-columnas:hover {
   background-color: #e4dede; /* Cambia color de fondo al pasar el mouse */
 }
-.Riesgos{
+.Riesgos {
   background-color: #a5c5e8;
 }
-.Actividades{
+.Actividades {
   background-color: #5cf0f5;
 }
-.cupsAsignados{
+.cupsAsignados {
   background-color: #f6f2b1;
 }
-.profesionales{
+.profesionales {
   background-color: #b6ddfd;
 }
-.paciente{
+.paciente {
   background-color: #69c350;
   margin-bottom: 4px;
   color: white;

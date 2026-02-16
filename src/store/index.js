@@ -680,9 +680,31 @@ export default createStore({
      */
     getEncuestaById: async ({ commit }, idEncuesta) => {
       try {
-        const { data } = await firebase_api.get(`/Actividades/${idEncuesta}.json`);
-        commit("setEncuesta", data);
-        return data;
+        // Consultar asignaciones completas y datos de Encuesta
+        const [asignacionesRes, encuestaRes] = await Promise.all([
+          firebase_api.get(`/Asignaciones/${idEncuesta}.json`),
+          firebase_api.get(`/Encuesta/${idEncuesta}.json`)
+        ]);
+
+        const asignacionesData = asignacionesRes.data;
+        const encuestaData = encuestaRes.data;
+
+        // Extraer cups del objeto de asignaciones
+        const cupsPaciente = asignacionesData?.cups || {};
+
+        let resultData = {};
+
+        // Estructurar los datos
+        if (encuestaData) {
+          resultData = {
+            id: idEncuesta,
+            ...encuestaData,
+            cups: cupsPaciente
+          };
+        }
+
+        commit("setEncuesta", resultData);
+        return resultData;
       } catch (error) {
         console.error("Error en getEncuestaById:", error);
         throw error;
@@ -1676,8 +1698,10 @@ export default createStore({
           })
           .map(([key, value]) => ({
             id: key,
+            key: value.key || "",
             nombre: value.nombre || "",
             descripcion: value.descripcion || "",
+            Profesional: value.Profesional || [],
           }));
 
         console.log("Actividades Extra cargadas correctamente:", actividadesExtra);
@@ -1869,13 +1893,19 @@ export default createStore({
         numFactura,
         idActividad,
         cupId,
+        facturado,
       } = datafact;
 
+      const hoy = new Date();
+      const fechaFacturacion = hoy.toISOString().split('T')[0];
+
       await firebase_api.patch(
-        `/Asignaciones/${cupId}.json`,
+        `/Asignaciones/${idEncuesta}/cups/${cupId}.json`,
         {
           FactNum: numFactura,
           FactProf: idFacturador,
+          facturado: facturado || true,
+          fechaFacturacion: fechaFacturacion,
         }
       );
     },
@@ -1886,67 +1916,52 @@ export default createStore({
     GetRegistersbyRangeGeneralFact: async ({ commit }, parametros) => {
       try {
         const { finicial, ffinal } = parametros;
-        
+
         console.log("📋 Parámetros de búsqueda:");
         console.log("   finicial:", finicial, "| tipo:", typeof finicial);
         console.log("   ffinal:", ffinal, "| tipo:", typeof ffinal);
-        
-        const { data } = await firebase_api.get("/Encuesta.json");
-        
-        if (!data) {
-          console.warn("⚠️ No hay datos en /Encuesta.json");
+
+        // Obtener actividades
+        const { data: actividades } = await firebase_api.get("/Actividades.json");
+        const { data: encuestas } = await firebase_api.get("/Encuesta.json");
+
+        if (!actividades || !encuestas) {
+          console.warn("⚠️ No hay datos en /Actividades.json o /Encuesta.json");
           commit("setEncuestasFact", []);
           return [];
         }
-        
-        const encuestas = Object.entries(data).map(([key, value]) => ({
+
+        // Mapear encuestas
+        const encuestasMap = Object.entries(encuestas).map(([key, value]) => ({
           id: key,
           ...value,
         }));
-        
-        console.log(`📊 Total de encuestas en BD: ${encuestas.length}`);
 
-        // Mostrar ejemplos de fechagestEnfermera en la BD
-        if (encuestas.length > 0) {
-          console.log("🗓️ Ejemplos de fechagestEnfermera en BD:");
-          for (let i = 0; i < Math.min(3, encuestas.length); i++) {
-            console.log(
-              `   Encuesta ${i + 1}: "${encuestas[i].fechagestEnfermera}" (tipo: ${typeof encuestas[i].fechagestEnfermera})`
-            );
-          }
-        }
+        // Mapear actividades y combinar con datos de encuesta
+        const resultados = [];
+        Object.entries(actividades).forEach(([idActividad, actividadData]) => {
+          if (actividadData && typeof actividadData === 'object') {
+            const encuestaAsociada = encuestasMap.find(e => e.id === idActividad);
+            if (encuestaAsociada) {
+              const fechaBD = encuestaAsociada.fechagestEnfermera;
+              const fechaBDSolo = fechaBD ? fechaBD.split(" ")[0] : null;
 
-        const encuestasFiltradas = encuestas.filter(
-          (encuesta) => {
-            const fechaBD = encuesta.fechagestEnfermera;
-            
-            // Comparar fechas extrayendo solo la fecha (sin hora)
-            const fechaBDSolo = fechaBD ? fechaBD.split(" ")[0] : null;
-            
-            const cumpleFecha = 
-              fechaBDSolo >= finicial &&
-              fechaBDSolo <= ffinal;
-            
-            if (encuesta.id === encuestas[0].id) {
-              console.log(`🔍 Comparación para primera encuesta:`);
-              console.log(`   fechaBD: "${fechaBD}"`);
-              console.log(`   fechaBDSolo: "${fechaBDSolo}"`);
-              console.log(`   finicial: "${finicial}"`);
-              console.log(`   ffinal: "${ffinal}"`);
-              console.log(`   ${fechaBDSolo} >= ${finicial}: ${fechaBDSolo >= finicial}`);
-              console.log(`   ${fechaBDSolo} <= ${ffinal}: ${fechaBDSolo <= ffinal}`);
-              console.log(`   cumpleFecha: ${cumpleFecha}`);
+              if (fechaBDSolo >= finicial && fechaBDSolo <= ffinal && !encuestaAsociada.status_facturacion) {
+                resultados.push({
+                  id: idActividad,
+                  ...encuestaAsociada,
+                  tipoActividad: actividadData
+                });
+              }
             }
-            
-            return cumpleFecha;
           }
-        );
-        
-        console.log(`✅ Encuestas filtradas por fecha: ${encuestasFiltradas.length}`);
-        console.log("📄 JSON de resultados:", JSON.stringify(encuestasFiltradas, null, 2));
-        
-        commit("setEncuestasFact", encuestasFiltradas);
-        return encuestasFiltradas;
+        });
+
+        console.log(`✅ Registros de actividades filtradas por fecha: ${resultados.length}`);
+        console.log("📄 JSON de resultados:", JSON.stringify(resultados, null, 2));
+
+        commit("setEncuestasFact", resultados);
+        return resultados;
       } catch (error) {
         console.error("❌ Error en Action_GetRegistersbyRangeGeneralFact:", error);
         throw error;
@@ -1958,22 +1973,39 @@ export default createStore({
      */
     GetRegistersbyRangeGeneralFactByID: async ({ commit }, parametros) => {
       try {
-        const { data } = await firebase_api.get("/Encuesta.json");
-        const encuestas = Object.entries(data).map(([key, value]) => ({
+        const { data: actividades } = await firebase_api.get("/Actividades.json");
+        const { data: encuestas } = await firebase_api.get("/Encuesta.json");
+
+        if (!actividades || !encuestas) {
+          commit("setEncuestasFact", []);
+          return [];
+        }
+
+        const encuestasMap = Object.entries(encuestas).map(([key, value]) => ({
           id: key,
           ...value,
         }));
 
-        const encuestasFiltradas = encuestas.filter(
-          (encuesta) =>
-            encuesta.numdoc === parametros.numdoc &&
-            encuesta.tipodoc === parametros.tipodoc &&
-            (encuesta.asigfact === "" ||
-              encuesta.asigfact === null ||
-              encuesta.asigfact === undefined)
-        );
-        commit("setEncuestasFact", encuestasFiltradas);
-        return encuestasFiltradas;
+        const resultados = [];
+        Object.entries(actividades).forEach(([idActividad, actividadData]) => {
+          const encuestaAsociada = encuestasMap.find(e =>
+            e.numdoc === parametros.numdoc &&
+            e.tipodoc === parametros.tipodoc &&
+            (e.asigfact === "" || e.asigfact === null || e.asigfact === undefined) &&
+            e.id === idActividad
+          );
+
+          if (encuestaAsociada && actividadData) {
+            resultados.push({
+              id: idActividad,
+              ...encuestaAsociada,
+              tipoActividad: actividadData
+            });
+          }
+        });
+
+        commit("setEncuestasFact", resultados);
+        return resultados;
       } catch (error) {
         console.error("Error en Action_GetRegistersbyRangeGeneralFactByID:", error);
         throw error;
@@ -1985,19 +2017,38 @@ export default createStore({
      */
     GetRegistersbyRangeGeneralFactAprov: async ({ commit }, iduser) => {
       try {
-        
-        const { data } = await firebase_api.get("/Encuesta.json");
-        const encuestas = Object.entries(data).map(([key, value]) => ({
+        const { data: actividades } = await firebase_api.get("/Actividades.json");
+        const { data: encuestas } = await firebase_api.get("/Encuesta.json");
+
+        if (!actividades || !encuestas) {
+          commit("setEncuestasFactAprov", []);
+          return [];
+        }
+
+        const encuestasMap = Object.entries(encuestas).map(([key, value]) => ({
           id: key,
           ...value,
         }));
 
-        const encuestasFiltradas = encuestas.filter(
-          (encuesta) =>
-            encuesta.asigfact === iduser && encuesta.status_facturacion === false
-        );
-        commit("setEncuestasFactAprov", encuestasFiltradas);
-        return encuestasFiltradas;
+        const resultados = [];
+        Object.entries(actividades).forEach(([idActividad, actividadData]) => {
+          const encuestaAsociada = encuestasMap.find(e =>
+            e.asigfact === iduser &&
+            e.status_facturacion === false &&
+            e.id === idActividad
+          );
+
+          if (encuestaAsociada && actividadData) {
+            resultados.push({
+              id: idActividad,
+              ...encuestaAsociada,
+              tipoActividad: actividadData
+            });
+          }
+        });
+
+        commit("setEncuestasFactAprov", resultados);
+        return resultados;
       } catch (error) {
         console.error("Error en Action_GetRegistersbyRangeGeneralFactAprov:", error);
         throw error;
@@ -2139,6 +2190,54 @@ export default createStore({
         console.error("Error al obtener datos de Firestore:", error);
         commit("clearUserData");
         localStorage.removeItem("userData");
+      }
+    },
+
+    /**
+     * Elimina todas las actividades asociadas a un paciente
+     * @param {string} pacienteId - ID del paciente
+     */
+    deleteActividadesByPacienteId: async ({ commit }, pacienteId) => {
+      try {
+        if (!pacienteId) {
+          throw new Error("ID de paciente inválido");
+        }
+
+        console.log(`[deleteActividadesByPacienteId] Eliminando actividades para paciente: ${pacienteId}`);
+
+        // Eliminar la rama completa de actividades para este paciente
+        const { data } = await firebase_api.delete(`/Actividades/${pacienteId}.json`);
+
+        console.log(`[deleteActividadesByPacienteId] Actividades eliminadas correctamente para paciente: ${pacienteId}`);
+        return data;
+      } catch (error) {
+        console.error(`[deleteActividadesByPacienteId] Error: ${error.message}`);
+        // No lanzar error para permitir continuidad en cascada
+        return null;
+      }
+    },
+
+    /**
+     * Elimina todas las asignaciones asociadas a un paciente
+     * @param {string} pacienteId - ID del paciente
+     */
+    deleteAsignacionesByPacienteId: async ({ commit }, pacienteId) => {
+      try {
+        if (!pacienteId) {
+          throw new Error("ID de paciente inválido");
+        }
+
+        console.log(`[deleteAsignacionesByPacienteId] Eliminando asignaciones para paciente: ${pacienteId}`);
+
+        // Eliminar la rama completa de asignaciones para este paciente
+        const { data } = await firebase_api.delete(`/Asignaciones/${pacienteId}.json`);
+
+        console.log(`[deleteAsignacionesByPacienteId] Asignaciones eliminadas correctamente para paciente: ${pacienteId}`);
+        return data;
+      } catch (error) {
+        console.error(`[deleteAsignacionesByPacienteId] Error: ${error.message}`);
+        // No lanzar error para permitir continuidad en cascada
+        return null;
       }
     },
   },

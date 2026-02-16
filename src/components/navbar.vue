@@ -3,14 +3,8 @@
     <nav class="navbar bg-body-tertiary fixed-top">
       <div class="container-fluid">
         <!-- Botón toggler a la izquierda -->
-        <button
-          class="navbar-toggler me-2"
-          type="button"
-          data-bs-toggle="offcanvas"
-          data-bs-target="#offcanvasNavbar"
-          aria-controls="offcanvasNavbar"
-          aria-label="Toggle navigation"
-        >
+        <button class="navbar-toggler me-2" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasNavbar"
+          aria-controls="offcanvasNavbar" aria-label="Toggle navigation">
           <span class="navbar-toggler-icon"></span>
         </button>
 
@@ -22,60 +16,37 @@
         </div>
 
         <!-- Offcanvas desde la izquierda -->
-        <div
-          class="offcanvas offcanvas-start"
-          tabindex="-1"
-          id="offcanvasNavbar"
-          aria-labelledby="offcanvasNavbarLabel"
-        >
+        <div class="offcanvas offcanvas-start" tabindex="-1" id="offcanvasNavbar"
+          aria-labelledby="offcanvasNavbarLabel">
           <div class="offcanvas-header">
             <div class="row">
               <h6 class="offcanvas-title" id="offcanvasNavbarLabel">MENU</h6>
             </div>
 
-            <button
-              type="button"
-              class="btn-close"
-              data-bs-dismiss="offcanvas"
-              aria-label="Close"
-            ></button>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
           </div>
 
           <div class="offcanvas-body">
             <ul class="navbar-nav justify-content-end flex-grow-1 pe-3">
               <li class="nav-item" v-if="userData && userData.cargo === 'Fact'">
-                <router-link
-                  class="nav-link"
-                  to="/sop_facturacion"
-                  @click="onNavLinkClick"
-                >
+                <router-link class="nav-link" to="/sop_facturacion" @click="onNavLinkClick">
                   <i class="bi bi-person-circle"></i> Facturador
                 </router-link>
               </li>
 
-              <li
-                class="nav-item"
-                v-if="userData && userData.cargo === 'Auxiliar de enfermeria'"
-              >
+              <li class="nav-item" v-if="userData && userData.cargo === 'Auxiliar de enfermeria'">
                 <router-link class="nav-link" to="/sop_aux" @click="onNavLinkClick">
                   <i class="bi bi-person-circle"></i> Auxiliar
                 </router-link>
               </li>
-              <li
-                class="nav-item"
-                v-if="userData && userData.cargo === 'Auxiliar de enfermeria'"
-              >
+              <li class="nav-item" v-if="userData && userData.cargo === 'Auxiliar de enfermeria'">
                 <router-link class="nav-link" to="/sop_agendas" @click="onNavLinkClick">
                   <i class="bi bi-calendar2-date"></i> Agendas
                 </router-link>
               </li>
 
               <li class="nav-item" v-if="userData && userData.cargo === 'Medico'">
-                <router-link
-                  class="nav-link"
-                  to="/sop_profesional"
-                  @click="onNavLinkClick"
-                >
+                <router-link class="nav-link" to="/sop_profesional" @click="onNavLinkClick">
                   <i class="bi bi-person-circle"></i> Medico
                 </router-link>
               </li>
@@ -85,88 +56,53 @@
                 </router-link>
               </li>
               <li class="nav-item" v-if="userData && userData.cargo === 'Admin'">
-                <router-link
-                  class="nav-link"
-                  to="/admin_informes"
-                  @click="onNavLinkClick"
-                >
+                <router-link class="nav-link" to="/admin_informes" @click="onNavLinkClick">
                   <i class="bi bi-bar-chart-fill"></i> Informes
                 </router-link>
               </li>
               <li class="nav-item" v-if="userData && userData.cargo === 'Medico'">
-                <router-link
-                  class="nav-link"
-                  to="/medico_informes"
-                  @click="onNavLinkClick"
-                >
+                <router-link class="nav-link" to="/medico_informes" @click="onNavLinkClick">
                   <i class="bi bi-bar-chart-fill"></i> Informes
                 </router-link>
               </li>
-              <li
-                class="nav-item"
-                v-if="userData && userData.cargo === 'Auxiliar de enfermeria'"
-              >
+              <li class="nav-item" v-if="userData && userData.cargo === 'Auxiliar de enfermeria'">
                 <router-link class="nav-link" to="/aux_informes" @click="onNavLinkClick">
                   <i class="bi bi-bar-chart-fill"></i> Informes
                 </router-link>
               </li>
               <li class="nav-item" v-if="userData && userData.cargo === 'Enfermero'">
-                <router-link
-                  class="nav-link"
-                  to="/enfermero_informes"
-                  @click="onNavLinkClick"
-                >
+                <router-link class="nav-link" to="/enfermero_informes" @click="onNavLinkClick">
                   <i class="bi bi-bar-chart-fill"></i> Informes
                 </router-link>
               </li>
 
               <template v-if="userData && userData.cargo === 'admin'">
                 <li class="nav-item">
-                  <router-link
-                    class="nav-link"
-                    to="/admin_programavisitas"
-                    @click="onNavLinkClick"
-                  >
+                  <router-link class="nav-link" to="/admin_programavisitas" @click="onNavLinkClick">
                     <i class="bi bi-car-front"></i> Prog Visitas
                   </router-link>
                 </li>
 
                 <li class="nav-item">
-                  <router-link
-                    class="nav-link"
-                    to="/registrousuarios"
-                    @click="onNavLinkClick"
-                  >
+                  <router-link class="nav-link" to="/registrousuarios" @click="onNavLinkClick">
                     <i class="bi bi-person-fill"></i> Usuarios
                   </router-link>
                 </li>
 
                 <li class="nav-item">
-                  <router-link
-                    class="nav-link"
-                    to="/admin_parametros"
-                    @click="onNavLinkClick"
-                  >
+                  <router-link class="nav-link" to="/admin_parametros" @click="onNavLinkClick">
                     <i class="bi bi-sliders"></i> Parámetros
                   </router-link>
                 </li>
 
                 <li class="nav-item">
-                  <router-link
-                    class="nav-link"
-                    to="/admin_informes"
-                    @click="onNavLinkClick"
-                  >
+                  <router-link class="nav-link" to="/admin_informes" @click="onNavLinkClick">
                     <i class="bi bi-file-earmark-medical"></i> Informes
                   </router-link>
                 </li>
 
                 <li class="nav-item">
-                  <router-link
-                    class="nav-link"
-                    to="/admin_caracterizacion"
-                    @click="onNavLinkClick"
-                  >
+                  <router-link class="nav-link" to="/admin_caracterizacion" @click="onNavLinkClick">
                     <i class="bi bi-file-person"></i> Reg Caract
                   </router-link>
                 </li>
@@ -190,20 +126,17 @@
                 </button>
               </li>
             </ul>
-            <div
-              class="sidebar-version"
-              style="
+            <div class="sidebar-version" style="
                 position: absolute;
-                bottom: 10px;
+                bottom: 5px;
                 left: 0;
                 width: 100%;
                 text-align: center;
-                font-size: 0.95rem;
+                font-size: 0.65rem;
                 color: #333;
                 opacity: 0.7;
-              "
-            >
-              <p>Version 1.6 - 11/09/2025</p>
+              ">
+              <p style="margin: 0; padding: 0;">Version 2.0 - 15/02/2026</p>
             </div>
           </div>
         </div>
@@ -257,19 +190,40 @@ export default {
 /* Mantener colores de fondo originales y mejorar visualización */
 .navbar.bg-body-tertiary {
   background-color: #212529 !important;
-  /* Fondo oscuro original Bootstrap */
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  padding: 0.5rem 0 !important;
+}
+
+.container-fluid {
+  padding: 0 0.5rem !important;
+}
+
+.navbar-toggler {
+  padding: 0.25rem 0.5rem !important;
+  width: auto;
+  height: auto;
 }
 
 .offcanvas {
   background-color: #23272b !important;
-  /* Fondo offcanvas oscuro */
+  width: 160px !important;
+}
+
+.offcanvas-body {
+  padding: 0.25rem 0 !important;
+}
+
+.offcanvas-header {
+  padding: 0.4rem 0.5rem !important;
 }
 
 .offcanvas-title,
 .offcanvas-header h6 {
   color: #fff;
   text-shadow: 1px 1px 4px #000;
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin: 0 !important;
 }
 
 .navbar-nav .nav-link,
@@ -277,29 +231,70 @@ export default {
 .navbar-nav .nav-item {
   color: #fff !important;
   text-shadow: 1px 1px 4px #000;
-  font-size: 1.13rem;
+  font-size: 0.8rem;
   font-weight: 500;
   letter-spacing: 0.01em;
+  padding: 0.2rem 0.4rem !important;
+  margin: 0.25rem 0 !important;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  line-height: 1.1;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
 .navbar-nav .nav-link.router-link-exact-active {
   color: #ffc107 !important;
   background: rgba(255, 255, 255, 0.08);
-  border-radius: 6px;
+  border-radius: 5px;
+  transition: all 0.2s ease;
 }
 
 .navbar-nav i {
-  font-size: 1.5rem;
-  margin-right: 0.5em;
+  font-size: 0.9rem;
+  margin-right: 0.2em;
   vertical-align: middle;
+  flex-shrink: 0;
 }
 
 .sidebar-version {
   color: #bbb !important;
+  font-size: 0.65rem !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+.logout-btn {
+  background: none;
+  border: none;
+  color: #fff !important;
+  text-shadow: 1px 1px 4px #000;
+  font-size: 0.8rem;
+  font-weight: 500;
+  padding: 0.2rem 0.4rem !important;
+  margin: 0.25rem 0 !important;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  transition: color 0.2s ease;
+  width: 100%;
+  text-align: left;
+  line-height: 1.1;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.logout-btn:hover {
+  color: #ff6b6b !important;
 }
 
 .blanco {
   color: #fff !important;
   text-shadow: 1px 1px 4px #000;
+  font-size: 0.85rem;
 }
 </style>

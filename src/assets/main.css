@@ -2,22 +2,24 @@
 
 #app {
   margin: 0 auto;
-  padding: 2px;
+  padding: 8px;
   font-weight: normal;
-  padding-top: 1.5rem;
+  padding-top: 3.5rem;
+  max-width: 1400px;
 }
 
 a,
 .green {
   text-decoration: none;
-  color: hsla(160, 100%, 37%, 1);
-  transition: 0.4s;
-  padding: 3px;
+  color: #2563eb;
+  transition: all 0.2s ease;
+  padding: 0;
 }
 
 @media (hover: hover) {
   a:hover {
-    background-color: hsla(160, 100%, 37%, 0.2);
+    color: #1d4ed8;
+    text-decoration: underline;
   }
 }
 
@@ -29,18 +31,32 @@ a,
 
 .cardpqrs {
   flex-grow: 1;
-  flex-basis: 100%; /* Ajusta el ancho inicial */
-  margin: 10px; /* Espacio entre tarjetas */
+  flex-basis: 100%;
+  margin: 10px;
   min-height: 10rem;
-  max-height: 15rem; /* Ajusta la altura máxima */
-  font-size: 0.9rem;
-  padding: 2px !important;
+  max-height: 15rem;
+  font-size: 13px;
+  padding: 12px !important;
+  border-radius: 8px;
+  background-color: #fff;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s ease;
 }
+
+.cardpqrs:hover {
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
 .card-body {
-  padding: 2px !important;
+  padding: 8px !important;
+  line-height: 1.6;
 }
 hr {
-  margin: 0.2rem;
+  margin: 1.5rem 0;
+  border: none;
+  border-top: 1px solid #e5e7eb;
+  opacity: 1;
 }
 .contenedor-centrado {
   display: flex;

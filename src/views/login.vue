@@ -1,26 +1,28 @@
 <template>
-<div class="login-layout">
-    <div class="login-container">
-        <div class="card p-4 shadow login-card">
-            <img src="@/assets/images/logo_extramurapp.png" alt="Logo Extramuralapp" class="login-logo-bg" />
-            <h2 class="text-center mb-4">Iniciar Sesión</h2>
-            <form @submit.prevent="handleLogin">
-                <div class="mb-3">
-                    <i class="bi bi-person-circle text-center"></i>
-                    <label for="email" class="form-label"> Email</label>
-                    <input v-model="email" type="email" class="form-control" id="email" placeholder="Ingresa tu email" autocomplete="username" required />
-                </div>
-                <div class="mb-3">
-                    <i class="bi bi-key"></i>
-                    <label for="password" class="form-label"> Contraseña</label>
-                    <input v-model="password" type="password" class="form-control" id="password" placeholder="Ingresa tu contraseña" autocomplete="current-password" required />
-                </div>
-                <button type="submit" class="buttonLogin mb-3 w-100">Entrar</button>
-            </form>
-            <p v-if="errorMessage" class="text-danger mt-3">{{ errorMessage }}</p>
+    <div class="login-layout">
+        <div class="login-container">
+            <div class="card p-4 shadow login-card">
+                <img src="@/assets/images/logo_extramurapp.png" alt="Logo Extramuralapp" class="login-logo-bg" />
+                <h2 class="text-center mb-4">Iniciar Sesión</h2>
+                <form @submit.prevent="handleLogin">
+                    <div class="mb-3">
+                        <i class="bi bi-person-circle text-center"></i>
+                        <label for="email" class="form-label"> Email</label>
+                        <input v-model="email" type="email" class="form-control" id="email"
+                            placeholder="Ingresa tu email" autocomplete="username" required />
+                    </div>
+                    <div class="mb-3">
+                        <i class="bi bi-key"></i>
+                        <label for="password" class="form-label"> Contraseña</label>
+                        <input v-model="password" type="password" class="form-control" id="password"
+                            placeholder="Ingresa tu contraseña" autocomplete="current-password" required />
+                    </div>
+                    <button type="submit" class="buttonLogin mb-3 w-100">Entrar</button>
+                </form>
+                <p v-if="errorMessage" class="text-danger mt-3">{{ errorMessage }}</p>
+            </div>
         </div>
     </div>
-</div>
 </template>
 
 <script>
@@ -31,7 +33,7 @@ import {
 import {
     auth
 } from "@/api/firebase"; // Tu instancia de auth inicializada en firebase.js
-import {} from "@/api/ApiFirebase";
+import { } from "@/api/ApiFirebase";
 
 export default {
     name: "App",
@@ -150,15 +152,45 @@ body {
     opacity: 0.8;
 }
 
+.login-card h2 {
+    font-size: 1.8rem;
+    font-weight: 600;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.login-card .form-label {
+    font-size: 1.1rem;
+    font-weight: 500;
+}
+
+.login-card .form-control {
+    font-size: 1rem;
+    padding: 0.75rem;
+    height: auto;
+}
+
+.login-card .buttonLogin {
+    font-size: 1.1rem;
+    font-weight: 600;
+    padding: 0.75rem;
+}
+
+.login-card p.text-danger {
+    font-size: 1rem;
+}
+
 .login-logo-bg {
     display: block;
-    margin: 0 auto 20px auto;
-    max-width: 150px;
+    margin: 0 auto 25px auto;
+    max-width: 260px;
+    width: 100%;
     height: auto;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.15));
 }
 
 .login-card i.bi {
     margin-right: 8px;
+    font-size: 1.3rem;
 }
 
 @media (max-width: 767px) {
@@ -167,12 +199,12 @@ body {
         align-items: flex-end;
         padding-bottom: 20px;
     }
-    
+
     .login-container {
         align-items: flex-end;
         justify-content: center;
     }
-    
+
     .login-card {
         width: 95%;
         max-width: 350px;
