@@ -447,9 +447,9 @@
         </div>
 
         <!-- Modal crear contratos -->
-        <div class="modal fade modal-lg" id="crearcontratos" data-bs-backdrop="static" data-bs-keyboard="false"
-          tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
-          <div class="modal-dialog">
+        <div class="modal fade" id="crearcontratos" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
+          aria-labelledby="staticBackdropLabel" aria-hidden="true">
+          <div class="modal-dialog modal-xl modal-dialog-scrollable" style="max-height: 95vh;">
             <div class="modal-content">
               <div class="modal-header">
                 <h1 class="modal-title fs-5" id="staticBackdropLabel">
@@ -461,96 +461,120 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"
                   @click="clearFormContratos"></button>
               </div>
-              <div class="modal-body">
-                <div class="row">
-                  <div class="col-3">
-                    <div class="mb-3">
-                      <label class="form-label">Seleccione EPS</label>
-                      <select class="form-select form-select-sm" aria-label="Small select example" v-model="Seps">
-                        <option value="">Seleccione...</option>
-                        <option :value="eps.id" v-for="(eps, index) in epss" :key="index">
-                          {{ eps.eps }}
-                        </option>
-                      </select>
+              <div class="modal-body" style="max-height: 85vh; overflow-y: auto;">
+                <!-- Sección de selección de opciones -->
+                <div class="card mb-4 sticky-top" style="top: 0; z-index: 10;">
+                  <div class="card-body">
+                    <h6 class="card-title mb-3">Configurar Contrato</h6>
+                    <div class="row g-2">
+                      <div class="col-12 col-md-6">
+                        <label class="form-label fw-bold">Seleccione EPS</label>
+                        <select class="form-select form-select-sm" aria-label="Seleccionar EPS" v-model="Seps">
+                          <option value="">Seleccione...</option>
+                          <option :value="eps.id" v-for="(eps, index) in epss" :key="index">
+                            {{ eps.eps }}
+                          </option>
+                        </select>
+                      </div>
+                      <div class="col-12 col-md-6">
+                        <label class="form-label fw-bold">Actividad Extra</label>
+                        <select class="form-select form-select-sm" aria-label="Seleccionar Actividad"
+                          v-model="Sactividad">
+                          <option value="">Seleccione...</option>
+                          <option :value="actividad.id" v-for="(actividad, index) in actividadesExtra" :key="index">
+                            {{ actividad.nombre }}
+                          </option>
+                        </select>
+                      </div>
+                      <div class="col-12 col-md-12">
+                        <label class="form-label fw-bold">CUPS Habilitados</label>
+                        <select class="form-select form-select-sm" aria-label="Seleccione varios CUPS" v-model="Scups"
+                          multiple style="height: 280px;">
+                          <option :value="cup.id" v-for="(cup, index) in cupsDisponibles" :key="index">
+                            [{{ cup.profesional }}]-[{{ cup.Grupo }}] {{ cup.DescripcionCUP }}
+                          </option>
+                        </select>
+                        <small class="text-muted d-block mt-1">CTRL+Click para múltiples</small>
+                      </div>
                     </div>
-
-                  </div>
-
-
-
-                  <div class="col-6">
-                    <label class="form-label">Actividad Extra</label>
-                    <select class="form-select form-select-sm" aria-label="Small select example" v-model="Sactividad">
-                      <option value="">Seleccione...</option>
-                      <option :value="actividad.id" v-for="(actividad, index) in actividadesExtra" :key="index">
-                        {{ actividad.nombre }}
-                      </option>
-                    </select>
-                  </div>
-                  <div class="col-8">
-                    <label class="form-label">CUPS Habilitados</label>
-                    <select class="form-select form-select-sm" aria-label="Small select example" v-model="Scups">
-                      <option value="">Seleccione...</option>
-                      <option :value="cup.id" v-for="(cup, index) in cupsDisponibles" :key="index">
-                        [{{ cup.profesional }}]-[{{ cup.Grupo }}] {{ cup.DescripcionCUP }}
-                      </option>
-                    </select>
-
-                  </div>
-                  <div class="col-1">
-                    <button class="btn btn-sm btn-warning mt-4" @click="addCupsContrato" :disabled="!Seps || !Scups"> +
-                      Agregar</button>
+                    <button class="btn btn-sm btn-warning mt-3 w-100" @click="addCupsContrato"
+                      :disabled="!Seps || Scups.length === 0">
+                      <i class="bi bi-plus-circle"></i> Agregar CUPS al Contrato
+                    </button>
                   </div>
                 </div>
 
                 <!-- Tabla de CUPS para la EPS seleccionada -->
-                <h6>CUPS agregados a {{Seps ? (epss.find(e => e.id === Seps)?.eps || 'EPS') : 'la EPS seleccionada'}}
-                </h6>
-                <div v-if="!Seps" class="alert alert-warning">
-                  Por favor, seleccione una EPS primero
-                </div>
-                <div v-else-if="contratosFiltrados.length === 0" class="alert alert-info">
-                  No hay CUPS agregados a esta EPS. Seleccione CUPS y presione el botón +
-                </div>
-                <div v-else>
-                  <table class="table table-sm table-bordered mb-3">
-                    <thead>
-                      <tr>
-                        <th>Profesional</th>
-                        <th>Grupo</th>
-                        <th>Actividad Extra</th>
-                        <th>CUPS</th>
-                        <th style="width: 80px;">Eliminar</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr v-for="(contrato, index) in contratosFiltrados" :key="index">
-                        <td>{{ obtenerProfesionalCups(contrato.cupsId, contrato.cupsProfesional) }}</td>
-                        <td>{{ obtenerGrupoCups(contrato.cupsId, contrato.cupsGrupo) || '-' }}</td>
-                        <td>{{ obtenerNombreActividadPorId(contrato.actividadId, contrato.actividadNombre) ||
-                          sinEspecificar }}</td>
-                        <td>{{ obtenerNombreCups(contrato.cupsId, contrato.cupsNombre) }}</td>
-                        <td>
-                          <button class="btn btn-sm btn-danger" @click="removeContrato(contrato)">
-                            <i class="bi bi-trash"></i>
-                          </button>
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
+                <div class="card mb-4">
+                  <div class="card-header bg-secondary text-white">
+                    <h6 class="mb-0">CUPS Agregados a <strong>{{Seps ? (epss.find(e => e.id === Seps)?.eps || 'EPS') :
+                      'la EPS seleccionada'}}</strong></h6>
+                  </div>
+                  <div class="card-body" style="max-height: 350px; overflow-y: auto; padding: 0.75rem;">
+                    <div v-if="!Seps" class="alert alert-warning mb-0 small" style="font-size: 0.85rem;">
+                      <i class="bi bi-info-circle"></i> Por favor, seleccione una EPS primero
+                    </div>
+                    <div v-else-if="contratosFiltrados.length === 0" class="alert alert-info mb-0 small"
+                      style="font-size: 0.85rem;">
+                      <i class="bi bi-inbox"></i> No hay CUPS agregados a esta EPS. Seleccione CUPS y presione el botón
+                      + Agregar
+                    </div>
+                    <div v-else>
+                      <table class="table table-sm table-hover mb-0" style="font-size: 0.85rem;">
+                        <thead class="table-light sticky-top">
+                          <tr style="font-size: 0.8rem;">
+                            <th style="width: 18%;">Profesional</th>
+                            <th style="width: 12%;">Grupo</th>
+                            <th style="width: 22%;">Actividad</th>
+                            <th style="width: 35%;">CUPS</th>
+                            <th class="text-center" style="width: 13%;">Acción</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr v-for="(contrato, index) in contratosFiltrados" :key="index">
+                            <td class="fw-bold">{{ obtenerProfesionalCups(contrato.cupsId, contrato.cupsProfesional) }}
+                            </td>
+                            <td>{{ obtenerGrupoCups(contrato.cupsId, contrato.cupsGrupo) || '-' }}</td>
+                            <td><span class="badge bg-info text-dark" style="font-size: 0.75rem;">{{
+                              obtenerNombreActividadPorId(contrato.actividadId, contrato.actividadNombre) ||
+                              sinEspecificar }}</span></td>
+                            <td><strong>{{ obtenerNombreCups(contrato.cupsId, contrato.cupsNombre) }}</strong></td>
+                            <td class="text-center">
+                              <button class="btn btn-sm btn-outline-danger" @click="removeContrato(contrato)"
+                                title="Eliminar este CUPS" style="padding: 0.25rem 0.5rem; font-size: 0.8rem;">
+                                <i class="bi bi-trash"></i>
+                              </button>
+                            </td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
                 </div>
 
                 <!-- Resumen de todos los contratos que se guardarán -->
-                <div v-if="contratosTemporalesAgrupados.length > 0" class="mt-4 p-3 bg-light border rounded">
-                  <strong>📋 Resumen de contratos a guardar:</strong>
-                  <div v-for="grupo in contratosTemporalesAgrupados" :key="grupo.epsId" class="mt-2">
-                    <strong>{{ grupo.epsNombre }} ({{ grupo.cups.length }} CUPS)</strong>
-                    <ul>
-                      <li v-for="(cup, idx) in grupo.cups" :key="idx" class="small">
-                        {{ obtenerNombreActividadPorId(cup.actividadId, cup.actividadNombre) || sinEspecificar }}:
-                        {{ obtenerNombreCups(cup.cupsId, cup.cupsNombre) }}
-                      </li>
-                    </ul>
+                <div v-if="contratosTemporalesAgrupados.length > 0" class="card border-success">
+                  <div class="card-header bg-success text-white">
+                    <h6 class="mb-0"><i class="bi bi-clipboard-check"></i> Resumen de Contratos a Guardar</h6>
+                  </div>
+                  <div class="card-body"
+                    style="max-height: 300px; overflow-y: auto; padding: 0.75rem; font-size: 0.85rem;">
+                    <div v-for="grupo in contratosTemporalesAgrupados" :key="grupo.epsId" class="mb-2">
+                      <div class="d-flex justify-content-between align-items-center mb-1">
+                        <strong style="font-size: 0.9rem;">{{ grupo.epsNombre }}</strong>
+                        <span class="badge bg-primary" style="font-size: 0.75rem;">{{ grupo.cups.length }} CUPS</span>
+                      </div>
+                      <ul class="mb-2" style="font-size: 0.8rem; padding-left: 1.2rem;">
+                        <li v-for="(cup, idx) in grupo.cups" :key="idx">
+                          <span class="badge bg-light text-dark" style="font-size: 0.7rem;">{{
+                            obtenerNombreActividadPorId(cup.actividadId,
+                              cup.actividadNombre) || sinEspecificar }}</span>
+                          <strong>{{ obtenerNombreCups(cup.cupsId, cup.cupsNombre) }}</strong>
+                        </li>
+                      </ul>
+                      <hr class="my-1"
+                        v-if="grupo !== contratosTemporalesAgrupados[contratosTemporalesAgrupados.length - 1]" />
+                    </div>
                   </div>
                 </div>
               </div>
@@ -665,7 +689,7 @@ export default {
       // ===== CONTRATOS =====
       Seps: "",
       Scargo: "",
-      Scups: "",
+      Scups: [], // Array para selección múltiple de CUPS
       Sactividad: "", // Nueva variable para actividad seleccionada
       contratosTemp: [], // Array temporal para CUPS antes de guardar
 
@@ -1090,7 +1114,7 @@ export default {
 
     clearFormContratos() {
       this.Seps = "";
-      this.Scups = "";
+      this.Scups = [];
       this.Sactividad = "";
       this.contratosTemp = [];
     },
@@ -1099,49 +1123,69 @@ export default {
 
 
     addCupsContrato() {
-      if (!this.Seps || !this.Scups) {
-        alert("Por favor, seleccione EPS y CUPS.");
+      if (!this.Seps || this.Scups.length === 0) {
+        alert("Por favor, seleccione EPS y al menos un CUPS.");
         return;
       }
 
-      // Buscar los datos completos de EPS y CUPS
+      // Buscar los datos completos de EPS
       const epsSeleccionada = this.epss.find(eps => eps.id === this.Seps);
-      const cupSeleccionado = this.cups.find(cup => cup.id === this.Scups);
-      const actividadSeleccionada = this.actividadesExtra?.find(act => act.id === this.Sactividad);
 
-      if (!epsSeleccionada || !cupSeleccionado) {
-        alert("Error: No se encontraron los datos seleccionados.");
+      if (!epsSeleccionada) {
+        alert("Error: No se encontró la EPS seleccionada.");
         return;
       }
 
-      // Verificar si ya existe en temporales PARA ESTA EPS específicamente
-      const existeEnTemp = this.contratosTemp.some(
-        contrato => contrato.epsNombre === epsSeleccionada.eps && contrato.cupsNombre === cupSeleccionado.DescripcionCUP
-      );
+      let contadosAgregados = 0;
+      let contadosDuplicados = 0;
 
-      if (existeEnTemp) {
-        alert("Este CUPS ya fue agregado a este contrato de esta EPS.");
-        return;
+      // Procesar cada CUPS seleccionado
+      this.Scups.forEach(cupsId => {
+        const cupSeleccionado = this.cups.find(cup => cup.id === cupsId);
+        const actividadSeleccionada = this.actividadesExtra?.find(act => act.id === this.Sactividad);
+
+        if (!cupSeleccionado) {
+          console.warn("CUPS no encontrado:", cupsId);
+          return;
+        }
+
+        // Verificar si ya existe en temporales PARA ESTA EPS específicamente
+        const existeEnTemp = this.contratosTemp.some(
+          contrato => contrato.epsNombre === epsSeleccionada.eps && contrato.cupsId === cupsId
+        );
+
+        if (existeEnTemp) {
+          contadosDuplicados++;
+          return;
+        }
+
+        // Agregar al array temporal con valores de texto en lugar de IDs
+        const nuevoContrato = {
+          epsId: this.Seps,  // Mantener ID para compatibilidad interna
+          epsNombre: epsSeleccionada.eps,
+          cupsId: cupsId,  // Mantener ID para compatibilidad interna
+          cupsNombre: cupSeleccionado.DescripcionCUP,
+          actividadId: this.Sactividad || null,
+          actividadNombre: actividadSeleccionada ? actividadSeleccionada.nombre : null,
+          cupsProfesional: cupSeleccionado.profesional,
+          cupsGrupo: cupSeleccionado.Grupo
+        };
+
+        this.contratosTemp.push(nuevoContrato);
+        contadosAgregados++;
+      });
+
+      // Mostrar resumen
+      let mensaje = `Se agregaron ${contadosAgregados} CUPS al contrato.`;
+      if (contadosDuplicados > 0) {
+        mensaje += ` (${contadosDuplicados} CUPS ya existían en el contrato.)`;
       }
+      alert(mensaje);
 
-      // Agregar al array temporal con valores de texto en lugar de IDs
-      const nuevoContrato = {
-        epsId: this.Seps,  // Mantener ID para compatibilidad interna
-        epsNombre: epsSeleccionada.eps,
-        cupsId: this.Scups,  // Mantener ID para compatibilidad interna
-        cupsNombre: cupSeleccionado.DescripcionCUP,
-        actividadId: this.Sactividad || null,
-        actividadNombre: actividadSeleccionada ? actividadSeleccionada.nombre : null,
-        cupsProfesional: cupSeleccionado.profesional,
-        cupsGrupo: cupSeleccionado.Grupo
-      };
-
-      this.contratosTemp.push(nuevoContrato);
-
-      console.log("CUPS agregado a temporal. Temporales actuales:", this.contratosTemp);
+      console.log("CUPS agregados a temporal. Temporales actuales:", this.contratosTemp);
 
       // Limpiar campos
-      this.Scups = "";
+      this.Scups = [];
     },
 
     removeContrato(contrato) {

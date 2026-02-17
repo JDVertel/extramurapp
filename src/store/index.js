@@ -1915,11 +1915,12 @@ export default createStore({
      */
     GetRegistersbyRangeGeneralFact: async ({ commit }, parametros) => {
       try {
-        const { finicial, ffinal } = parametros;
+        const { finicial, ffinal, convenio } = parametros;
 
         console.log("📋 Parámetros de búsqueda:");
         console.log("   finicial:", finicial, "| tipo:", typeof finicial);
         console.log("   ffinal:", ffinal, "| tipo:", typeof ffinal);
+        console.log("   convenio:", convenio, "| tipo:", typeof convenio);
 
         // Obtener actividades
         const { data: actividades } = await firebase_api.get("/Actividades.json");
@@ -1945,8 +1946,11 @@ export default createStore({
             if (encuestaAsociada) {
               const fechaBD = encuestaAsociada.fechagestEnfermera;
               const fechaBDSolo = fechaBD ? fechaBD.split(" ")[0] : null;
+              const convenioEncuesta = encuestaAsociada.convenio || '';
 
-              if (fechaBDSolo >= finicial && fechaBDSolo <= ffinal && !encuestaAsociada.status_facturacion) {
+              if (fechaBDSolo >= finicial && fechaBDSolo <= ffinal &&
+                !encuestaAsociada.status_facturacion &&
+                convenioEncuesta === convenio) {
                 resultados.push({
                   id: idActividad,
                   ...encuestaAsociada,
@@ -1957,7 +1961,7 @@ export default createStore({
           }
         });
 
-        console.log(`✅ Registros de actividades filtradas por fecha: ${resultados.length}`);
+        console.log(`✅ Registros de actividades filtradas por fecha y convenio: ${resultados.length}`);
         console.log("📄 JSON de resultados:", JSON.stringify(resultados, null, 2));
 
         commit("setEncuestasFact", resultados);

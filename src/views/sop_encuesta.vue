@@ -68,7 +68,7 @@
                             <label for="eps" class="form-label">EPS del paciente</label>
                             <select id="eps" v-model="epsId" class="form-select" required>
                                 <option value="">Seleccione</option>
-                                <option v-for="(ep, index) in epss" :key="index" :value="ep.id">
+                                <option v-for="(ep, index) in epssConContrato" :key="index" :value="ep.id">
                                     {{ ep.eps }}
                                 </option>
                             </select>
@@ -143,8 +143,8 @@
                                     </select>
                                 </div>
                                 <div class="col-2">
-                                    <button type="button" class="btn btn-warning w-100"
-                                        v-if="poblacionRiesgo !== ''" @click="addRiesgo">+</button>
+                                    <button type="button" class="btn btn-warning w-100" v-if="poblacionRiesgo !== ''"
+                                        @click="addRiesgo">+</button>
                                 </div>
                             </div>
                             <div class="mt-2">
@@ -181,8 +181,8 @@
                                     </select>
                                 </div>
                                 <div class="col-2">
-                                    <button type="button" class="btn btn-warning w-100"
-                                        v-if="tipoActividad !== ''" @click="addActividad">+</button>
+                                    <button type="button" class="btn btn-warning w-100" v-if="tipoActividad !== ''"
+                                        @click="addActividad">+</button>
                                 </div>
                             </div>
 
@@ -432,6 +432,7 @@ export default {
                 status_visita: false,
                 idEncuesta: 1,
                 grupo: this.userData.grupo,
+                convenio: this.userData.convenio,
                 idEncuestador: this.userData.numDocumento,
                 bd: "Encuesta",
                 fecha: moment().format("YYYY-MM-DD"),
@@ -478,7 +479,7 @@ export default {
             document.body.classList.remove('modal-open');
             document.body.style.overflow = '';
             document.body.style.paddingRight = '';
-            
+
             // Asegurar que el documento sea desplazable
             if (document.body.scrollHeight <= window.innerHeight) {
                 document.body.style.minHeight = (window.innerHeight + 100) + 'px';
@@ -491,6 +492,7 @@ export default {
             "getAllMedicosbyGrupo",
             "getAllEnfermerosbyGrupo",
             "getAllEps",
+            "getAllContratos",
         ]),
 
         async consultar() {
@@ -672,7 +674,13 @@ export default {
             "medicosByGrupo",
             "enfermerosByGrupo",
             "epss",
+            "contratos",
         ]),
+        epssConContrato() {
+            if (!this.epss || !this.contratos || this.contratos.length === 0) return this.epss || [];
+            const epsIdConContrato = new Set(this.contratos.map(c => c.epsId));
+            return this.epss.filter(eps => epsIdConContrato.has(eps.id));
+        },
         epsSeleccionada() {
             if (!this.epsId || !this.epss) return null;
             return this.epss.find(e => e.id === this.epsId);
@@ -700,17 +708,15 @@ export default {
     async mounted() {
         await this.getAllComunaBarrios();
         await this.getAllEps();
-        this.getAllMedicosbyGrupo({
-            grupo: this.userData.grupo,
-        });
+        await this.getAllContratos();
         this.getAllEnfermerosbyGrupo({
             grupo: this.userData.grupo,
         });
-        
+
         // Asegurar que la página sea desplazable al montar el componente
         this.ensureScrollability();
     },
-    
+
     beforeUnmount() {
         // Limpiar cualquier estilo que pueda interferir al salir del componente
         this.ensureScrollability();
@@ -852,17 +858,17 @@ html {
 
 /* Estilos para botones redondeados */
 .btn.rounded-circle {
-  width: 40px;
-  height: 40px;
-  padding: 0;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s ease;
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
 }
 
 .btn.rounded-circle:hover {
-  transform: scale(1.05);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    transform: scale(1.05);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 </style>

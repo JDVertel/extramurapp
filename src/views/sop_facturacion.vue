@@ -99,7 +99,16 @@
                             <div class="tab-pane fade show active" id="home-tab-pane" role="tabpanel"
                                 aria-labelledby="home-tab" tabindex="0">
                                 <div class="row mt-3">
-
+                                    <div class="col-4">
+                                        <div class="input-group">
+                                            <span class="input-group-text">Convenio</span>
+                                            <select v-model="convenioFiltro" class="form-select" required>
+                                                <option value="">Seleccione</option>
+                                                <option value="Extramural">Extramural</option>
+                                                <option value="E Basicos">E Basicos</option>
+                                            </select>
+                                        </div>
+                                    </div>
                                     <div class="col-8">
                                         <div class="input-group">
                                             <span class="input-group-text">Rango de fechas de la consulta</span>
@@ -111,7 +120,7 @@
                                     </div>
                                     <div class="col-4">
                                         <button type="button" class="btn btn-warning"
-                                            @click="getdataEncuestas(fechaInicio, fechaFin)">
+                                            @click="getdataEncuestas(fechaInicio, fechaFin, convenioFiltro)">
                                             Buscar
                                         </button>
                                     </div>
@@ -414,6 +423,7 @@ export default {
         return {
             fechaFin: "",
             fechaInicio: "",
+            convenioFiltro: "",
             cargando: false,
             activeTab: "pendientes", // Control de pestaña activa
             aprovDisabled: {}, // Estado de desactivación por paciente
@@ -512,12 +522,13 @@ export default {
             );
             this.cargando = false;
         },
-        async getdataEncuestas(fechaInicio, fechaFin) {
+        async getdataEncuestas(fechaInicio, fechaFin, convenio) {
             this.cargando = true;
             try {
                 let parametros = {
                     finicial: fechaInicio,
                     ffinal: fechaFin,
+                    convenio: convenio,
                 };
                 await this.GetRegistersbyRangeGeneralFact(parametros);
             } catch (error) {
