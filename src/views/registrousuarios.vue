@@ -153,13 +153,12 @@
                                         <label for="editCargo">Cargo</label>
                                         <select id="editCargo" v-model="editCargo" class="form-select">
                                             <option value="Auxiliar de enfermeria">Auxiliar</option>
-                                            <option value="Enfermero">Enfermero</option>
                                             <option value="Medico">Medico</option>
-                                            <option value="Fact">Facturador</option>
-                                            <option value="admin">Administrador</option>
+                                            <option value="Enfermero">Enfermero</option>
                                             <option value="Psicologo">Psicologo</option>
-                                            <option value="Nutricionista">Nutricionista</option>
                                             <option value="Tsocial">Trabajador social</option>
+                                            <option value="Fact">Facturador</option>
+                                            <option value="admin">--Administrador--</option>
                                         </select>
                                     </div>
                                     <div class="col col-12 mb-3">
@@ -182,7 +181,6 @@
                                         editCargo === 'Enfermero' ||
                                         editCargo === 'Medico' ||
                                         editCargo === 'Psicologo' ||
-                                        editCargo === 'Nutricionista' ||
                                         editCargo === 'Tsocial'
                                     ">
                                         <label for="editGrupo"># Grupo</label>
@@ -496,13 +494,13 @@ export default {
         getCargoShortName(cargo) {
             const shortNames = {
                 'Auxiliar de enfermeria': 'AUX',
-                'Enfermero': 'ENF',
-                'Medico': 'MED',
+                'Enfermero': 'ENFE',
+                'Medico': 'MEDI',
                 'Fact': 'FACT',
                 'admin': 'ADMIN',
-                'Psicologo': 'PSI',
-                'Nutricionista': 'NUT',
-                'Tsocial': 'TS'
+                'Psicologo': 'PSICO',
+                'Nutricionista': 'NUTRI',
+                'Tsocial': 'TSOCIAL'
             };
 
             return shortNames[cargo] || cargo.substring(0, 3).toUpperCase();
@@ -1651,5 +1649,18 @@ Esta acción eliminará el usuario de la base de datos.`)) {
 
 .success {
     color: green;
+}
+
+/* Colores personalizados para cargos adicionales */
+.bg-purple {
+    background-color: #6f42c1 !important;
+}
+
+.bg-orange {
+    background-color: #fd7e14 !important;
+}
+
+.bg-teal {
+    background-color: #20c997 !important;
 }
 </style>

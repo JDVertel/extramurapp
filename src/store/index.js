@@ -67,6 +67,10 @@ export default createStore({
 
     // Usuarios y personal
     usuarios: [],
+    medicosByGrupo: [],
+    enfermerosByGrupo: [],
+    psicologosByGrupo: [],
+    tsocialesByGrupo: [],
 
     // Parámetros
     comunasBarrios: [],
@@ -1210,14 +1214,15 @@ export default createStore({
     },
 
     /**
-     * Obtiene médicos por grupo
+     * Obtiene médicos por grupo y convenio
      */
-    getAllMedicosbyGrupo: async ({ commit }, { grupo }) => {
-      console.log("datos que entran en data2", grupo);
+    getAllMedicosbyGrupo: async ({ commit }, { grupo, convenio }) => {
+      console.log("datos que entran en getAllMedicosbyGrupo - grupo:", grupo, "convenio:", convenio);
       try {
         const q = query(
           collection(db, "users"),
           where("grupo", "==", grupo),
+          where("convenio", "==", convenio),
           where("cargo", "==", "Medico")
         );
 
@@ -1237,14 +1242,15 @@ export default createStore({
     },
 
     /**
-     * Obtiene enfermeros por grupo
+     * Obtiene enfermeros por grupo y convenio
      */
-    getAllEnfermerosbyGrupo: async ({ commit }, { grupo }) => {
-      console.log("datos que entran en data3", grupo);
+    getAllEnfermerosbyGrupo: async ({ commit }, { grupo, convenio }) => {
+      console.log("datos que entran en getAllEnfermerosbyGrupo - grupo:", grupo, "convenio:", convenio);
       try {
         const q = query(
           collection(db, "users"),
           where("grupo", "==", grupo),
+          where("convenio", "==", convenio),
           where("cargo", "==", "Enfermero")
         );
 
@@ -1259,6 +1265,62 @@ export default createStore({
         return encuestasFiltradas;
       } catch (error) {
         console.error("Error en getAllEnfermerosbyGrupo:", error);
+        throw error;
+      }
+    },
+
+    /**
+     * Obtiene psicólogos por grupo y convenio
+     */
+    getAllPsicologosbyGrupo: async ({ commit }, { grupo, convenio }) => {
+      console.log("datos que entran en getAllPsicologosbyGrupo - grupo:", grupo, "convenio:", convenio);
+      try {
+        const q = query(
+          collection(db, "users"),
+          where("grupo", "==", grupo),
+          where("convenio", "==", convenio),
+          where("cargo", "==", "Psicologo")
+        );
+
+        const querySnapshot = await getDocs(q);
+
+        const psicologosFiltrados = querySnapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+
+        commit("setPsicologosByGrupo", psicologosFiltrados);
+        return psicologosFiltrados;
+      } catch (error) {
+        console.error("Error en getAllPsicologosbyGrupo:", error);
+        throw error;
+      }
+    },
+
+    /**
+     * Obtiene trabajadores sociales por grupo y convenio
+     */
+    getAllTsocialesbyGrupo: async ({ commit }, { grupo, convenio }) => {
+      console.log("datos que entran en getAllTsocialesbyGrupo - grupo:", grupo, "convenio:", convenio);
+      try {
+        const q = query(
+          collection(db, "users"),
+          where("grupo", "==", grupo),
+          where("convenio", "==", convenio),
+          where("cargo", "==", "Tsocial")
+        );
+
+        const querySnapshot = await getDocs(q);
+
+        const tsocialesFiltrados = querySnapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+
+        commit("setTsocialesByGrupo", tsocialesFiltrados);
+        return tsocialesFiltrados;
+      } catch (error) {
+        console.error("Error en getAllTsocialesbyGrupo:", error);
         throw error;
       }
     },
@@ -2336,6 +2398,12 @@ export default createStore({
     },
     setEnfermerosByGrupo(state, enfermeros) {
       state.enfermerosByGrupo = enfermeros;
+    },
+    setPsicologosByGrupo(state, psicologos) {
+      state.psicologosByGrupo = psicologos;
+    },
+    setTsocialesByGrupo(state, tsociales) {
+      state.tsocialesByGrupo = tsociales;
     },
 
     // Pacientes

@@ -1,21 +1,22 @@
 <template>
-  <div v-if="cargando" class="spinner-overlay">
-    <div class="spinner-border text-primary" role="status">
-      <span class="visually-hidden">Cargando...</span>
+  <div>
+    <div v-if="cargando" class="spinner-overlay">
+      <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Cargando...</span>
+      </div>
+      <div class="spinner-message">Por favor espere, cargando información...</div>
     </div>
-    <div class="spinner-message">Por favor espere, cargando información...</div>
-  </div>
-  <div v-if="!cargando">
-    <h1 class="display-6 center">{{ userData.cargo }}</h1>
-    <div class="alert alert-warning shadow-sm  d-flex justify-content-between align-items-center" role="alert">
-      Realizar nueva encuesta <RouterLink class="btn btn-warning" to="/sop_encuesta">
-        <i class="bi bi-file-earmark-plus-fill"></i> <br />
+    <div v-if="!cargando">
+      <h1 class="display-6 center">{{ userData.cargo }}</h1>
+      <div class="alert alert-warning shadow-sm  d-flex justify-content-between align-items-center" role="alert">
+        Realizar nueva encuesta <RouterLink class="btn btn-warning" to="/sop_encuesta">
+          <i class="bi bi-file-earmark-plus-fill"></i> <br />
 
-      </RouterLink>
-    </div>
+        </RouterLink>
+      </div>
 
 
-    <div class="container-fluid">
+      <div class="container-fluid">
       <h4>Detalle de Actividades ({{ cantEncuestas }}) <small>Pendientes</small></h4>
 
       <!-- Mensaje cuando no hay registros -->
@@ -110,6 +111,7 @@
         </div>
       </div>
     </div>
+  </div>
   </div>
 </template>
 
