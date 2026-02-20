@@ -361,10 +361,19 @@
                                                             <td>{{ cup.detalle || '-' }}</td>
                                                             <td>{{ cup.Grupo || '-' }}</td>
                                                             <td>
-                                                                <template v-if="cup.facturado">
+                                                                <template v-if="cup.facturado && !modoEdicion">
                                                                     {{ cup.FactNum }}
                                                                 </template>
-                                                                <template v-else>
+                                                                <template v-if="cup.facturado && modoEdicion">
+                                                                    <div class="input-group mb-3">
+                                                                        <input type="text"
+                                                                            :id="`editar-factura-${cupId}`"
+                                                                            class="form-control"
+                                                                            v-model="facturaEditables[cupId]"
+                                                                            placeholder="#factura">
+                                                                    </div>
+                                                                </template>
+                                                                <template v-if="!cup.facturado">
                                                                     <div class="input-group mb-3">
                                                                         <input type="text" :id="`factura-${cupId}`"
                                                                             class="form-control"
@@ -396,11 +405,25 @@
 
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"
+                            @click="modoEdicion = false">
                             Cerrar
                         </button>
 
-                        <button v-if="allCupsWithFactura || noCupsRenderizados" class="btn btn-danger"
+                        <button v-if="!modoEdicion && (allCupsWithFactura)" class="btn btn-info"
+                            @click="iniciarEdicionCodigos">
+                            <i class="bi bi-pencil-square"></i> Editar Código
+                        </button>
+
+                        <button v-if="modoEdicion" class="btn btn-warning" @click="cancelarEdicion">
+                            <i class="bi bi-x-circle"></i> Cancelar
+                        </button>
+
+                        <button v-if="modoEdicion" class="btn btn-success" @click="guardarEdicionCodigos">
+                            <i class="bi bi-check-circle"></i> Guardar Cambios
+                        </button>
+
+                        <button v-if="!modoEdicion && (allCupsWithFactura || noCupsRenderizados)" class="btn btn-danger"
                             @click="cerrarfact(pacienteIdModal)" data-bs-dismiss="modal">
                             <i class="bi bi-check2-circle"></i> Cerrar Paciente
                         </button>
@@ -433,6 +456,8 @@ export default {
             cupl: null,
             tipodoc: "",
             numdoc: "",
+            modoEdicion: false, // Control para modo edición de códigos
+            facturaEditables: {}, // Almacena valores editables de facturas
         }
     },
     computed: {
@@ -721,8 +746,55 @@ export default {
             if (!actividadId || !this.actividadesExtra) return actividadId || '-';
             const actividad = this.actividadesExtra.find(act => String(act.key) === String(actividadId));
             return actividad ? actividad.nombre : actividadId;
-        }
+        },
 
+        iniciarEdicionCodigos() {
+            // Copiar los valores actuales de FactNum a facturaEditables
+            this.facturaEditables = {};
+            if (this.InfoEncuestasById && Array.isArray(this.InfoEncuestasById)) {
+                this.InfoEncuestasById.forEach(paciente => {
+                    if (paciente.cups && typeof paciente.cups === 'object') {
+                        Object.entries(paciente.cups).forEach(([cupId, cup]) => {
+                            if (cup && cup.facturado && cup.FactNum) {
+                                this.facturaEditables[cupId] = cup.FactNum;
+                            }
+                        });
+                    }
+                });
+            }
+            this.modoEdicion = true;
+        },
+
+        cancelarEdicion() {
+            this.facturaEditables = {};
+            this.modoEdicion = false;
+        },
+
+        async guardarEdicionCodigos() {
+            try {
+                this.cargando = true;
+                // Actualizar los valores en InfoEncuestasById
+                if (this.InfoEncuestasById && Array.isArray(this.InfoEncuestasById)) {
+                    this.InfoEncuestasById.forEach(paciente => {
+                        if (paciente.cups && typeof paciente.cups === 'object') {
+                            Object.entries(paciente.cups).forEach(([cupId, cup]) => {
+                                if (this.facturaEditables[cupId]) {
+                                    cup.FactNum = this.facturaEditables[cupId];
+                                }
+                            });
+                        }
+                    });
+                }
+                alert("Códigos de factura actualizados correctamente");
+                this.facturaEditables = {};
+                this.modoEdicion = false;
+            } catch (error) {
+                console.error('Error al guardar cambios:', error);
+                alert('Error al guardar cambios: ' + (error?.message || error));
+            } finally {
+                this.cargando = false;
+            }
+        }
     },
     async mounted() {
         this.cargando = true

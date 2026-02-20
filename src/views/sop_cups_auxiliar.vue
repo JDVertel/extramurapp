@@ -74,7 +74,10 @@
                                             <div v-for="(cup, idx) in obtenerCupsArrayPorActividad(item.key)" :key="idx"
                                                 class="d-flex align-items-center justify-content-between mb-1 p-1 border-bottom">
                                                 <div>
-                                                    <small>{{ cup.cupsNombre || cup.DescripcionCUP }}</small>
+                                                    <small class="cup-texto-corto"
+                                                        :title="cup.cupsNombre || cup.DescripcionCUP">
+                                                        {{ truncarTexto(cup.cupsNombre || cup.DescripcionCUP, 28) }}
+                                                    </small>
                                                     <br>
                                                     <small class="text-muted">
                                                         <i class="bi bi-person-fill"></i> {{ cup.nombreProf || 'N/D' }}
@@ -404,6 +407,12 @@ export default {
             "cerrarEncuesta",
             "getAsignacionesByEncuesta",
         ]),
+
+        truncarTexto(texto, max = 28) {
+            const valor = String(texto || "").trim();
+            if (valor.length <= max) return valor;
+            return `${valor.slice(0, max)}...`;
+        },
 
         onModalShown() {
             // Remover aria-hidden cuando el modal se muestra para solucionar problemas de accesibilidad
@@ -769,6 +778,7 @@ export default {
                     actividadId: this.idItem,
                     key: this.keyActividad,
                     nombreProf: this.userData.nombre,
+                    convenio: this.userData?.convenio || "",
                 };
             });
 
@@ -777,6 +787,7 @@ export default {
                 cups: cupsConActividad,
                 idEncuesta: this.idEncuesta,
                 nombreProf: this.userData.nombre,
+                convenio: this.userData?.convenio || "",
             };
 
             try {
@@ -1217,5 +1228,10 @@ select {
 
 .texto-sombra {
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.cup-texto-corto {
+    display: inline-block;
+    font-size: 0.75rem;
 }
 </style>

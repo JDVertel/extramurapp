@@ -25,11 +25,11 @@
                     style="border-radius: 24px;">
                     <div class="row paciente shadow-sm">
                         <div class="col-6 col-md-6">
-                            <small class="d-block"><strong>{{ encuesta.nombre1 }} {{ encuesta.apellido1
+                            <small><strong>{{ encuesta.nombre1 }} {{ encuesta.apellido1
                                     }}</strong></small>
-                            <small class="text-muted d-block">EPS: {{ encuesta.eps }} | Riesgo: {{
+                            <small>EPS: {{ encuesta.eps }} | Riesgo: {{
                                 encuesta.poblacionRiesgo }}</small>
-                            <small class="text-muted d-block">Nac: {{ encuesta.fechaNac }} | Enc: {{ encuesta.fecha
+                            <small>Nac: {{ encuesta.fechaNac }} | Enc: {{ encuesta.fecha
                                 }}</small>
                             <!-- Mostrar actividades si existen -->
 
@@ -47,7 +47,7 @@
                                     <!-- CUPS (Enfermero y Medico) -->
                                     <div
                                         v-if="encuesta.status_caracterizacion === true && (userData.cargo === 'Enfermero' || userData.cargo === 'Medico')">
-                                        <button type="button" class="btn btn-danger rounded-circle agendar-btn"
+                                        <button type="button" class="btn btn-danger btn-sm agendar-btn"
                                             @click="cupsGestion(encuesta.id)">
                                             <i class="bi bi-calendar2-heart-fill"></i>
                                             <span class="agendar-label">Cups</span>

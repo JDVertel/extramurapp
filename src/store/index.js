@@ -1834,6 +1834,7 @@ export default createStore({
           cups: nuevosCups,
           idEncuesta,
           nombrePtof,
+          convenio,
         } = entradasC;
 
         if (!key) throw new Error("El identificador 'key' es obligatorio");
@@ -1863,7 +1864,11 @@ export default createStore({
         const nuevosCupsObj = {};
         nuevosCups.forEach((cup) => {
           const id = cup.id || generarId();
-          nuevosCupsObj[id] = { ...cup, id };
+          nuevosCupsObj[id] = {
+            ...cup,
+            id,
+            convenio: cup?.convenio ?? convenio ?? "",
+          };
         });
 
         // 4. Combinar cups existentes con los nuevos
@@ -1875,6 +1880,7 @@ export default createStore({
           key,
           nombrePtof,
           idEncuesta,
+          convenio: convenio ?? datosExistentes.convenio ?? "",
           cups: cupsActualizadosObj,
         };
 
@@ -2005,9 +2011,10 @@ export default createStore({
         console.log("   ffinal:", fin, "| tipo:", typeof fin);
         console.log("   convenio:", convenioFiltro, "| tipo:", typeof convenioFiltro);
 
-        // Obtener actividades y encuestas
+        // Obtener actividades, encuestas y asignaciones (CUPS)
         const { data: actividades } = await firebase_api.get("/Actividades.json");
         const { data: encuestas } = await firebase_api.get("/Encuesta.json");
+        const { data: asignaciones } = await firebase_api.get("/Asignaciones.json");
 
         if (!actividades || !encuestas) {
           console.warn("⚠️ No hay datos en /Actividades.json o /Encuesta.json");
@@ -2021,6 +2028,32 @@ export default createStore({
           ...value,
         }));
 
+        // Función auxiliar para extraer convenio de CUPS
+        const obtenerConvenioDelCUPS = (idEncuesta) => {
+          if (!asignaciones || !asignaciones[idEncuesta]) {
+            return "";
+          }
+
+          const asignacionData = asignaciones[idEncuesta];
+
+          // Si la asignación tiene directamente convenio, usarlo
+          if (asignacionData.convenio) {
+            return normalizarTexto(asignacionData.convenio);
+          }
+
+          // Si tiene cups, extraer convenio del primer CUPS disponible
+          if (asignacionData.cups && typeof asignacionData.cups === 'object') {
+            const cupsArray = Object.values(asignacionData.cups);
+            for (let cup of cupsArray) {
+              if (cup && cup.convenio) {
+                return normalizarTexto(cup.convenio);
+              }
+            }
+          }
+
+          return "";
+        };
+
         // Mapear actividades y combinar con datos de encuesta
         const resultados = [];
         Object.entries(actividades).forEach(([idActividad, actividadData]) => {
@@ -2029,15 +2062,18 @@ export default createStore({
             if (encuestaAsociada) {
               const fechaBD = encuestaAsociada.fechagestEnfermera;
               const fechaBDSolo = fechaBD ? fechaBD.split(" ")[0] : null;
-              const regimenEncuesta = normalizarTexto(encuestaAsociada.regimen);
+
+              // Obtener convenio del CUPS en lugar de usar regimen de encuesta
+              const conveniodelCUPS = obtenerConvenioDelCUPS(idActividad);
 
               const cumpleFecha =
                 !!fechaBDSolo && fechaBDSolo >= inicio && fechaBDSolo <= fin;
               const cumpleConvenio =
-                !convenioFiltro || regimenEncuesta === convenioFiltro;
+                !convenioFiltro || conveniodelCUPS === convenioFiltro;
               const sinFacturar = encuestaAsociada.status_facturacion !== true;
+              const noAsignado = !encuestaAsociada.asigfact;
 
-              if (cumpleFecha && sinFacturar && cumpleConvenio) {
+              if (cumpleFecha && sinFacturar && cumpleConvenio && noAsignado) {
                 resultados.push({
                   id: idActividad,
                   ...encuestaAsociada,
