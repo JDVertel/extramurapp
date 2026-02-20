@@ -26,11 +26,11 @@
                     <div class="row paciente shadow-sm">
                         <div class="col-6 col-md-6">
                             <small class="d-block"><strong>{{ encuesta.nombre1 }} {{ encuesta.apellido1
-                            }}</strong></small>
+                                    }}</strong></small>
                             <small class="text-muted d-block">EPS: {{ encuesta.eps }} | Riesgo: {{
                                 encuesta.poblacionRiesgo }}</small>
                             <small class="text-muted d-block">Nac: {{ encuesta.fechaNac }} | Enc: {{ encuesta.fecha
-                            }}</small>
+                                }}</small>
                             <!-- Mostrar actividades si existen -->
 
                         </div>
@@ -39,10 +39,10 @@
                             <div class="btn-grid">
                                 <!-- Fila única: Visita, Caracterización y CUPS (3 botones) -->
                                 <div class="btn-row">
-                             
-                                  
 
-                              
+
+
+
 
                                     <!-- CUPS (Enfermero y Medico) -->
                                     <div
@@ -112,7 +112,7 @@ export default {
         },
 
         cupsGestion(id) {
-            sessionStorage.setItem("rutaAnterior", "/sop_profesional");
+            sessionStorage.setItem("rutaAnterior", "/sop_enfermero");
             this.$router.push({
                 name: "sop_cups",
                 params: {

@@ -6,17 +6,19 @@
       </div>
       <div class="spinner-message">Por favor espere, cargando información...</div>
     </div>
-    <div v-if="!cargando">
+    <div v-else-if="errorCarga" class="alert alert-danger m-3">
+      <h4>Error cargando información</h4>
+      <p>{{ errorCarga }}</p>
+      <button class="btn btn-primary" @click="cargarEncuestas">Reintentar</button>
+    </div>
+    <div v-else>
       <h1 class="display-6 center">{{ userData.cargo }}</h1>
-      <div class="alert alert-warning shadow-sm  d-flex justify-content-between align-items-center" role="alert">
+      <div class="alert alert-warning shadow-sm d-flex justify-content-between align-items-center" role="alert">
         Realizar nueva encuesta <RouterLink class="btn btn-warning" to="/sop_encuesta">
-          <i class="bi bi-file-earmark-plus-fill"></i> <br />
-
+          <i class="bi bi-file-earmark-plus-fill"></i>
         </RouterLink>
       </div>
 
-
-      <div class="container-fluid">
       <h4>Detalle de Actividades ({{ cantEncuestas }}) <small>Pendientes</small></h4>
 
       <!-- Mensaje cuando no hay registros -->
@@ -26,85 +28,75 @@
         <p class="mb-0">No hay registros pendientes en este momento.</p>
       </div>
 
-      <div v-else class="container-fluid" style="max-height: 500px; overflow-y: auto ">
-        <div v-for="(encuesta, index) in encuestas" :key="index" class="container rounded-lg p-2 mb-2"
-          style="border-radius: 24px;">
-          <div class="row paciente shadow-sm">
-            <div class="col-6 col-md-6">
-              <small class="d-block"><strong>{{ encuesta.nombre1 }} {{ encuesta.apellido1 }}</strong></small>
-              <small class="text-muted d-block">EPS: {{ encuesta.eps }} | Riesgo: {{ encuesta.poblacionRiesgo }}</small>
-              <small class="text-muted d-block">Nac: {{ encuesta.fechaNac }} | Enc: {{ encuesta.fecha }}</small>
-            </div>
+      <div v-for="(encuesta, index) in encuestas" :key="index" class="container rounded-lg p-2 mb-2">
+        <div class="row paciente shadow-sm" style="border-radius: 5px;">
+          <div class="col-7 col-md-6">
+            <small class="d-block"><strong>{{ encuesta.nombre1 }} {{ encuesta.nombre2 }} {{ encuesta.apellido1 }} {{
+              encuesta.apellido2 }}</strong></small>
+            <small>EPS: {{ encuesta.eps }} | Riesgo: {{ encuesta.poblacionRiesgo }}</small>
+            <small>Nac: {{ encuesta.fechaNac }} | Enc: {{ encuesta.fecha }}</small>
+          </div>
 
-            <div class="col-6 col-md-6 acciones-col ">
-              <div class="btn-grid">
-                <!-- Fila única: Visita, Caracterización y CUPS (3 botones) -->
-                <div class="btn-row">
-                  <!-- Visita (solo Auxiliar de enfermeria) -->
-                  <template v-if="userData.cargo === 'Auxiliar de enfermeria'">
-                    <div v-if="encuesta.Agenda_Visitamedica?.cita_visitamedica === false">
-                      <button type="button" class="btn btn-info rounded-circle agendar-btn"
-                        @click="Agendar(encuesta.id, 'visitamedica')">
-                        <i class="bi bi-houses"></i>
-                        <span class="agendar-label">Visita</span>
-                      </button>
-                    </div>
-                    <div v-else-if="encuesta.Agenda_Visitamedica?.cita_visitamedica === undefined">
-                      <button type="button" class="btn btn-info rounded-circle agendar-btn"
-                        @click="Agendar(encuesta.id, 'visitamedica')">
-                        <i class="bi bi-houses"></i>
-                        <span class="agendar-label">Visita</span>
-                      </button>
-                    </div>
-                    <div v-else>
-                      <button type="button" class="btn btn-secondary rounded-circle agendar-btn" disabled>
-                        <i class="bi bi-check2-circle"></i>
-                        <span class="agendar-label">Visita</span>
-                      </button>
-                    </div>
-                  </template>
-
-                  <!-- Caracterización (solo Auxiliar de enfermeria) -->
-                  <template v-if="userData.cargo === 'Auxiliar de enfermeria'">
-                    <div v-if="encuesta.status_caracterizacion === false">
-                      <button type="button" class="btn btn-warning rounded-circle agendar-btn"
-                        @click="Caracterizar(encuesta.id)">
-                        <i class="bi bi-calendar2-check"></i>
-                        <span class="agendar-label">Caract</span>
-                      </button>
-                    </div>
-                    <div v-else>
-                      <button type="button" class="btn btn-secondary rounded-circle agendar-btn" disabled>
-                        <i class="bi bi-check2-circle"></i>
-                        <span class="agendar-label">Caract</span>
-                      </button>
-                    </div>
-                  </template>
-
-                  <!-- CUPS (Auxiliar de enfermeria y Medico) -->
+          <div class="col-5 col-md-6 acciones-col">
+            <div class="btn-grid">
+              <div class="btn-row">
+                <!-- Auxiliar: Visita -->
+                <template v-if="userData.cargo === 'Auxiliar de enfermeria'">
                   <div
-                    v-if="encuesta.status_caracterizacion === true && (userData.cargo === 'Auxiliar de enfermeria' || userData.cargo === 'Medico')">
-                    <button type="button" class="btn btn-danger rounded-circle agendar-btn"
-                      @click="cupsGestion(encuesta.id)">
-                      <i class="bi bi-calendar2-heart-fill"></i>
-                      <span class="agendar-label">Cups</span>
+                    v-if="encuesta.Agenda_Visitamedica?.cita_visitamedica === false || encuesta.Agenda_Visitamedica?.cita_visitamedica === undefined">
+                    <button type="button" class="btn btn-info rounded-circle agendar-btn"
+                      @click="Agendar(encuesta.id, 'visitamedica')">
+                      <i class="bi bi-houses"></i>
+                      <span class="agendar-label">Visita</span>
                     </button>
                   </div>
+                  <div v-else>
+                    <button type="button" class="btn btn-secondary rounded-circle agendar-btn" disabled>
+                      <i class="bi bi-check2-circle"></i>
+                      <span class="agendar-label">Visita</span>
+                    </button>
+                  </div>
+                </template>
 
-                  <!-- Botón Eliminar (solo Auxiliar de enfermeria) -->
-                  <template v-if="userData.cargo === 'Auxiliar de enfermeria'">
-                    <div>
-                      <button type="button" class="btn btn-outline-danger rounded-circle agendar-btn"
-                        @click="eliminarRegistro(encuesta.id)"
-                        :disabled="eliminandoRegistro === encuesta.id"
-                        :title="'Eliminar registro'">
-                        <i class="bi bi-trash" v-if="eliminandoRegistro !== encuesta.id"></i>
-                        <i class="bi bi-hourglass-split" v-else></i>
-                        <span class="agendar-label">{{ eliminandoRegistro === encuesta.id ? 'Verif' : 'Elim' }}</span>
-                      </button>
-                    </div>
-                  </template>
+                <!-- Auxiliar: Caracterización -->
+                <template v-if="userData.cargo === 'Auxiliar de enfermeria'">
+                  <div v-if="encuesta.status_caracterizacion === false">
+                    <button type="button" class="btn btn-warning rounded-circle agendar-btn"
+                      @click="Caracterizar(encuesta.id)">
+                      <i class="bi bi-calendar2-check"></i>
+                      <span class="agendar-label">Caract</span>
+                    </button>
+                  </div>
+                  <div v-else>
+                    <button type="button" class="btn btn-secondary rounded-circle agendar-btn" disabled>
+                      <i class="bi bi-check2-circle"></i>
+                      <span class="agendar-label">Caract</span>
+                    </button>
+                  </div>
+                </template>
+
+                <!-- CUPS -->
+                <div
+                  v-if="encuesta.status_caracterizacion === true && (userData.cargo === 'Auxiliar de enfermeria' || userData.cargo === 'Medico')">
+                  <button type="button" class="btn btn-danger rounded-circle agendar-btn"
+                    @click="cupsGestion(encuesta.id)">
+                    <i class="bi bi-calendar2-heart-fill"></i>
+                    <span class="agendar-label">Cups</span>
+                  </button>
                 </div>
+
+                <!-- Eliminar -->
+                <template v-if="userData.cargo === 'Auxiliar de enfermeria'">
+                  <div>
+                    <button type="button" class="btn btn-outline-danger rounded-circle agendar-btn"
+                      @click="eliminarRegistro(encuesta.id)" :disabled="eliminandoRegistro === encuesta.id"
+                      :title="'Eliminar registro'">
+                      <i class="bi bi-trash" v-if="eliminandoRegistro !== encuesta.id"></i>
+                      <i class="bi bi-hourglass-split" v-else></i>
+                      <span class="agendar-label">{{ eliminandoRegistro === encuesta.id ? 'Verif' : 'Elim' }}</span>
+                    </button>
+                  </div>
+                </template>
               </div>
             </div>
           </div>
@@ -112,43 +104,28 @@
       </div>
     </div>
   </div>
-  </div>
 </template>
 
 <script>
 import { mapActions, mapState } from "vuex";
-import moment from "moment";
+
 export default {
   data() {
     return {
       cargando: true,
-      fechaActual: "",
-      eliminandoRegistro: null, // Para mostrar estado de carga durante eliminación
+      eliminandoRegistro: null,
+      rutaAnterior: null,
+      errorCarga: null,
     };
   },
+
   methods: {
     ...mapActions([
       "removeRegEnc",
       "getAllRegistersByFechaStatus",
-      "getAllRegistersByIduser",
-      "getAllRegistersByFecha",
-      " SelectExistenteAgendas",
-      "getAsignacionesByEncuesta", // Añadimos la acción para consultar asignaciones
+      "getAsignacionesByEncuesta",
     ]),
 
-    removeRegEncuesta(id) {
-      this.removeRegEnc(id);
-      alert("Registro eliminado exitosamente.");
-      this.getAllRegistersByFecha({
-        idUsuario: this.userData.numDocumento,
-        fecha: this.fechaActual,
-      });
-      this.getAllRegistersByFechaStatus({
-        idUsuario: this.userData.numDocumento,
-      });
-    },
-
-    // Nueva función para eliminar registro con validación
     async eliminarRegistro(idEncuesta) {
       if (!confirm('¿Está seguro de que desea eliminar este registro?\n\nEsta acción eliminará el registro de actividades y la encuesta asociada.')) {
         return;
@@ -157,23 +134,16 @@ export default {
       this.eliminandoRegistro = idEncuesta;
 
       try {
-        // Verificar si el registro tiene asignaciones
         const asignaciones = await this.getAsignacionesByEncuesta(idEncuesta);
-        
+
         if (asignaciones && Object.keys(asignaciones).length > 0) {
-          alert('â ️ No se puede eliminar el registro\n\nEste registro tiene asignaciones activas. Debe eliminar primero todas las asignaciones antes de eliminar el registro principal.');
+          alert('⚠️ No se puede eliminar el registro\n\nEste registro tiene asignaciones activas. Debe eliminar primero todas las asignaciones antes de eliminar el registro principal.');
           return;
         }
 
-        // Si no tiene asignaciones, proceder con la eliminación
         await this.removeRegEnc(idEncuesta);
-        
         alert('✅ Registro eliminado exitosamente\n\nSe ha eliminado el registro de actividades y la encuesta asociada.');
-        
-        // Recargar los datos
-        await this.getAllRegistersByFechaStatus({
-          idUsuario: this.userData.numDocumento,
-        });
+        await this.cargarEncuestas();
 
       } catch (error) {
         console.error('Error al eliminar registro:', error);
@@ -182,21 +152,18 @@ export default {
         this.eliminandoRegistro = null;
       }
     },
+
     Agendar(id, tipo) {
       this.$router.push({
         name: "sop_agendamiento",
-        params: {
-          idEncuesta: id,
-          tipo: tipo,
-        },
+        params: { idEncuesta: id, tipo },
       });
     },
+
     Caracterizar(id) {
       this.$router.push({
         name: "sop_caracterizacion",
-        params: {
-          idEncuesta: id,
-        },
+        params: { idEncuesta: id },
       });
     },
 
@@ -204,48 +171,69 @@ export default {
       sessionStorage.setItem("rutaAnterior", "/sop_aux");
       this.$router.push({
         name: "sop_cups",
-        params: {
-          idEncuesta: id,
-        },
+        params: { idEncuesta: id },
       });
     },
 
-    nombresActividades(act) {
-      if (!act) return [];
-      const lista = Array.isArray(act) ? act : Object.values(act);
-      return lista.map((a) => a?.nombre).filter(Boolean);
+    async cargarEncuestas() {
+      this.cargando = true;
+      this.errorCarga = null;
+
+      try {
+        // Esperar a que App.vue sincronice userData desde localStorage
+        let intentos = 0;
+        while ((!this.userData || !this.userData.numDocumento) && intentos < 30) {
+          await new Promise(resolve => setTimeout(resolve, 100));
+          intentos++;
+        }
+
+        if (!this.userData?.numDocumento) {
+          throw new Error('Usuario no disponible después de esperar');
+        }
+
+        await Promise.race([
+          this.getAllRegistersByFechaStatus({
+            idUsuario: this.userData.numDocumento,
+          }),
+          new Promise((_, reject) =>
+            setTimeout(() => reject(new Error('Timeout - tardó más de 10 segundos')), 10000)
+          )
+        ]);
+      } catch (error) {
+        console.error("Error cargando encuestas:", error.message);
+        this.errorCarga = error.message || 'Error al cargar encuestas';
+      } finally {
+        // Esperar un mínimo de 500ms para que se vea el spinner
+        await new Promise(resolve => setTimeout(resolve, 500));
+        this.cargando = false;
+        this.$forceUpdate();
+      }
     },
   },
 
   computed: {
-    ...mapState(["encuestas", "userData", "cantEncuestas", "encuestasToday"]),
-
-    documento() {
-      return this.userData.numDocumento;
-    },
-
-    totalRegisters() {
-      return this.encuestas.length;
-    },
+    ...mapState(["encuestas", "userData", "cantEncuestas"]),
   },
-  async mounted() {
-    this.fechaActual = moment().format("YYYY-MM-DD");
-    try {
-      //encuestas diarias + contador
-      // await this.getAllRegistersByFecha({
-      //   idUsuario: this.userData.numDocumento,
-      // fecha: this.fechaActual,
-      //});
-      //encuestas abiertas
-      await this.getAllRegistersByFechaStatus({
-        idUsuario: this.userData.numDocumento,
-      });
-    } catch (error) {
-      console.error("Error en mounted de sop_aux:", error);
-      alert("Error cargando encuestas: " + (error?.message || error));
-    } finally {
+
+  watch: {
+    '$route': {
+      handler: function (to, from) {
+        // Se dispara SIEMPRE que la ruta cambia, sin importar el nombre
+        // Esto es crítico cuando presionas atrás del navegador
+        console.log(`[sop_aux watch] Ruta cambió de ${from.name} a ${to.name}`);
+        if (to.name === 'sop_aux') {
+          console.log('[sop_aux watch] Cargando encuestas por cambio de ruta');
+          this.cargarEncuestas();
+        }
+      },
+      deep: true
     }
-    this.cargando = false;
+  },
+
+  async mounted() {
+    this.rutaAnterior = this.$route.name;
+    this.cargando = true;
+    await this.cargarEncuestas();
   },
 };
 </script>
@@ -277,7 +265,6 @@ export default {
   justify-content: center;
 }
 
-/* Layout horizontal para botones */
 .btn-row {
   display: flex;
   flex-direction: row;
@@ -287,7 +274,6 @@ export default {
   flex-wrap: wrap;
 }
 
-/* Estilos para botones redondeados */
 .agendar-btn {
   width: 50px;
   height: 50px;

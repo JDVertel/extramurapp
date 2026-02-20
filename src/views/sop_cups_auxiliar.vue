@@ -1,174 +1,219 @@
 <template>
-<!-- {{ InfoEncuestasById }} -->
-<!-- {{ dataencuesta.eps }} -->
-<div v-if="guardando" class="overlay-guardando">
-    <div class="spinner-border text-primary" role="status">
-        <span class="visually-hidden">Guardando...</span>
-    </div>
-    <div class="texto-guardando">Guardando listado, por favor espere...</div>
-</div>
-<div class="container-fluid rounded shadow-sm py-3 mb-3 paciente p-1" v-if="userEncuesta">
-    <div class="row align-items-stretch  p-1">
-      <div class="col-12 mb-md-0 p-1 text-center">
-        <strong>{{ userEncuesta.nombre1 }} {{ userEncuesta.nombre2 }}
-          {{ userEncuesta.apellido1 }} {{ userEncuesta.apellido2 }} , {{ this.idEncuesta }}</strong>
-      </div>
-      <div class="col-6 ">
-        <strong>EPS:</strong> {{ userEncuesta.eps }}<br />
-        <strong>Régimen:</strong> {{ userEncuesta.regimen }}
-      </div>
-      <div class="col-6 ">
-        <strong>Sexo:</strong> {{ userEncuesta.sexo }}<br />
-        <strong>Edad:</strong> {{ edadActual(userEncuesta.fechaNac) }}
-      </div>
-    </div>
-</div>
-<div v-if="InfoEncuestasById && InfoEncuestasById[0]" class="mb-4" :aria-busy="guardando">
-    <div>
-        <div class="container-fluid bg-light rounded shadow-sm p-3">
-            <h5 class="fw-bold text-success mb-3">
-                <i class="bi bi-person-check-fill"></i> Actividades del paciente
-            </h5>
-            <table class="table">
-                <thead>
-                    <tr>
-                        <th scope="col">Opc</th>
-                        <th scope="col">Actividad</th>
-                        <th scope="col">Cups</th>
-
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr v-for="(item, key) in InfoEncuestasById[0].tipoActividad" :key="key">
-                        <td> <button class="btn btn-primary rounded-pill" v-if="item && puedeMostrarActividad(item.key)" type="button" data-bs-toggle="modal" data-bs-target="#staticBackdrop" @click="integrarCup(item)">
-                                <i class="bi bi-plus-circle"></i>
-                            </button>
-                        </td>
-                        <td>{{ obtenerNombreActividadDelContrato(item.key) }}</td>
-                        <td>
-                            <div v-if="obtenerCupsArrayPorActividad(item.key).length > 0">
-                                <div v-for="(cup, idx) in obtenerCupsArrayPorActividad(item.key)" :key="idx" class="d-flex align-items-center justify-content-between mb-1 p-1 border-bottom">
-                                    <div>
-                                        <small>{{ cup.cupsNombre || cup.DescripcionCUP }}</small>
-                                        <br>
-                                        <small class="text-muted">
-                                            <i class="bi bi-person-fill"></i> {{ cup.nombreProf || 'Usuario desconocido' }}
-                                            <span class="badge ms-1" :class="{
-                          'bg-success': cup.key === 'Auxiliar de enfermeria',
-                          'bg-warning text-dark': cup.key === 'Enfermero', 
-                          'bg-primary': cup.key === 'Medico',
-                          'bg-secondary': !cup.key || !['Auxiliar de enfermeria', 'Enfermero', 'Medico'].includes(cup.key)
-                        }">{{ cup.key || 'Rol desconocido' }}</span>
-                                        </small>
-                                    </div>
-                                    <button v-if="puedeEliminarCups(cup)" class="btn btn-danger rounded-circle ms-2" @click="eliminarCupsAsignado(cup, item.key)" title="Eliminar CUPS">
-                                        <i class="bi bi-trash"></i>
-                                    </button>
-                                    <span v-else class="badge bg-secondary ms-2" title="Solo el creador puede eliminar">
-                                        <i class="bi bi-lock"></i>
-                                    </span>
-                                </div>
-                            </div>
-                            <span v-else class="text-muted">Sin CUPS</span>
-                        </td>
-
-                    </tr>
-
-                </tbody>
-            </table>
-
+    <!-- {{ InfoEncuestasById }} -->
+    <!-- {{ dataencuesta.eps }} -->
+    <div class="sop-cups-auxiliar-view">
+        <!-- SPINNER SIEMPRE VISIBLE MIENTRAS CARGA -->
+        <div v-if="cargandoDatos" class="overlay-guardando">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Cargando...</span>
+            </div>
+            <div class="texto-guardando">Cargando datos...</div>
         </div>
-    </div>
-    <div class="footer my-3 text-end">
-        <button class="btn btn-success rounded-pill" @click="cerrarVisita()" v-if="InfoEncuestasById !== ''">
-            <i class="bi bi-clipboard2-check"></i> Cerrar Visita
-        </button>
-    </div>
-    <!-- El modal queda igual, puedes mejorar clase 'modal-content' por 'shadow-lg' si gustas -->
-    <div class="modal fade" id="staticBackdrop" tabindex="-1" aria-labelledby="staticBackdropLabel" @shown.bs.modal="onModalShown" @hidden.bs.modal="onModalHidden">
-        <div class="modal-dialog">
-            <div class="modal-content shadow-lg">
-                <div class="modal-header">
-                    <h1 class="modal-title fs-5" id="staticBackdropLabel">
-                        <i class="bi bi-plus-circle-fill me-2"></i>
-                        Añadir CUPS a la actividad
-                    </h1>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+
+        <!-- OVERLAY DE GUARDANDO -->
+        <div v-if="guardando && !cargandoDatos" class="overlay-guardando">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Guardando...</span>
+            </div>
+            <div class="texto-guardando">Guardando listado, por favor espere...</div>
+        </div>
+
+        <!-- CONTENIDO VISIBLE SOLO CUANDO NO ESTÁ CARGANDO -->
+        <template v-if="!cargandoDatos">
+            <div class="container-fluid rounded shadow-sm py-3 mb-3 paciente p-1" v-if="userEncuesta">
+                <div class="row">
+                    <div class="col-12 col-md-1 align-self-center text-center">
+                        <i class="bi bi-person-circle h1 texto-sombra"></i>
+                    </div>
+                    <div class="col-12 col-md-11 align-self-center">
+                        <div class="row">
+                            <div class="col-12 col-md-3 texto-sombra">
+                                <strong>Paciente:</strong>
+                                {{ userEncuesta.nombre1 }} {{ userEncuesta.nombre2 }}
+                                {{ userEncuesta.apellido1 }} {{ userEncuesta.apellido2 }}
+                            </div>
+                            <div class="col-12 col-md-6 texto-sombra">
+                                <strong>EPS:</strong> {{ userEncuesta.eps }} <br>
+                                <strong>Régimen:</strong> {{ userEncuesta.regimen }}
+                            </div>
+                            <div class="col-12 col-md-3 texto-sombra">
+                                <strong>Sexo:</strong> {{ userEncuesta.sexo }}<br />
+                                <strong>Edad:</strong> {{ edadActual(userEncuesta.fechaNac) }}
+                            </div>
+                        </div>
+
+
+
+                    </div>
                 </div>
-                <div class="modal-body">
-                    Seleccione el CUP que desea asignar a
-                    <strong>{{ actividadSeleccionadaNombre }}</strong>
-                    <div class="row">
-                        <div class="mb-3">
-                            <br />
-                            <select v-model="CupsSeleccionadoId" class="form-select" id="cupSelect">
-                                <option value="">Seleccione un CUPS</option>
-                                <option v-for="cup in cupsDisponiblesPorContrato" :key="cup.id" :value="cup.id">
-                                    [{{ cup.codigo }}] {{ cup.DescripcionCUP }} - {{ cup.profesional }}
-                                </option>
-                            </select>
-                            <small v-if="cupsDisponiblesPorContrato.length === 0" class="text-muted d-block mt-1">
-                                No hay CUPS disponibles para esta actividad, EPS y profesional.
-                            </small>
-                            <div class="row mt-2">
-                                <div class="col-2">
-                                    Cantidad
-                                    <input type="number" id="cupCantidad" name="cupCantidad" class="form-control" aria-label="Cantidad" v-model="cantidad" />
-                                </div>
-                                <div class="col-10">
-                                    <div class="input-group">
-                                        <span class="input-group-text">Detalle</span>
-                                        <textarea id="cupDetalle" name="cupDetalle" class="form-control" aria-label="With textarea" v-model="detalle"></textarea>
+
+            </div>
+            <div v-if="InfoEncuestasById && InfoEncuestasById[0]" class="mb-4" :aria-busy="guardando">
+                <div>
+                    <div class="container-fluid bg-light rounded shadow-sm p-3">
+                        <h5 class="fw-bold text-success mb-3">
+                            <i class="bi bi-person-check-fill"></i> Actividades del paciente
+                        </h5>
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th scope="col">Opc</th>
+                                    <th scope="col">Actividad</th>
+                                    <th scope="col">Cups</th>
+
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr v-for="(item, key) in actividadesPaciente" :key="`${item.key}-${key}`">
+                                    <td> <button class="btn btn-primary rounded-pill"
+                                            v-if="item && puedeMostrarActividad(item.key)" type="button"
+                                            data-bs-toggle="modal" data-bs-target="#staticBackdrop"
+                                            @click="integrarCup(item)">
+                                            <i class="bi bi-plus-circle"></i>
+                                        </button>
+                                    </td>
+                                    <td>{{ obtenerNombreActividadDelContrato(item.key) }}</td>
+                                    <td>
+                                        <div v-if="obtenerCupsArrayPorActividad(item.key).length > 0">
+                                            <div v-for="(cup, idx) in obtenerCupsArrayPorActividad(item.key)" :key="idx"
+                                                class="d-flex align-items-center justify-content-between mb-1 p-1 border-bottom">
+                                                <div>
+                                                    <small>{{ cup.cupsNombre || cup.DescripcionCUP }}</small>
+                                                    <br>
+                                                    <small class="text-muted">
+                                                        <i class="bi bi-person-fill"></i> {{ cup.nombreProf || 'N/D' }}
+                                                        <span class="badge ms-1" :class="{
+                                                            'bg-success': cup.key === 'Auxiliar de enfermeria',
+                                                            'bg-warning text-dark': cup.key === 'Enfermero',
+                                                            'bg-primary': cup.key === 'Medico',
+                                                            'bg-secondary': !cup.key || !['Auxiliar de enfermeria', 'Enfermero', 'Medico'].includes(cup.key)
+                                                        }">{{ cup.key || 'Rol desconocido' }}</span>
+                                                    </small>
+                                                </div>
+                                                <button v-if="puedeEliminarCups(cup)"
+                                                    class="btn btn-danger rounded-circle ms-2"
+                                                    @click="eliminarCupsAsignado(cup, item.key)" title="Eliminar CUPS">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                                <span v-else class="badge bg-secondary ms-2"
+                                                    title="Solo el creador puede eliminar">
+                                                    <i class="bi bi-lock"></i>
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <span v-else class="text-muted">Sin CUPS</span>
+                                    </td>
+
+                                </tr>
+
+                            </tbody>
+                        </table>
+
+                    </div>
+                </div>
+                <div class="footer my-3 text-end">
+                    <button class="btn btn-success rounded-pill" @click="cerrarVisita()"
+                        v-if="InfoEncuestasById !== ''">
+                        <i class="bi bi-clipboard2-check"></i> Cerrar Visita
+                    </button>
+                </div>
+                <!-- El modal queda igual, puedes mejorar clase 'modal-content' por 'shadow-lg' si gustas -->
+                <div class="modal fade" id="staticBackdrop" tabindex="-1" aria-labelledby="staticBackdropLabel">
+                    <div class="modal-dialog">
+                        <div class="modal-content shadow-lg">
+                            <div class="modal-header">
+                                <h1 class="modal-title fs-5" id="staticBackdropLabel">
+                                    <i class="bi bi-plus-circle-fill me-2"></i>
+                                    Añadir CUPS a la actividad
+                                </h1>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                    aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                Seleccione el CUP que desea asignar a
+                                <strong>{{ actividadSeleccionadaNombre }}</strong>
+                                <div class="row">
+                                    <div class="mb-3">
+                                        <br />
+                                        <select v-model="CupsSeleccionadoId" class="form-select" id="cupSelect">
+                                            <option value="">Seleccione un CUPS</option>
+                                            <option v-for="cup in cupsDisponiblesPorContrato" :key="cup.id"
+                                                :value="cup.id">
+                                                [{{ cup.codigo }}] {{ cup.DescripcionCUP }} - {{ cup.profesional }}
+                                            </option>
+                                        </select>
+                                        <small v-if="cupsDisponiblesPorContrato.length === 0"
+                                            class="text-muted d-block mt-1">
+                                            No hay CUPS disponibles para esta actividad, EPS y profesional.
+                                        </small>
+                                        <div class="row mt-2">
+                                            <div class="col-2">
+                                                Cantidad
+                                                <input type="number" id="cupCantidad" name="cupCantidad"
+                                                    class="form-control" aria-label="Cantidad" v-model="cantidad" />
+                                            </div>
+                                            <div class="col-10">
+                                                <div class="input-group">
+                                                    <span class="input-group-text">Detalle</span>
+                                                    <textarea id="cupDetalle" name="cupDetalle" class="form-control"
+                                                        aria-label="With textarea" v-model="detalle"></textarea>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <button class="btn btn-warning rounded-pill mt-2"
+                                            @click="addCups(this.CupsSeleccionadoId, this.cantidad, this.detalle)"
+                                            :disabled="!CupsSeleccionadoId || cantidad < 1 || !detalle.trim()">
+                                            <i class="bi bi-plus-circle-dotted"></i> Agregar al listado
+                                        </button>
                                     </div>
                                 </div>
                             </div>
-                            <button class="btn btn-warning rounded-pill mt-2" @click="addCups(this.CupsSeleccionadoId, this.cantidad, this.detalle)" :disabled="!CupsSeleccionadoId || cantidad < 1 || !detalle.trim()">
-                                <i class="bi bi-plus-circle-dotted"></i> Agregar al listado
-                            </button>
+                            <div class="modal-body">
+                                <h6>Listado de CUPS:</h6>
+                                <hr />
+                                <table class="table" v-if="cupsArray.length > 0">
+                                    <thead>
+                                        <tr>
+                                            <th scope="col">CUPS</th>
+                                            <th scope="col">Detalle Ingresado</th>
+                                            <th scope="col">Cantidad</th>
+                                            <th scope="col">Grupo</th>
+                                            <th scope="col">Opción</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr v-for="(cup, index) in cupsArray" :key="index">
+                                            <td>{{ cup.cupsNombre }}</td>
+                                            <td>{{ cup.detalle }}</td>
+                                            <td>{{ cup.cantidad }}</td>
+                                            <td>{{ cup.Grupo }}</td>
+                                            <td>
+                                                <button class="btn btn-danger rounded-circle"
+                                                    @click="eliminarDelListado(index)">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                                <div v-if="cupsArray.length === 0">No hay CUPS seleccionados.</div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-danger rounded-pill" data-bs-dismiss="modal">
+                                        <i class="bi bi-x-square"></i> Cancelar
+                                    </button>
+                                    <button type="button" class="btn btn-primary rounded-pill"
+                                        @click="confirmarSeleccion(userEncuesta?.id)" data-bs-dismiss="modal"
+                                        v-if="cupsArray.length !== 0">
+                                        <i class="bi bi-floppy"></i> Guardar Listado
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
-                <div class="modal-body">
-                    <h6>Listado de CUPS:</h6>
-                    <hr />
-                    <table class="table" v-if="cupsArray.length > 0">
-                        <thead>
-                            <tr>
-                                <th scope="col">CUPS</th>
-                                <th scope="col">Detalle Ingresado</th>
-                                <th scope="col">Cantidad</th>
-                                <th scope="col">Grupo</th>
-                                <th scope="col">Opción</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr v-for="(cup, index) in cupsArray" :key="index">
-                                <td>{{ cup.cupsNombre }}</td>
-                                <td>{{ cup.detalle }}</td>
-                                <td>{{ cup.cantidad }}</td>
-                                <td>{{ cup.Grupo }}</td>
-                                <td>
-                                    <button class="btn btn-danger rounded-circle" @click="eliminarDelListado(index)">
-                                        <i class="bi bi-trash"></i>
-                                    </button>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                    <div v-if="cupsArray.length === 0">No hay CUPS seleccionados.</div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-danger rounded-pill" data-bs-dismiss="modal">
-                            <i class="bi bi-x-square"></i> Cancelar
-                        </button>
-                        <button type="button" class="btn btn-primary rounded-pill" @click="confirmarSeleccion(userEncuesta?.id)" data-bs-dismiss="modal" v-if="cupsArray.length !== 0">
-                            <i class="bi bi-floppy"></i> Guardar Listado
-                        </button>
-                    </div>
-                </div>
             </div>
-        </div>
+        </template>
     </div>
-</div>
 </template>
 
 <script>
@@ -191,64 +236,67 @@ export default {
             cantidad: 1, // Valor por defecto para la cantidad
             detalle: "", // Detalle del cup seleccionado
             guardando: false, // Para mostrar el overlay/spinner
+            cargandoDatos: true, // Para mostrar spinner mientras carga datos iniciales
             actividadSeleccionadaNombre: "",
+            modalEl: null,
+            isComponentActive: true, // Bandera para cancelar operaciones al desmontar
 
             /*  */
             tipoActividadExtramural: [{
-                    nombre: "Consulta PYMS",
-                    Profesional: ["Auxiliar de enfermeria", "Enfermero", "Medico"],
-                    key: "Proc1",
-                },
-                {
-                    nombre: "Consulta Morbilidad",
-                    Profesional: ["Medico"],
-                    key: "Proc2",
-                },
-                {
-                    nombre: "VPS",
-                    Profesional: ["Enfermero", "Medico"],
-                    key: "Proc3",
-                },
-                {
-                    nombre: "Toma lab PYMS",
-                    Profesional: ["Enfermero", "Auxiliar de enfermeria"],
-                    key: "Proc4",
-                },
-                {
-                    nombre: "Toma lab Morbilidad",
-                    Profesional: ["Enfermero", "Auxiliar de enfermeria"],
-                    key: "Proc5",
-                },
-                {
-                    nombre: "Vacunacion",
-                    Profesional: ["Enfermero", "Auxiliar de enfermeria"],
-                    key: "Proc6",
-                },
-                {
-                    nombre: "Realizacion de tamizajes",
-                    Profesional: ["Auxiliar de enfermeria", "Enfermero", "Medico"],
-                    key: "Proc7",
-                },
-                {
-                    nombre: "Realizacion Test",
-                    Profesional: ["Enfermero", "Medico"],
-                    key: "Proc8",
-                },
-                {
-                    nombre: "IEC",
-                    Profesional: ["Auxiliar de enfermeria", "Enfermero", "Medico"],
-                    key: "Proc9",
-                },
-                {
-                    nombre: "Remision IPS",
-                    Profesional: ["Auxiliar de enfermeria", "Enfermero", "Medico"],
-                    key: "Proc10",
-                },
-                {
-                    nombre: "Otro",
-                    Profesional: ["Auxiliar de enfermeria", "Enfermero", "Medico"],
-                    key: "Proc11",
-                },
+                nombre: "Consulta PYMS",
+                Profesional: ["Auxiliar de enfermeria", "Enfermero", "Medico"],
+                key: "Proc1",
+            },
+            {
+                nombre: "Consulta Morbilidad",
+                Profesional: ["Medico"],
+                key: "Proc2",
+            },
+            {
+                nombre: "VPS",
+                Profesional: ["Enfermero", "Medico"],
+                key: "Proc3",
+            },
+            {
+                nombre: "Toma lab PYMS",
+                Profesional: ["Enfermero", "Auxiliar de enfermeria"],
+                key: "Proc4",
+            },
+            {
+                nombre: "Toma lab Morbilidad",
+                Profesional: ["Enfermero", "Auxiliar de enfermeria"],
+                key: "Proc5",
+            },
+            {
+                nombre: "Vacunacion",
+                Profesional: ["Enfermero", "Auxiliar de enfermeria"],
+                key: "Proc6",
+            },
+            {
+                nombre: "Realizacion de tamizajes",
+                Profesional: ["Auxiliar de enfermeria", "Enfermero", "Medico"],
+                key: "Proc7",
+            },
+            {
+                nombre: "Realizacion Test",
+                Profesional: ["Enfermero", "Medico"],
+                key: "Proc8",
+            },
+            {
+                nombre: "IEC",
+                Profesional: ["Auxiliar de enfermeria", "Enfermero", "Medico"],
+                key: "Proc9",
+            },
+            {
+                nombre: "Remision IPS",
+                Profesional: ["Auxiliar de enfermeria", "Enfermero", "Medico"],
+                key: "Proc10",
+            },
+            {
+                nombre: "Otro",
+                Profesional: ["Auxiliar de enfermeria", "Enfermero", "Medico"],
+                key: "Proc11",
+            },
             ],
         };
     },
@@ -262,6 +310,7 @@ export default {
             "encuestas",
             "contratos",
             "epss",
+            "actividades",
         ]),
 
         //logica para obtener los cups filtrados por EPS y profesional
@@ -272,6 +321,25 @@ export default {
         userEncuesta() {
             const encuestas = this.encuestas || [];
             return encuestas.find((enc) => String(enc.id) === String(this.idEncuesta)) || null;
+        },
+
+        actividadesPaciente() {
+            const desdeEncuesta = this.InfoEncuestasById?.[0]?.tipoActividad;
+            const desdeStore = this.actividades?.tipoActividad || this.actividades;
+            const fuente = desdeEncuesta ?? desdeStore ?? [];
+
+            const lista = Array.isArray(fuente)
+                ? fuente
+                : (fuente && typeof fuente === 'object' ? Object.values(fuente) : []);
+
+            return lista
+                .map((actividad) => {
+                    if (!actividad) return null;
+                    if (typeof actividad === 'string') return { key: actividad };
+                    if (typeof actividad === 'object' && actividad.key) return actividad;
+                    return null;
+                })
+                .filter((actividad) => actividad && actividad.key);
         },
 
         // CUPS disponibles filtrados por contrato según profesional, EPS y actividad
@@ -332,6 +400,7 @@ export default {
     methods: {
         ...mapActions([
             "getEncuestaById",
+            "getActividadesById",
             "getAllCups",
             "getAllContratos",
             "getAllEpss",
@@ -356,10 +425,12 @@ export default {
                 modal.setAttribute('aria-hidden', 'true');
             }
 
-            // Forzar restaurar el scroll si Bootstrap deja el body bloqueado
+            // Limpiar estado del body que Bootstrap pudo haber dejado
             document.body.classList.remove('modal-open');
             document.body.style.overflow = '';
             document.body.style.paddingRight = '';
+
+            // Remover TODOS los backdrops de Bootstrap
             const backdrops = document.querySelectorAll('.modal-backdrop');
             backdrops.forEach((backdrop) => backdrop.remove());
 
@@ -368,6 +439,53 @@ export default {
                     document.activeElement.blur();
                 }
             });
+        },
+
+        registrarEventosModal() {
+            if (!this.modalEl) {
+                const modal = document.getElementById('staticBackdrop');
+                if (!modal) return;
+                this.modalEl = modal;
+            }
+
+            // Vincular con métodos de la instancia para poder removerlos después
+            this.modalEl.addEventListener('shown.bs.modal', this.onModalShown.bind(this));
+            this.modalEl.addEventListener('hidden.bs.modal', this.onModalHidden.bind(this));
+        },
+
+        quitarEventosModal() {
+            if (!this.modalEl) return;
+
+            // Forzar a Bootstrap a cerrar el modal si está abierto
+            try {
+                const bootstrapModal = window.bootstrap?.Modal?.getInstance(this.modalEl);
+                if (bootstrapModal) {
+                    bootstrapModal.hide();
+                }
+            } catch (e) {
+                // Ignorar errores si Bootstrap no está disponible
+            }
+
+            // Remover event listeners
+            this.modalEl.removeEventListener('shown.bs.modal', this.onModalShown.bind(this));
+            this.modalEl.removeEventListener('hidden.bs.modal', this.onModalHidden.bind(this));
+
+            // Limpiar TODOS los estados de modal del DOM
+            document.body.classList.remove('modal-open');
+            document.body.style.overflow = '';
+            document.body.style.paddingRight = '';
+
+            // Remover todos los backdrops
+            const backdrops = document.querySelectorAll('.modal-backdrop');
+            backdrops.forEach((backdrop) => backdrop.remove());
+
+            // Remover el atributo aria-modal si existe
+            const modal = document.getElementById('staticBackdrop');
+            if (modal) {
+                modal.setAttribute('aria-hidden', 'true');
+            }
+
+            this.modalEl = null;
         },
 
         // Función de debugging para diagnosticar problemas de datos
@@ -679,7 +797,7 @@ export default {
             if (!tipoActividad || !this.userData || !this.userData.cargo) return [];
             return Object.values(tipoActividad).filter(
                 (actividad) =>
-                actividad.Profesional && actividad.Profesional.includes(this.userData.cargo)
+                    actividad.Profesional && actividad.Profesional.includes(this.userData.cargo)
             );
         },
 
@@ -793,27 +911,53 @@ export default {
         },
 
         async recargar() {
-            /* this.idEncuesta = this.$route.params.idEncuesta; */
-            await this.getEncuestaById(this.idEncuesta);
-            await this.cargarAsignaciones();
+            if (!this.isComponentActive) return;
+
+            try {
+                await this.getEncuestaById(this.idEncuesta);
+                if (!this.isComponentActive) return;
+
+                await this.getActividadesById(this.idEncuesta);
+                if (!this.isComponentActive) return;
+
+                await this.cargarAsignaciones();
+            } catch (error) {
+                console.error("Error en recargar:", error);
+            }
         },
+
+        resolverRutaDestino(cargo) {
+            const rutaAnterior = sessionStorage.getItem("rutaAnterior");
+            const rutasValidas = ["/sop_aux", "/sop_enfermero", "/sop_profesional"];
+
+            if (rutaAnterior && rutasValidas.includes(rutaAnterior)) {
+                return rutaAnterior;
+            }
+
+            if (rutaAnterior && !rutaAnterior.startsWith("/")) {
+                const rutaNormalizada = `/${rutaAnterior}`;
+                if (rutasValidas.includes(rutaNormalizada)) {
+                    return rutaNormalizada;
+                }
+            }
+
+            if (cargo === "Medico") return "/sop_profesional";
+            if (cargo === "Enfermero") return "/sop_enfermero";
+            return "/sop_aux";
+        },
+
+        async redirigirPostCierre(cargo) {
+            const rutaDestino = this.resolverRutaDestino(cargo);
+            sessionStorage.removeItem("rutaAnterior");
+
+            await this.$nextTick();
+            await this.$router.replace(rutaDestino);
+        },
+
         async cerrarVisita() {
             // Confirmar que el usuario quiere cerrar la visita
             if (confirm("¿Estás seguro de que deseas cerrar las actividades de la visita?")) {
                 const cargo = this.userData.cargo;
-                // Obtener la ruta anterior del sessionStorage, con valores por defecto según el cargo
-                let rutaDestino = sessionStorage.getItem("rutaAnterior");
-
-                if (!rutaDestino) {
-                    // Si no hay ruta guardada, determinar según el cargo
-                    if (cargo === "Auxiliar de enfermeria") {
-                        rutaDestino = "/sop_aux";
-                    } else if (cargo === "Enfermero") {
-                        rutaDestino = "/sop_enfermero";
-                    } else if (cargo === "Medico") {
-                        rutaDestino = "/sop_profesional";
-                    }
-                }
 
                 try {
 
@@ -823,9 +967,7 @@ export default {
                             id: this.idEncuesta,
                             cargo: cargo,
                         });
-                        // Navegar solo después de que se complete el cierre
-                        sessionStorage.removeItem("rutaAnterior");
-                        this.$router.push(rutaDestino);
+                        await this.redirigirPostCierre(cargo);
                     }
                     // Si el usuario es Enfermero, verificar que las actividades de Auxiliar y Médico ya estén cerradas
                     else if (cargo === "Enfermero") {
@@ -861,9 +1003,7 @@ export default {
                                 id: this.idEncuesta,
                                 cargo: cargo,
                             });
-                            // Navegar solo después de que se complete el cierre
-                            sessionStorage.removeItem("rutaAnterior");
-                            this.$router.push(rutaDestino);
+                            await this.redirigirPostCierre(cargo);
                         } else {
                             alert(
                                 "Deben estar cerradas las actividades por Auxiliar y Médico antes de cerrar la visita..."
@@ -883,65 +1023,68 @@ export default {
         "$route.params.idEncuesta"(newId) {
             this.idEncuesta = newId;
             this.recargar();
-        },
-        // Watcher para redirigir si no hay datos después de intentar cargar
-        userEncuesta(newVal) {
-            if (newVal === null && this.idEncuesta && this.InfoEncuestasById.length === 0) {
-                // Solo redirigir si pasaron más de 2 segundos y no hay datos cargados
-                setTimeout(() => {
-                    if (this.userEncuesta === null && this.InfoEncuestasById.length === 0) {
-                        const rutaAnterior = sessionStorage.getItem("rutaAnterior");
-                        const cargo = this.userData?.cargo;
-                        let ruta = rutaAnterior;
-
-                        if (!ruta) {
-                            ruta = cargo === "Medico" ? "/sop_profesional" : "/sop_aux";
-                        }
-
-                        sessionStorage.removeItem("rutaAnterior");
-                        this.$router.push(ruta);
-                    }
-                }, 2000);
-            }
         }
     },
 
     /* ----------------------------------------------------------------------------------------------- */
     async mounted() {
-        await Promise.all([
-            this.getAllCups(),
-            this.getAllContratos(),
-            this.getAllEpss()
-        ]);
-
-        // Llamar función de debugging para diagnosticar problemas de datos
-        this.debugEpsContratos();
-    },
-
-    /* ----------------------------------------------------------------------------------------------- */
-    async created() {
-        this.idEncuesta = this.$route.params.idEncuesta;
+        // Reiniciar la bandera cuando el componente se monta
+        this.isComponentActive = true;
+        this.cargandoDatos = true;
 
         try {
-            const firebase_api = (await import('../api/ApiFirebase.js')).default;
-            const {
-                data: allEncuestas
-            } = await firebase_api.get('/Encuesta.json');
+            // Cargar datos críticos primero (necesarios para renderizar)
+            await Promise.all([
+                this.getEncuestaById(this.idEncuesta),
+                this.getActividadesById(this.idEncuesta),
+            ]);
 
-            if (allEncuestas) {
-                const encuestasArray = Object.keys(allEncuestas).map(key => ({
-                    ...allEncuestas[key],
-                    id: key
-                }));
+            // Datos críticos cargados, ahora mostrar contenido
+            this.cargandoDatos = false;
 
-                this.$store.commit('setEncuestas', encuestasArray);
-            }
+            // Cargar datos complementarios en background (sin esperar)
+            Promise.all([
+                this.getAllCups(),
+                this.getAllContratos(),
+                this.getAllEpss(),
+                this.cargarAsignaciones()
+            ]).catch(error => {
+                console.error("Error al cargar datos complementarios:", error);
+            });
         } catch (error) {
-            console.error("Error al cargar encuestas:", error);
+            console.error("Error en mounted:", error);
+            this.cargandoDatos = false;
         }
 
-        await this.getEncuestaById(this.idEncuesta);
-        await this.cargarAsignaciones();
+        this.registrarEventosModal();
+    },
+
+    beforeUnmount() {
+        // Marcar como inactivo para cancelar operaciones pendientes
+        this.isComponentActive = false;
+
+        // Limpiar event listeners del modal
+        this.quitarEventosModal();
+
+        // Forzar limpieza de estados Bootstrap
+        document.body.classList.remove('modal-open');
+        document.body.style.overflow = '';
+        document.body.style.paddingRight = '';
+
+        // Remover todos los backdrops pendientes
+        const backdrops = document.querySelectorAll('.modal-backdrop');
+        backdrops.forEach((backdrop) => backdrop.remove());
+
+        // Limpiar el modal del DOM completamente
+        const modal = document.getElementById('staticBackdrop');
+        if (modal) {
+            modal.setAttribute('aria-hidden', 'true');
+            modal.style.display = 'none';
+        }
+    },
+    /* ----------------------------------------------------------------------------------------------- */
+    created() {
+        this.idEncuesta = this.$route.params.idEncuesta;
     },
 };
 </script>
@@ -1042,4 +1185,9 @@ select {
 .btn.rounded-pill:hover {
     transform: translateY(-1px);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-}</style>
+}
+
+.texto-sombra {
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+</style>

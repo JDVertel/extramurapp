@@ -1,5 +1,6 @@
 <script>
 import Navbar from "./components/navbar.vue";
+import { mapState } from "vuex";
 
 export default {
     components: {
@@ -7,32 +8,62 @@ export default {
     },
     data() {
         return {
-            isLoggedIn: !!localStorage.getItem("token") // estado reactivo inicial
+            isLoggedIn: !!localStorage.getItem("token")
         };
+    },
+    computed: {
+        ...mapState(["userData"])
     },
     methods: {
         logout() {
             localStorage.removeItem("token");
-            this.isLoggedIn = false; // actualizar reactivo para ocultar navbar
+            this.isLoggedIn = false;
         },
         login(token) {
             localStorage.setItem("token", token);
-            this.isLoggedIn = true; // actualizar reactivo para mostrar navbar
+            this.isLoggedIn = true;
+        },
+        syncUserDataFromStorage() {
+            // Sincronizar userData desde localStorage si el Store está vacío
+            if ((!this.userData || !this.userData.numDocumento)) {
+                const storedUserData = localStorage.getItem("userData");
+                if (storedUserData) {
+                    try {
+                        const parsed = JSON.parse(storedUserData);
+                        if (parsed && parsed.numDocumento) {
+                            this.$store.commit("setUserData", parsed);
+                            console.log('✓ userData sincronizado desde localStorage');
+                        }
+                    } catch (e) {
+                        console.error('Error al sincronizar userData:', e);
+                    }
+                }
+            }
         }
     },
-
-
-
+    watch: {
+        '$route'() {
+            // Sincronizar userData cada vez que cambia la ruta
+            this.$nextTick(() => {
+                this.syncUserDataFromStorage();
+            });
+        }
+    },
+    mounted() {
+        console.log('App.vue mounted');
+        this.syncUserDataFromStorage();
+    },
+    created() {
+        // Sincronizar también en created para que sea más rápido
+        this.syncUserDataFromStorage();
+    }
 }
 </script>
 
 <template>
     <div id="app">
         <Navbar v-if="!$route.meta.hideNavbar" />
-        <router-view v-slot="{ Component }">
-            <transition name="fade" mode="out-in">
-                <component :is="Component" />
-            </transition>
+        <router-view :key="$route.path">
         </router-view>
     </div>
 </template>

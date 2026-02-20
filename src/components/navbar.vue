@@ -9,9 +9,12 @@
         </button>
 
         <div>
-          <h6 v-if="userData" class="text-sm-end text-capitalize blanco">
+          <h6 v-if="userData && userData.nombre" class="text-sm-end text-capitalize blanco">
             {{ userData.nombre || "" }} /
             {{ userData.cargo || "" }}
+          </h6>
+          <h6 v-else class="text-sm-end text-capitalize blanco" style="opacity: 0.6;">
+            Cargando...
           </h6>
         </div>
 
@@ -160,9 +163,16 @@ export default {
     },
     async logoutUser() {
       try {
-        this.userLogout();
+        // Redirigir a logout mientras se ejecuta el logout
+        this.$router.push("/logout").then(() => {
+          this.userLogout();
+        }).catch(() => {
+          // Si la redirección falla, ejecutar logout de todas formas
+          this.userLogout();
+        });
       } catch (error) {
         console.error("Error al cerrar sesión:", error);
+        this.userLogout();
       }
     },
 

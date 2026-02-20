@@ -684,17 +684,20 @@ export default createStore({
      */
     getEncuestaById: async ({ commit }, idEncuesta) => {
       try {
-        // Consultar asignaciones completas y datos de Encuesta
-        const [asignacionesRes, encuestaRes] = await Promise.all([
+        // Consultar asignaciones, datos de encuesta y actividades
+        const [asignacionesRes, encuestaRes, actividadesRes] = await Promise.all([
           firebase_api.get(`/Asignaciones/${idEncuesta}.json`),
-          firebase_api.get(`/Encuesta/${idEncuesta}.json`)
+          firebase_api.get(`/Encuesta/${idEncuesta}.json`),
+          firebase_api.get(`/Actividades/${idEncuesta}.json`),
         ]);
 
         const asignacionesData = asignacionesRes.data;
         const encuestaData = encuestaRes.data;
+        const actividadesData = actividadesRes.data;
 
         // Extraer cups del objeto de asignaciones
         const cupsPaciente = asignacionesData?.cups || {};
+        const tipoActividad = actividadesData?.tipoActividad || encuestaData?.tipoActividad || {};
 
         let resultData = {};
 
@@ -703,7 +706,8 @@ export default createStore({
           resultData = {
             id: idEncuesta,
             ...encuestaData,
-            cups: cupsPaciente
+            cups: cupsPaciente,
+            tipoActividad,
           };
         }
 
@@ -2229,10 +2233,11 @@ export default createStore({
           sessionStorage.clear();
           commit("clearAuth");
           commit("clearUserData");
-          router.push("/login");
+          // NO redirigir aquí, lo maneja el navbar
         })
         .catch((error) => {
           console.error("Logout error:", error);
+          throw error;
         });
     },
 

@@ -173,16 +173,36 @@ const routes = [
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes,
+  scrollBehavior(to, from, savedPosition) {
+    // Mantener posición del scroll cuando navegas hacia atrás
+    if (savedPosition) {
+      return savedPosition;
+    } else {
+      return { left: 0, top: 0 };
+    }
+  }
 });
 
 router.beforeEach((to, from, next) => {
-  const loggedIn = !!localStorage.getItem("token"); // O el método que uses para validar sesión
+  const token = localStorage.getItem("token");
+  const loggedIn = !!token;
 
-  if (to.matched.some((record) => record.meta.requiresAuth) && !loggedIn) {
-    // Si la ruta requiere auth y no hay token, redirige a login
-    next("/login");
+  console.log(`[Router] Navegando de ${from.name} a ${to.name} - Token: ${loggedIn ? 'SÍ' : 'NO'}`);
+
+  // Si la ruta requiere autenticación, validar token
+  if (to.matched.some((record) => record.meta.requiresAuth)) {
+    if (!loggedIn) {
+      console.warn(`[Router] NO autenticado en ruta protegida ${to.name}: redirigiendo a login`);
+      next("/login");
+    } else {
+      // Token existe, permitir navegación
+      // App.vue se encargará de sincronizar userData desde localStorage
+      console.log(`[Router] Autenticado - permitiendo acceso a ${to.name}`);
+      next();
+    }
   } else {
-    // Si está autenticado o la ruta no es protegida, permite el acceso
+    // Rutas públicas (login, logout, etc)
+    console.log(`[Router] Ruta pública ${to.name} - permitiendo acceso`);
     next();
   }
 });
