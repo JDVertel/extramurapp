@@ -20,7 +20,7 @@
 
         <!-- CONTENIDO VISIBLE SOLO CUANDO NO ESTÁ CARGANDO -->
         <template v-if="!cargandoDatos">
-            <div class="container-fluid rounded shadow-sm py-3 mb-3 paciente p-1" v-if="userEncuesta">
+            <div class="container-fluid rounded shadow-sm mt-2 mb-2 paciente p-1" v-if="userEncuesta">
                 <div class="row">
                     <div class="col-12 col-md-1 align-self-center text-center">
                         <i class="bi bi-person-circle h1 texto-sombra"></i>
@@ -41,18 +41,14 @@
                                 <strong>Edad:</strong> {{ edadActual(userEncuesta.fechaNac) }}
                             </div>
                         </div>
-
-
-
                     </div>
                 </div>
-
             </div>
             <div v-if="InfoEncuestasById && InfoEncuestasById[0]" class="mb-4" :aria-busy="guardando">
                 <div>
                     <div class="container-fluid bg-light rounded shadow-sm p-3">
                         <h5 class="fw-bold text-success mb-3">
-                            <i class="bi bi-person-check-fill"></i> Actividades del paciente
+                            <i class="bi bi-person-check-fill"></i> Actividades del Paciente
                         </h5>
                         <table class="table">
                             <thead>
@@ -65,7 +61,7 @@
                             </thead>
                             <tbody>
                                 <tr v-for="(item, key) in actividadesPaciente" :key="`${item.key}-${key}`">
-                                    <td> <button class="btn btn-primary rounded-pill"
+                                    <td> <button class="btn btn-primary btn-sm"
                                             v-if="item && puedeMostrarActividad(item.key)" type="button"
                                             data-bs-toggle="modal" data-bs-target="#staticBackdrop"
                                             @click="integrarCup(item)">
@@ -90,8 +86,7 @@
                                                         }">{{ cup.key || 'Rol desconocido' }}</span>
                                                     </small>
                                                 </div>
-                                                <button v-if="puedeEliminarCups(cup)"
-                                                    class="btn btn-danger rounded-circle ms-2"
+                                                <button v-if="puedeEliminarCups(cup)" class="btn btn-danger btn-sm ms-2"
                                                     @click="eliminarCupsAsignado(cup, item.key)" title="Eliminar CUPS">
                                                     <i class="bi bi-trash"></i>
                                                 </button>
@@ -153,7 +148,7 @@
                                                     class="form-control" aria-label="Cantidad" v-model="cantidad" />
                                             </div>
                                             <div class="col-10">
-                                                <div class="input-group">
+                                                <div class="input-group input-group-sm mb-3">
                                                     <span class="input-group-text">Detalle</span>
                                                     <textarea id="cupDetalle" name="cupDetalle" class="form-control"
                                                         aria-label="With textarea" v-model="detalle"></textarea>
@@ -1090,9 +1085,25 @@ export default {
 </script>
 
 <style>
+.sop-cups-auxiliar-view {
+    font-size: 0.9rem;
+}
+
+.sop-cups-auxiliar-view h5 {
+    font-size: 1rem;
+}
+
+.sop-cups-auxiliar-view .table {
+    font-size: 0.8rem;
+}
+
+.sop-cups-auxiliar-view .modal-body {
+    font-size: 0.85rem;
+}
+
 .texto-guardando {
     margin-top: 1rem;
-    font-size: 1.2rem;
+    font-size: 0.85rem;
     color: #333;
 }
 
@@ -1137,11 +1148,27 @@ select {
 
 .texto-guardando {
     margin-top: 1rem;
-    font-size: 1.2rem;
+    font-size: 0.85rem;
     color: #333;
 }
 
 /* Estilos mejorados para el modal */
+.sop-cups-auxiliar-view {
+    font-size: 0.9rem;
+}
+
+.sop-cups-auxiliar-view h5 {
+    font-size: 1rem;
+}
+
+.sop-cups-auxiliar-view .table {
+    font-size: 0.8rem;
+}
+
+.sop-cups-auxiliar-view .modal-body {
+    font-size: 0.85rem;
+}
+
 .modal-header {
     background: linear-gradient(135deg, #4e73df 0%, #224abe 100%);
     color: white;
@@ -1161,14 +1188,15 @@ select {
 
 /* Estilos para botones redondeados */
 .btn.rounded-circle {
-    width: 40px;
-    height: 40px;
+    width: 32px;
+    height: 32px;
     padding: 0;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     border: none;
     transition: all 0.2s ease;
+    font-size: 0.75rem;
 }
 
 .btn.rounded-circle:hover {

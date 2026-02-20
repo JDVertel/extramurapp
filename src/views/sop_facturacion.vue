@@ -525,6 +525,11 @@ export default {
         async getdataEncuestas(fechaInicio, fechaFin, convenio) {
             this.cargando = true;
             try {
+                if (!fechaInicio || !fechaFin) {
+                    alert("Debe seleccionar fecha inicial y fecha final.");
+                    return;
+                }
+
                 let parametros = {
                     finicial: fechaInicio,
                     ffinal: fechaFin,

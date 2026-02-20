@@ -44,14 +44,14 @@
                 <template v-if="userData.cargo === 'Auxiliar de enfermeria'">
                   <div
                     v-if="encuesta.Agenda_Visitamedica?.cita_visitamedica === false || encuesta.Agenda_Visitamedica?.cita_visitamedica === undefined">
-                    <button type="button" class="btn btn-info rounded-circle agendar-btn"
+                    <button type="button" class="btn btn-info  agendar-btn"
                       @click="Agendar(encuesta.id, 'visitamedica')">
                       <i class="bi bi-houses"></i>
                       <span class="agendar-label">Visita</span>
                     </button>
                   </div>
                   <div v-else>
-                    <button type="button" class="btn btn-secondary rounded-circle agendar-btn" disabled>
+                    <button type="button" class="btn btn-secondary  agendar-btn" disabled>
                       <i class="bi bi-check2-circle"></i>
                       <span class="agendar-label">Visita</span>
                     </button>
@@ -61,14 +61,14 @@
                 <!-- Auxiliar: Caracterización -->
                 <template v-if="userData.cargo === 'Auxiliar de enfermeria'">
                   <div v-if="encuesta.status_caracterizacion === false">
-                    <button type="button" class="btn btn-warning rounded-circle agendar-btn"
+                    <button type="button" class="btn btn-warning  agendar-btn"
                       @click="Caracterizar(encuesta.id)">
                       <i class="bi bi-calendar2-check"></i>
                       <span class="agendar-label">Caract</span>
                     </button>
                   </div>
                   <div v-else>
-                    <button type="button" class="btn btn-secondary rounded-circle agendar-btn" disabled>
+                    <button type="button" class="btn btn-secondary agendar-btn" disabled>
                       <i class="bi bi-check2-circle"></i>
                       <span class="agendar-label">Caract</span>
                     </button>
@@ -78,7 +78,7 @@
                 <!-- CUPS -->
                 <div
                   v-if="encuesta.status_caracterizacion === true && (userData.cargo === 'Auxiliar de enfermeria' || userData.cargo === 'Medico')">
-                  <button type="button" class="btn btn-danger rounded-circle agendar-btn"
+                  <button type="button" class="btn btn-primary  agendar-btn"
                     @click="cupsGestion(encuesta.id)">
                     <i class="bi bi-calendar2-heart-fill"></i>
                     <span class="agendar-label">Cups</span>
@@ -88,7 +88,7 @@
                 <!-- Eliminar -->
                 <template v-if="userData.cargo === 'Auxiliar de enfermeria'">
                   <div>
-                    <button type="button" class="btn btn-outline-danger rounded-circle agendar-btn"
+                    <button type="button" class="btn btn-danger  agendar-btn"
                       @click="eliminarRegistro(encuesta.id)" :disabled="eliminandoRegistro === encuesta.id"
                       :title="'Eliminar registro'">
                       <i class="bi bi-trash" v-if="eliminandoRegistro !== encuesta.id"></i>

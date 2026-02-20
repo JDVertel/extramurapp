@@ -120,6 +120,7 @@ export default createStore({
           idEncuesta,
           grupo,
           idEncuestador,
+          convenio,
           eps,
           regimen,
           fecha,
@@ -154,6 +155,7 @@ export default createStore({
           idEncuesta,
           grupo,
           idEncuestador,
+          convenio,
           eps,
           regimen,
           fecha,
@@ -779,6 +781,7 @@ export default createStore({
       const caracterizacion = {
         estadoCaracterizacion: entradasC.estadoCaracterizacion,
         idEncuesta: entradasC.idEncuesta,
+        convenio: entradasC.convenio,
         visita: entradasC.visita,
         tipovisita: entradasC.tipovisita,
         tipovivienda: entradasC.tipovivienda,
@@ -1982,13 +1985,27 @@ export default createStore({
     GetRegistersbyRangeGeneralFact: async ({ commit }, parametros) => {
       try {
         const { finicial, ffinal, convenio } = parametros;
+        const normalizarTexto = (valor) =>
+          String(valor ?? "")
+            .trim()
+            .toLowerCase();
+
+        const inicio = String(finicial ?? "").trim();
+        const fin = String(ffinal ?? "").trim();
+        const convenioFiltro = normalizarTexto(convenio);
+
+        if (!inicio || !fin) {
+          console.warn("⚠️ Filtro inválido: fechas vacías en facturación");
+          commit("setEncuestasFact", []);
+          return [];
+        }
 
         console.log("📋 Parámetros de búsqueda:");
-        console.log("   finicial:", finicial, "| tipo:", typeof finicial);
-        console.log("   ffinal:", ffinal, "| tipo:", typeof ffinal);
-        console.log("   convenio:", convenio, "| tipo:", typeof convenio);
+        console.log("   finicial:", inicio, "| tipo:", typeof inicio);
+        console.log("   ffinal:", fin, "| tipo:", typeof fin);
+        console.log("   convenio:", convenioFiltro, "| tipo:", typeof convenioFiltro);
 
-        // Obtener actividades
+        // Obtener actividades y encuestas
         const { data: actividades } = await firebase_api.get("/Actividades.json");
         const { data: encuestas } = await firebase_api.get("/Encuesta.json");
 
@@ -2012,11 +2029,15 @@ export default createStore({
             if (encuestaAsociada) {
               const fechaBD = encuestaAsociada.fechagestEnfermera;
               const fechaBDSolo = fechaBD ? fechaBD.split(" ")[0] : null;
-              const convenioEncuesta = encuestaAsociada.convenio || '';
+              const regimenEncuesta = normalizarTexto(encuestaAsociada.regimen);
 
-              if (fechaBDSolo >= finicial && fechaBDSolo <= ffinal &&
-                !encuestaAsociada.status_facturacion &&
-                convenioEncuesta === convenio) {
+              const cumpleFecha =
+                !!fechaBDSolo && fechaBDSolo >= inicio && fechaBDSolo <= fin;
+              const cumpleConvenio =
+                !convenioFiltro || regimenEncuesta === convenioFiltro;
+              const sinFacturar = encuestaAsociada.status_facturacion !== true;
+
+              if (cumpleFecha && sinFacturar && cumpleConvenio) {
                 resultados.push({
                   id: idActividad,
                   ...encuestaAsociada,

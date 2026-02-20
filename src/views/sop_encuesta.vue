@@ -1,226 +1,237 @@
 <template>
-<div>
-    <div v-if="enviando" class="overlay-guardando active">
-        <div class="spinner-border text-primary" role="status">
-            <span class="visually-hidden">Guardando...</span>
+    <div>
+        <div v-if="enviando" class="overlay-guardando active">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Guardando...</span>
+            </div>
+            <div class="texto-guardando">Guardando registro, por favor espere...</div>
         </div>
-        <div class="texto-guardando">Guardando registro, por favor espere...</div>
-    </div>
-    <div class="container-fluid" :aria-busy="enviando">
-        <h4 class="center mt-2">
-            <i class="bi bi-journal-medical"></i> Registro de Demanda Inducida
-        </h4>
-        <br />
-        <!-- FORMULARIO -->
+        <div class="container-fluid" :aria-busy="enviando">
+            <h4 class="center mt-2">
+                <i class="bi bi-journal-medical"></i> Registro de Demanda Inducida
+            </h4>
+            <br />
+            <!-- FORMULARIO -->
 
-        <form @submit.prevent="addRegistroEncuesta">
-            <!-- SECCIÓN BÚSQUEDA -->
-            <div class="row mb-4">
-                <div class="col-6 col-md-3 mb-3">
-                    <label for="tipodoc" class="form-label">Tipo de Documento</label>
-                    <select id="tipodoc" v-model="tipodoc" class="form-select" required>
-                        <option value="">Seleccione</option>
-                        <option value="RC">Registro Civil</option>
-                        <option value="TI">Tarjeta de Identidad</option>
-                        <option value="CC">Cédula de Ciudadanía</option>
-                        <option value="CE">Cédula de Extranjería</option>
-                        <option value="NV">Certificado nacido vivo</option>
-                        <option value="PA">Pasaporte</option>
-                        <option value="PE">Permiso Especial de Permanencia</option>
-                        <option value="MS">Menos sin identificacion</option>
-                        <option value="AS">Adulto sin identificacion</option>
-                        <option value="PT">Permiso por proteccion temporal</option>
-                    </select>
-                </div>
-                <div class="col-6 col-md-3 mb-3">
-                    <label for="numdoc" class="form-label">Número de Documento</label>
-                    <input type="text" id="numdoc" v-model="numdoc" class="form-control" required />
-                </div>
-                <div class="col-6 col-md-3 mb-4">
-                    <button type="button" class="btn btn-primary mt-4" @click="consultar">
-                        <i class="bi bi-search"></i> Consultar
-                    </button>
-                </div>
-            </div>
-
-            <!-- ESTADO CONSULTA -->
-            <div class="mb-4">
-
-                <div v-if="estadoConsulta === 'encuestado'" class="alert alert-danger" role="alert">
-                    <i class="bi bi-x-circle"></i> Paciente encuestado previamente
-                    <div class="mt-3" v-if="pacienteEncontrado">
-                        <strong>Información de la encuesta existente:</strong>
-                        <ul class="mt-2">
-                            <li><strong>Fecha de encuesta:</strong> {{ pacienteEncontrado.fecha }}</li>
-                            <li><strong>ID Encuestador:</strong> {{ pacienteEncontrado.idEncuestador }}</li>
-
-                        </ul>
-                    </div>
-                </div>
-                <div v-if="estadoConsulta === 'disponible'" class="alert alert-success" role="alert">
-                    <i class="bi bi-check-circle-fill"></i> Paciente disponible para encuestar
-                </div>
-            </div>
-
-            <!-- FORMULARIO PACIENTE -->
-            <div v-if="estadoConsulta === 'disponible'" class="form-section">
-
-                <div class="row mt-3">
-                    <h2> <i class="bi bi-person-circle h2"></i> Datos del paciente</h2>
+            <form @submit.prevent="addRegistroEncuesta">
+                <!-- SECCIÓN BÚSQUEDA -->
+                <div class="row mb-4">
                     <div class="col-6 col-md-3 mb-3">
-                        <label for="eps" class="form-label">EPS del paciente</label>
-                        <select id="eps" v-model="epsId" class="form-select" required>
+                        <label for="tipodoc" class="form-label">Tipo de Documento</label>
+                        <select id="tipodoc" v-model="tipodoc" class="form-select" required>
                             <option value="">Seleccione</option>
-                            <option v-for="(ep, index) in epssConContrato" :key="index" :value="ep.id">
-                                {{ ep.eps }}
-                            </option>
+                            <option value="RC">Registro Civil</option>
+                            <option value="TI">Tarjeta de Identidad</option>
+                            <option value="CC">Cédula de Ciudadanía</option>
+                            <option value="CE">Cédula de Extranjería</option>
+                            <option value="NV">Certificado nacido vivo</option>
+                            <option value="PA">Pasaporte</option>
+                            <option value="PE">Permiso Especial de Permanencia</option>
+                            <option value="MS">Menos sin identificacion</option>
+                            <option value="AS">Adulto sin identificacion</option>
+                            <option value="PT">Permiso por proteccion temporal</option>
                         </select>
                     </div>
                     <div class="col-6 col-md-3 mb-3">
-                        <label for="regimen" class="form-label">Regimen del paciente</label>
-                        <select id="regimen" v-model="regimen" class="form-select" required>
-                            <option value="">Seleccione</option>
-                            <option v-for="(regimen, index) in Dregimen" :key="index" :value="regimen.nombre">
-                                {{ regimen.nombre }}
-                            </option>
-                        </select>
+                        <label for="numdoc" class="form-label">Número de Documento</label>
+                        <input type="text" id="numdoc" v-model="numdoc" class="form-control" required />
                     </div>
-                    <div class="col-6 col-md-3 mb-3">
-                        <label for="nombre1" class="form-label">Primer Nombre</label>
-                        <input type="text" id="nombre1" v-model="nombre1" class="form-control" required />
+                    <div class="col-6 col-md-3 mb-4">
+                        <button type="button" class="btn btn-primary mt-4" @click="consultar">
+                            <i class="bi bi-search"></i> Consultar
+                        </button>
                     </div>
-                    <div class="col-6 col-md-3 mb-3">
-                        <label for="nombre2" class="form-label">Segundo Nombre</label>
-                        <input type="text" id="nombre2" v-model="nombre2" class="form-control" />
-                    </div>
-                    <div class="col-6 col-md-3 mb-3">
-                        <label for="apellido1" class="form-label">Primer Apellido</label>
-                        <input type="text" id="apellido1" v-model="apellido1" class="form-control" required />
-                    </div>
-                    <div class="col-6 col-md-3 mb-3">
-                        <label for="apellido2" class="form-label">Segundo Apellido</label>
-                        <input type="text" id="apellido2" v-model="apellido2" class="form-control" />
-                    </div>
-                    <div class="col-6 col-md-3 mb-3">
-                        <label for="fechaNac" class="form-label">Fecha de nacimiento</label>
-                        <input type="date" id="fechaNac" v-model="fechaNac" class="form-control" :max="fechaActual" required />
-                    </div>
-                    <div class="col-6 col-md-3 mb-3">
-                        <label for="sexo" class="form-label">Sexo</label>
-                        <select id="sexo" v-model="sexo" class="form-select" required>
-                            <option value="">Seleccione</option>
-                            <option value="M">Masculino</option>
-                            <option value="F">Femenino</option>
-                        </select>
-                    </div>
+                </div>
 
-                    <div class="col-6 col-md-3 mb-3">
-                        <label for="direccion" class="form-label">Dirección</label>
-                        <input type="text" id="direccion" v-model="direccion" class="form-control" required />
-                    </div>
-                    <div class="col-6 col-md-3 mb-3">
-                        <label for="telefono" class="form-label">Teléfono</label>
-                        <input type="number" id="telefono" v-model="telefono" class="form-control" required />
-                    </div>
+                <!-- ESTADO CONSULTA -->
+                <div class="mb-4">
 
-                    <div class="col-6 col-md-3 mb-3">
-                        <label for="barrioVeredacomuna" class="form-label">Barrio-vereda/comuna</label>
-                        <select id="barrioVeredacomuna" v-model="barrioVeredacomuna" class="form-select" required>
-                            <option value="">Seleccione</option>
-                            <option :value="option" v-for="(option, index) in comunasBarrios" :key="index">
-                                {{ option.barrio }} ({{ option.comuna }})
-                            </option>
-                        </select>
-                    </div>
-                    <div class="col-12 ">
-                        <label for="poblacionRiesgo" class="form-label">Población de Riesgo</label>
-                        <div class="row g-2">
-                            <div class="col-10">
-                                <select id="poblacionRiesgo" v-model="poblacionRiesgo" class="form-select">
-                                    <option value="">Seleccione</option>
-                                    <option :value="option2.nombre" v-for="(option2, index) in poblacionRiesgoDisponibles" :key="index">
-                                        {{ option2.nombre }}
-                                    </option>
-                                </select>
-                            </div>
-                            <div class="col-2">
-                                <button type="button" class="btn btn-warning w-100" v-if="poblacionRiesgo !== ''" @click="addRiesgo">+</button>
-                            </div>
-                        </div>
-                        <div class="mt-2">
-                            <ul class="list-group list-group-flush">
-                                <li class="list-group-item d-flex justify-content-between align-items-center" v-for="(list, index) in ListpoblacionRiesgo" :key="index">
-                                    <span>{{ list }}</span>
-                                    <button type="button" class="btn btn-danger  btn-sm rounded-circle" @click="removeRiesgo(index)">
-                                        <i class="bi bi-trash"></i>
-                                    </button>
-                                </li>
+                    <div v-if="estadoConsulta === 'encuestado'" class="alert alert-danger" role="alert">
+                        <i class="bi bi-x-circle"></i> Paciente encuestado previamente
+                        <div class="mt-3" v-if="pacienteEncontrado">
+                            <strong>Información de la encuesta existente:</strong>
+                            <ul class="mt-2">
+                                <li><strong>Fecha de encuesta:</strong> {{ pacienteEncontrado.fecha }}</li>
+                                <li><strong>ID Encuestador:</strong> {{ pacienteEncontrado.idEncuestador }}</li>
+
                             </ul>
                         </div>
                     </div>
-
-                    <!-- DATOS DE ATENCIÓN -->
-                    <div class="col-12">
-                        <h2 class="mt-4 mb-3"> <i class="bi bi-clipboard-check h2"></i> Datos de Atención</h2>
-                  
+                    <div v-if="estadoConsulta === 'disponible'" class="alert alert-success" role="alert">
+                        <i class="bi bi-check-circle-fill"></i> Paciente disponible para encuestar
                     </div>
+                </div>
 
-                    <div class="col-12 col-md-6 mb-3">
-                        <label for="tipoActividad" class="form-label">Tipo de Actividad (Proyectada)</label>
-                        <div class="row g-2">
-                            <div class="col-10">
-                                <select id="tipoActividad" v-model="tipoActividad" class="form-select">
-                                    <option value="">Seleccione</option>
-                                    <option value="__ALL__">Todas</option>
-                                    <option :value="option" v-for="(option, index) in tipoActividadDisponibles" :key="index">
-                                        {{ option.nombre }}
-                                    </option>
-                                </select>
+                <!-- FORMULARIO PACIENTE -->
+                <div v-if="estadoConsulta === 'disponible'" class="form-section">
+
+                    <div class="row mt-3">
+                        <h2> <i class="bi bi-person-circle h2"></i> Datos del paciente</h2>
+                        <div class="col-6 col-md-3 mb-3">
+                            <label for="eps" class="form-label">EPS del paciente</label>
+                            <select id="eps" v-model="epsId" class="form-select" required>
+                                <option value="">Seleccione</option>
+                                <option v-for="(ep, index) in epssConContrato" :key="index" :value="ep.id">
+                                    {{ ep.eps }}
+                                </option>
+                            </select>
+                        </div>
+                        <div class="col-6 col-md-3 mb-3">
+                            <label for="regimen" class="form-label">Regimen del paciente</label>
+                            <select id="regimen" v-model="regimen" class="form-select" required>
+                                <option value="">Seleccione</option>
+                                <option v-for="(regimen, index) in Dregimen" :key="index" :value="regimen.nombre">
+                                    {{ regimen.nombre }}
+                                </option>
+                            </select>
+                        </div>
+                        <div class="col-6 col-md-3 mb-3">
+                            <label for="nombre1" class="form-label">Primer Nombre</label>
+                            <input type="text" id="nombre1" v-model="nombre1" class="form-control" required />
+                        </div>
+                        <div class="col-6 col-md-3 mb-3">
+                            <label for="nombre2" class="form-label">Segundo Nombre</label>
+                            <input type="text" id="nombre2" v-model="nombre2" class="form-control" />
+                        </div>
+                        <div class="col-6 col-md-3 mb-3">
+                            <label for="apellido1" class="form-label">Primer Apellido</label>
+                            <input type="text" id="apellido1" v-model="apellido1" class="form-control" required />
+                        </div>
+                        <div class="col-6 col-md-3 mb-3">
+                            <label for="apellido2" class="form-label">Segundo Apellido</label>
+                            <input type="text" id="apellido2" v-model="apellido2" class="form-control" />
+                        </div>
+                        <div class="col-6 col-md-3 mb-3">
+                            <label for="fechaNac" class="form-label">Fecha de nacimiento</label>
+                            <input type="date" id="fechaNac" v-model="fechaNac" class="form-control" :max="fechaActual"
+                                required />
+                        </div>
+                        <div class="col-6 col-md-3 mb-3">
+                            <label for="sexo" class="form-label">Sexo</label>
+                            <select id="sexo" v-model="sexo" class="form-select" required>
+                                <option value="">Seleccione</option>
+                                <option value="M">Masculino</option>
+                                <option value="F">Femenino</option>
+                            </select>
+                        </div>
+
+                        <div class="col-6 col-md-3 mb-3">
+                            <label for="direccion" class="form-label">Dirección</label>
+                            <input type="text" id="direccion" v-model="direccion" class="form-control" required />
+                        </div>
+                        <div class="col-6 col-md-3 mb-3">
+                            <label for="telefono" class="form-label">Teléfono</label>
+                            <input type="number" id="telefono" v-model="telefono" class="form-control" required />
+                        </div>
+
+                        <div class="col-6 col-md-3 mb-3">
+                            <label for="barrioVeredacomuna" class="form-label">Barrio-vereda/comuna</label>
+                            <select id="barrioVeredacomuna" v-model="barrioVeredacomuna" class="form-select" required>
+                                <option value="">Seleccione</option>
+                                <option :value="option" v-for="(option, index) in comunasBarrios" :key="index">
+                                    {{ option.barrio }} ({{ option.comuna }})
+                                </option>
+                            </select>
+                        </div>
+                        <div class="col-12 ">
+                            <label for="poblacionRiesgo" class="form-label">Población de Riesgo</label>
+                            <div class="row g-2">
+                                <div class="col-10">
+                                    <select id="poblacionRiesgo" v-model="poblacionRiesgo" class="form-select">
+                                        <option value="">Seleccione</option>
+                                        <option :value="option2.nombre"
+                                            v-for="(option2, index) in poblacionRiesgoDisponibles" :key="index">
+                                            {{ option2.nombre }}
+                                        </option>
+                                    </select>
+                                </div>
+                                <div class="col-2">
+                                    <button type="button" class="btn btn-warning w-100" v-if="poblacionRiesgo !== ''"
+                                        @click="addRiesgo">+</button>
+                                </div>
                             </div>
-                            <div class="col-2">
-                                <button type="button" class="btn btn-warning w-100" v-if="tipoActividad !== ''" @click="addActividad">+</button>
+                            <div class="mt-2">
+                                <ul class="list-group list-group-flush">
+                                    <li class="list-group-item d-flex justify-content-between align-items-center"
+                                        v-for="(list, index) in ListpoblacionRiesgo" :key="index">
+                                        <span>{{ list }}</span>
+                                        <button type="button" class="btn btn-danger  btn-sm rounded-circle"
+                                            @click="removeRiesgo(index)">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </li>
+                                </ul>
                             </div>
                         </div>
 
-                        <div class="mt-2">
-                            <ul class="list-group list-group-flush">
-                                <li class="list-group-item d-flex justify-content-between align-items-center" v-for="(list, index) in ListtipoActividad" :key="index">
-                                    <span>{{ list.nombre }}</span>
-                                    <button type="button" class="btn btn-danger btn-sm rounded-circle" @click="removeActividad(index)">
-                                        <i class="bi bi-trash"></i>
-                                    </button>
-                                </li>
-                            </ul>
+                        <!-- DATOS DE ATENCIÓN -->
+                        <div class="col-12">
+                            <h2 class="mt-4 mb-3"> <i class="bi bi-clipboard-check h2"></i> Datos de Atención</h2>
+
                         </div>
-                    </div>
 
-                    <div class="col-6 ">
-                        <label for="desplazamiento" class="form-label">¿Desplazamiento efectivo?</label>
-                        <select id="desplazamiento" v-model="desplazamiento" class="form-select" required>
-                            <option value="" disabled>Seleccione</option>
-                            <option value="si">Sí</option>
-                            <option value="no">No</option>
-                        </select>
-                    </div>
-                    <div class="col-6 ">
-                        <label for="requiereRemision" class="form-label">¿Requiere remisión a procedimiento?</label>
-                        <select id="requiereRemision" v-model="requiereRemision" class="form-select" required>
-                            <option value="" disabled>Seleccione</option>
-                            <option value="si">Sí</option>
-                            <option value="no">No</option>
-                        </select>
-                    </div>
-                    <div class="col-12">
-                           <h2 class="mt-4 mb-3"> <i class="bi bi-heart-pulse-fill h2"></i> Asignacion de profesionales</h2>
-                    </div>
+                        <div class="col-12 col-md-6 mb-3">
+                            <label for="tipoActividad" class="form-label">Tipo de Actividad (Proyectada)</label>
+                            <div class="row g-2">
+                                <div class="col-10">
+                                    <select id="tipoActividad" v-model="tipoActividad" class="form-select">
+                                        <option value="">Seleccione</option>
+                                        <option value="__ALL__">Todas</option>
+                                        <option :value="option" v-for="(option, index) in tipoActividadDisponibles"
+                                            :key="index">
+                                            {{ option.nombre }}
+                                        </option>
+                                    </select>
+                                </div>
+                                <div class="col-2">
+                                    <button type="button" class="btn btn-warning w-100" v-if="tipoActividad !== ''"
+                                        @click="addActividad">+</button>
+                                </div>
+                            </div>
 
-                 
+                            <div class="mt-2">
+                                <ul class="list-group list-group-flush">
+                                    <li class="list-group-item d-flex justify-content-between align-items-center"
+                                        v-for="(list, index) in ListtipoActividad" :key="index">
+                                        <span>{{ list.nombre }}</span>
+                                        <button type="button" class="btn btn-danger btn-sm rounded-circle"
+                                            @click="removeActividad(index)">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div class="col-6 ">
+                            <label for="desplazamiento" class="form-label">¿Desplazamiento efectivo?</label>
+                            <select id="desplazamiento" v-model="desplazamiento" class="form-select" required>
+                                <option value="" disabled>Seleccione</option>
+                                <option value="si">Sí</option>
+                                <option value="no">No</option>
+                            </select>
+                        </div>
+                        <div class="col-6 ">
+                            <label for="requiereRemision" class="form-label">¿Requiere remisión a procedimiento?</label>
+                            <select id="requiereRemision" v-model="requiereRemision" class="form-select" required>
+                                <option value="" disabled>Seleccione</option>
+                                <option value="si">Sí</option>
+                                <option value="no">No</option>
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <h2 class="mt-4 mb-3"> <i class="bi bi-heart-pulse-fill h2"></i> Asignacion de profesionales
+                            </h2>
+                        </div>
+
+
 
                         <div class="col-6 col-md-3 mb-3">
                             <label for="medico" class="form-label">Médico</label>
                             <select id="medico" v-model="medico" class="form-select" required>
                                 <option value="">---Seleccione---</option>
-                                <option v-for="medico in medicosByGrupo" :key="medico.numDocumento" :value="medico.numDocumento">
+                                <option v-for="medico in medicosByGrupo" :key="medico.numDocumento"
+                                    :value="medico.numDocumento">
                                     {{ medico.nombre }}
                                 </option>
                             </select>
@@ -229,43 +240,48 @@
                             <label for="enfermero" class="form-label">Enfermero Jefe </label>
                             <select id="enfermero" v-model="enfermero" class="form-select" required>
                                 <option value="">---Seleccione---</option>
-                                <option v-for="enfermero in enfermerosByGrupo" :key="enfermero.numDocumento" :value="enfermero.numDocumento">
+                                <option v-for="enfermero in enfermerosByGrupo" :key="enfermero.numDocumento"
+                                    :value="enfermero.numDocumento">
                                     {{ enfermero.nombre }}
                                 </option>
                             </select>
                         </div>
 
-                           <div class="col-6 col-md-3 mb-3">
+                        <div v-if="esConvenioEBasicos" class="col-6 col-md-3 mb-3">
                             <label for="psicologo" class="form-label">Psicologo</label>
-                            <select id="psicologo" v-model="psicologo" class="form-select" required>
+                            <select id="psicologo" v-model="psicologo" class="form-select"
+                                :required="esConvenioEBasicos">
                                 <option value="">---Seleccione---</option>
-                                <option v-for="psicologo in psicologosByGrupo" :key="psicologo.numDocumento" :value="psicologo.numDocumento">
+                                <option v-for="psicologo in psicologosByGrupo" :key="psicologo.numDocumento"
+                                    :value="psicologo.numDocumento">
                                     {{ psicologo.nombre }}
                                 </option>
                             </select>
                         </div>
 
-                           <div class="col-6 col-md-3 mb-3">
+                        <div v-if="esConvenioEBasicos" class="col-6 col-md-3 mb-3">
                             <label for="trabajadorSocial" class="form-label">T social </label>
-                            <select id="trabajadorSocial" v-model="trabajadorSocial" class="form-select" required>
+                            <select id="trabajadorSocial" v-model="trabajadorSocial" class="form-select"
+                                :required="esConvenioEBasicos">
                                 <option value="">---Seleccione---</option>
-                                <option v-for="trabajador in tsocialesByGrupo" :key="trabajador.numDocumento" :value="trabajador.numDocumento">
+                                <option v-for="trabajador in tsocialesByGrupo" :key="trabajador.numDocumento"
+                                    :value="trabajador.numDocumento">
                                     {{ trabajador.nombre }}
                                 </option>
                             </select>
                         </div>
-                 
-                    <!-- BOTÓN SUBMIT -->
-                    <div class="col-12 mb-4">
-                        <button type="submit" class="btn btn-primary" v-if="userData" :disabled="enviando">
-                            <i class="bi bi-floppy"></i> Guardar Demanda inducida
-                        </button>
+
+                        <!-- BOTÓN SUBMIT -->
+                        <div class="col-12 mb-4">
+                            <button type="submit" class="btn btn-primary" v-if="userData" :disabled="enviando">
+                                <i class="bi bi-floppy"></i> Guardar Demanda inducida
+                            </button>
+                        </div>
                     </div>
                 </div>
-            </div>
-        </form>
+            </form>
+        </div>
     </div>
-</div>
 </template>
 
 <script>
@@ -312,37 +328,37 @@ export default {
         nombreEncuestador: "",
 
         poblacionRiesgoOptions: [{
-                nombre: "Gestante",
-            },
-            {
-                nombre: "Menor a 5 años",
-            },
-            {
-                nombre: "Discapacidad",
-            },
-            {
-                nombre: "Adulto mayor",
-            },
-            {
-                nombre: "Orientacion sexual diversa",
-            },
-            {
-                nombre: "Grupo etnico",
-            },
+            nombre: "Gestante",
+        },
+        {
+            nombre: "Menor a 5 años",
+        },
+        {
+            nombre: "Discapacidad",
+        },
+        {
+            nombre: "Adulto mayor",
+        },
+        {
+            nombre: "Orientacion sexual diversa",
+        },
+        {
+            nombre: "Grupo etnico",
+        },
         ],
 
         Dregimen: [{
-                nombre: "Contributivo",
-            },
-            {
-                nombre: "Subsidiado",
-            },
-            {
-                nombre: "Especial",
-            },
-            {
-                nombre: "PPNA",
-            },
+            nombre: "Contributivo",
+        },
+        {
+            nombre: "Subsidiado",
+        },
+        {
+            nombre: "Especial",
+        },
+        {
+            nombre: "PPNA",
+        },
         ],
         ListpoblacionRiesgo: [],
         ListtipoActividad: [],
@@ -366,6 +382,8 @@ export default {
                 return;
             }
 
+            const requiereProfesionalesExtra = this.esConvenioEBasicos;
+
             // Validación de campos obligatorios
             if (
                 !this.epsId ||
@@ -385,8 +403,8 @@ export default {
                 !this.userData.numDocumento ||
                 !this.medico ||
                 !this.enfermero ||
-                !this.psicologo ||
-                !this.trabajadorSocial
+                (requiereProfesionalesExtra && !this.psicologo) ||
+                (requiereProfesionalesExtra && !this.trabajadorSocial)
             ) {
                 alert("Por favor, complete todos los campos obligatorios o logeate nuevamente.");
                 this.enviando = false;
@@ -398,8 +416,12 @@ export default {
                 fechavisita: "",
                 idMedicoAtiende: this.medico,
                 idEnfermeroAtiende: this.enfermero,
-                idPsicologoAtiende: this.psicologo,
-                idTsocialAtiende: this.trabajadorSocial,
+                ...(requiereProfesionalesExtra && this.psicologo
+                    ? { idPsicologoAtiende: this.psicologo }
+                    : {}),
+                ...(requiereProfesionalesExtra && this.trabajadorSocial
+                    ? { idTsocialAtiende: this.trabajadorSocial }
+                    : {}),
                 status_gest_aux: false,
                 status_gest_medica: false,
                 status_gest_enfermera: false,
@@ -658,6 +680,10 @@ export default {
             "contratos",
             "actividadesExtra",
         ]),
+        esConvenioEBasicos() {
+            const convenioUsuario = String(this.userData?.vconvenio ?? "").trim();
+            return convenioUsuario === "E Basicos";
+        },
         epssConContrato() {
             if (!this.epss || !this.contratos || this.contratos.length === 0) return this.epss || [];
             const epsIdConContrato = new Set(this.contratos.map(c => c.epsId));
@@ -687,6 +713,12 @@ export default {
             this.pacienteEncontrado = null;
             this.nombreEncuestador = "";
         },
+        esConvenioEBasicos(valor) {
+            if (!valor) {
+                this.psicologo = "";
+                this.trabajadorSocial = "";
+            }
+        },
     },
     async mounted() {
         await this.getAllComunaBarrios();
@@ -701,14 +733,16 @@ export default {
             grupo: this.userData.grupo,
             convenio: this.userData.convenio,
         });
-        await this.getAllPsicologosbyGrupo({
-            grupo: this.userData.grupo,
-            convenio: this.userData.convenio,
-        });
-        await this.getAllTsocialesbyGrupo({
-            grupo: this.userData.grupo,
-            convenio: this.userData.convenio,
-        });
+        if (this.esConvenioEBasicos) {
+            await this.getAllPsicologosbyGrupo({
+                grupo: this.userData.grupo,
+                convenio: this.userData.convenio,
+            });
+            await this.getAllTsocialesbyGrupo({
+                grupo: this.userData.grupo,
+                convenio: this.userData.convenio,
+            });
+        }
 
         // Asegurar que la página sea desplazable al montar el componente
         this.ensureScrollability();

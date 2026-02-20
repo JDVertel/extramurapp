@@ -25,11 +25,11 @@
                     style="border-radius: 24px;">
                     <div class="row paciente shadow-sm">
                         <div class="col-6 col-md-6">
-                            <small class="d-block"><strong>{{ encuesta.nombre1 }} {{ encuesta.apellido1
+                            <small><strong>{{ encuesta.nombre1 }} {{ encuesta.apellido1
                             }}</strong></small>
-                            <small class="text-muted d-block">EPS: {{ encuesta.eps }} | Riesgo: {{
+                            <small >EPS: {{ encuesta.eps }} | Riesgo: {{
                                 encuesta.poblacionRiesgo }}</small>
-                            <small class="text-muted d-block">Nac: {{ encuesta.fechaNac }} | Enc: {{ encuesta.fecha
+                            <small c>Nac: {{ encuesta.fechaNac }} | Enc: {{ encuesta.fecha
                             }}</small>
                             <!-- Mostrar actividades si existen -->
 
@@ -39,54 +39,14 @@
                             <div class="btn-grid">
                                 <!-- Fila única: Visita, Caracterización y CUPS (3 botones) -->
                                 <div class="btn-row">
-                                    <!-- Visita (solo Auxiliar de enfermeria) -->
-                                    <template v-if="userData.cargo === 'Auxiliar de enfermeria'">
-                                        <div v-if="encuesta.Agenda_Visitamedica?.cita_visitamedica === false">
-                                            <button type="button" class="btn btn-info rounded-circle agendar-btn"
-                                                @click="Agendar(encuesta.id, 'visitamedica')">
-                                                <i class="bi bi-houses"></i>
-                                                <span class="agendar-label">Visita</span>
-                                            </button>
-                                        </div>
-                                        <div v-else-if="encuesta.Agenda_Visitamedica?.cita_visitamedica === undefined">
-                                            <button type="button" class="btn btn-info rounded-circle agendar-btn"
-                                                @click="Agendar(encuesta.id, 'visitamedica')">
-                                                <i class="bi bi-houses"></i>
-                                                <span class="agendar-label">Visita</span>
-                                            </button>
-                                        </div>
-                                        <div v-else>
-                                            <button type="button"
-                                                class="btn btn-secondary rounded-circle agendar-btn" disabled>
-                                                <i class="bi bi-check2-circle"></i>
-                                                <span class="agendar-label">Visita</span>
-                                            </button>
-                                        </div>
-                                    </template>
+             
 
-                                    <!-- Caracterización (solo Auxiliar de enfermeria) -->
-                                    <template v-if="userData.cargo === 'Auxiliar de enfermeria'">
-                                        <div v-if="encuesta.status_caracterizacion === false">
-                                            <button type="button"
-                                                class="btn btn-warning rounded-circle agendar-btn"
-                                                @click="Caracterizar(encuesta.id)">
-                                                <i class="bi bi-calendar2-check"></i>
-                                                <span class="agendar-label">Caract</span>
-                                            </button>
-                                        </div>
-                                        <div v-else>
-                                            <button type="button"
-                                                class="btn btn-secondary rounded-circle agendar-btn" disabled>
-                                                <i class="bi bi-check2-circle"></i>
-                                                <span class="agendar-label">Caract</span>
-                                            </button>
-                                        </div>
-                                    </template>
+                         
 
                                     <!-- CUPS (Auxiliar de enfermeria y Medico) -->
                                     <div
                                         v-if="encuesta.status_caracterizacion === true && (userData.cargo === 'Auxiliar de enfermeria' || userData.cargo === 'Medico')">
-                                        <button type="button" class="btn btn-danger rounded-circle agendar-btn"
+                                        <button type="button" class="btn btn-danger  agendar-btn"
                                             @click="cupsGestion(encuesta.id)">
                                             <i class="bi bi-calendar2-heart-fill"></i>
                                             <span class="agendar-label">Cups</span>
