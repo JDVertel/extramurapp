@@ -13,24 +13,24 @@
             <h4>Detalle de Actividades ({{ cantEncuestasFiltradasPorConvenio }}) <small>Pendientes</small></h4>
 
             <!-- Mensaje cuando no hay registros -->
-            <div v-if="!encuestasFiltradasPorConvenio || encuestasFiltradasPorConvenio.length === 0" class="alert alert-success shadow-sm text-center"
-                role="alert">
+            <div v-if="!encuestasFiltradasPorConvenio || encuestasFiltradasPorConvenio.length === 0"
+                class="alert alert-success shadow-sm text-center" role="alert">
                 <i class="bi bi-check-circle-fill" style="font-size: 3rem;"></i>
                 <h5 class="mt-3">¡Todo OK!</h5>
                 <p class="mb-0">No hay registros pendientes en este momento.</p>
             </div>
 
             <div v-else class="container-fluid" style="max-height: 500px; overflow-y: auto ">
-                <div v-for="(encuesta, index) in encuestasFiltradasPorConvenio" :key="index" class="container rounded-lg p-2 mb-2"
-                    style="border-radius: 24px;">
+                <div v-for="(encuesta, index) in encuestasFiltradasPorConvenio" :key="index"
+                    class="container rounded-lg p-2 mb-2" style="border-radius: 24px;">
                     <div class="row paciente shadow-sm">
                         <div class="col-6 col-md-6">
                             <small><strong>{{ encuesta.nombre1 }} {{ encuesta.apellido1
-                                    }}</strong></small>
+                            }}</strong></small>
                             <small>EPS: {{ encuesta.eps }} | Riesgo: {{
                                 encuesta.poblacionRiesgo }}</small>
                             <small>Nac: {{ encuesta.fechaNac }} | Enc: {{ encuesta.fecha
-                                }}</small>
+                            }}</small>
                             <!-- Mostrar actividades si existen -->
 
                         </div>
