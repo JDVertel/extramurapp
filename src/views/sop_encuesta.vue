@@ -52,8 +52,8 @@
                             <strong>Información de la encuesta existente:</strong>
                             <ul class="mt-2">
                                 <li><strong>Fecha de encuesta:</strong> {{ pacienteEncontrado.fecha }}</li>
-                                <li><strong>ID Encuestador:</strong> {{ pacienteEncontrado.idEncuestador }}</li>
-
+                                <li><strong>Encuestador:</strong> {{ nombreEncuestador || 'Cargando...' }}</li>
+                                <li><strong>Convenio:</strong> {{ pacienteEncontrado.convenio }}</li>
                             </ul>
                         </div>
                     </div>
@@ -136,7 +136,7 @@
                         <div class="col-12 ">
                             <label for="poblacionRiesgo" class="form-label">Población de Riesgo</label>
                             <div class="row g-2">
-                                <div class="col-10">
+                                <div class="col-9">
                                     <select id="poblacionRiesgo" v-model="poblacionRiesgo" class="form-select">
                                         <option value="">Seleccione</option>
                                         <option :value="option2.nombre"
@@ -146,8 +146,8 @@
                                     </select>
                                 </div>
                                 <div class="col-2">
-                                    <button type="button" class="btn btn-warning w-100" v-if="poblacionRiesgo !== ''"
-                                        @click="addRiesgo">+</button>
+                                    <button type="button" class="btn btn-warning w-100 mt-2"
+                                        v-if="poblacionRiesgo !== ''" @click="addRiesgo">+ Agregar</button>
                                 </div>
                             </div>
                             <div class="mt-2">
@@ -173,7 +173,7 @@
                         <div class="col-12 col-md-6 mb-3">
                             <label for="tipoActividad" class="form-label">Tipo de Actividad (Proyectada)</label>
                             <div class="row g-2">
-                                <div class="col-10">
+                                <div class="col-9">
                                     <select id="tipoActividad" v-model="tipoActividad" class="form-select">
                                         <option value="">Seleccione</option>
                                         <option value="__ALL__">Todas</option>
@@ -184,8 +184,8 @@
                                     </select>
                                 </div>
                                 <div class="col-2">
-                                    <button type="button" class="btn btn-warning w-100" v-if="tipoActividad !== ''"
-                                        @click="addActividad">+</button>
+                                    <button type="button" class="btn btn-warning w-100 mt-2" v-if="tipoActividad !== ''"
+                                        @click="addActividad">+ Agregar</button>
                                 </div>
                             </div>
 
@@ -292,7 +292,11 @@ import {
 import moment from "moment";
 import {
     doc,
-    getDoc
+    getDoc,
+    collection,
+    query,
+    where,
+    getDocs
 } from "firebase/firestore";
 import {
     db
@@ -503,11 +507,26 @@ export default {
                 return;
             }
 
+            const convenioUsuario = String(this.userData?.convenio ?? "").trim();
+            const esConvenioEBasicos = convenioUsuario === "E Basicos";
+
+            if (esConvenioEBasicos && !this.tipodoc) {
+                alert("Por favor, seleccione el tipo de documento.");
+                return;
+            }
+
             try {
-                // Usar la acción del store para consultar pacientes
-                const resultado = await this.$store.dispatch('getAllByPacientesID', {
-                    numdoc: this.numdoc,
-                });
+                // Si el usuario es E Basicos, consultar por tipo + número + convenio
+                // En otros convenios, mantener la consulta general por número
+                const resultado = esConvenioEBasicos
+                    ? await this.$store.dispatch('getAllByPacientesIDEB', {
+                        tipodoc: this.tipodoc,
+                        numdoc: this.numdoc,
+                        convenio: "E Basicos",
+                    })
+                    : await this.$store.dispatch('getAllByPacientesID', {
+                        numdoc: this.numdoc,
+                    });
 
                 // Si hay resultados, el paciente ya fue encuestado
                 if (resultado && Array.isArray(resultado) && resultado.length > 0) {
@@ -524,17 +543,20 @@ export default {
             } catch (error) {
                 console.error("Error al consultar paciente:", error);
                 // Si no encuentra la acción en el store, mostrar mensaje amigable
-                console.warn("Verificar que getAllByPacientesID esté definido en el store");
+                console.warn("Verificar que las acciones de consulta estén definidas en el store");
                 alert("Error al consultar el paciente. Por favor, intente nuevamente.");
             }
         },
 
         async obtenerNombreEncuestador(idEncuestador) {
-
             try {
-                const userDoc = await getDoc(doc(db, "users", idEncuestador));
-                if (userDoc.exists()) {
-                    const userData = userDoc.data();
+                // Buscar usuario por numDocumento en la colección users
+                const usersRef = collection(db, "users");
+                const q = query(usersRef, where("numDocumento", "==", idEncuestador));
+                const querySnapshot = await getDocs(q);
+
+                if (!querySnapshot.empty) {
+                    const userData = querySnapshot.docs[0].data();
                     this.nombreEncuestador = userData.nombre || "Nombre no disponible";
                 } else {
                     this.nombreEncuestador = "Usuario no encontrado";
@@ -687,7 +709,10 @@ export default {
         epssConContrato() {
             if (!this.epss || !this.contratos || this.contratos.length === 0) return this.epss || [];
             const epsIdConContrato = new Set(this.contratos.map(c => c.epsId));
-            return this.epss.filter(eps => epsIdConContrato.has(eps.id));
+            return this.epss.filter(eps =>
+                epsIdConContrato.has(eps.id) &&
+                !String(eps.eps || '').includes('*')
+            );
         },
         epsSeleccionada() {
             if (!this.epsId || !this.epss) return null;

@@ -6,14 +6,13 @@
                 <h2 class="text-center mb-4">Iniciar Sesión</h2>
                 <form @submit.prevent="handleLogin">
                     <div class="mb-3">
-                        <i class="bi bi-person-circle text-center"></i>
-                        <label for="email" class="form-label"> Email</label>
+                        <label for="email" class="form-label"><i class="bi bi-person-circle text-center"></i>
+                            Email</label>
                         <input v-model="email" type="email" class="form-control" id="email"
                             placeholder="Ingresa tu email" autocomplete="username" required />
                     </div>
                     <div class="mb-3">
-                        <i class="bi bi-key"></i>
-                        <label for="password" class="form-label"> Contraseña</label>
+                        <label for="password" class="form-label"><i class="bi bi-key"></i> Contraseña</label>
                         <input v-model="password" type="password" class="form-control" id="password"
                             placeholder="Ingresa tu contraseña" autocomplete="current-password" required />
                     </div>

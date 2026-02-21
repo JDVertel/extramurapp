@@ -7,13 +7,15 @@
           aria-controls="offcanvasNavbar" aria-label="Toggle navigation">
           <span class="navbar-toggler-icon"></span>
         </button>
-
+        <img src="@/assets/images/logo_extramurapp.png" alt="ExtramuApp Logo" class="navbar-logo" />
         <div>
-          <h6 v-if="userData && userData.nombre" class="text-sm-end text-capitalize blanco">
+          <h6 v-if="userData && userData.nombre" class="text-start text-capitalize blanco" style="font-size: 0.9rem;">
+            ExtramuApp / {{ userData.convenio || "" }}<br>
             {{ userData.nombre || "" }} /
             {{ userData.cargo || "" }}
+
           </h6>
-          <h6 v-else class="text-sm-end text-capitalize blanco" style="opacity: 0.6;">
+          <h6 v-else class="text-center text-capitalize blanco" style="opacity: 0.6;">
             Cargando...
           </h6>
         </div>
@@ -212,6 +214,16 @@ export default {
   padding: 0.25rem 0.5rem !important;
   width: auto;
   height: auto;
+  border: 2px solid #fff !important;
+  border-radius: 5px;
+}
+
+.navbar-toggler:focus {
+  box-shadow: 0 0 0 0.2rem rgba(255, 255, 255, 0.25);
+}
+
+.navbar-toggler-icon {
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba%28255, 255, 255, 1%29' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
 }
 
 .offcanvas {
@@ -306,5 +318,27 @@ export default {
   color: #fff !important;
   text-shadow: 1px 1px 4px #000;
   font-size: 0.85rem;
+}
+
+.navbar-logo {
+  height: 40px;
+  width: auto;
+  object-fit: contain;
+  margin: 0 0.5rem;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+}
+
+@media (max-width: 768px) {
+  .navbar-logo {
+    height: 32px;
+    margin: 0px 0.3rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .navbar-logo {
+    height: 38px;
+    margin: 0px 0.2rem;
+  }
 }
 </style>

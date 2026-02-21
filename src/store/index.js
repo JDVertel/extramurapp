@@ -770,6 +770,44 @@ export default createStore({
       }
     },
 
+    /**
+     * Obtiene datos de paciente por tipo, número y convenio (exclusivo E Basicos)
+     */
+    getAllByPacientesIDEB: async ({ commit }, { tipodoc, numdoc, convenio }) => {
+      console.log("datos que entran EB - tipodoc, numdoc, convenio:", tipodoc, numdoc, convenio);
+      try {
+        const { data } = await firebase_api.get("/Encuesta.json");
+
+        if (!data || data === null) {
+          console.log("No hay encuestas registradas");
+          return [];
+        }
+
+        const consultaUsuarios = Object.entries(data).map(([key, value]) => ({
+          id: key,
+          ...value,
+        }));
+
+        const tipodocNormalizado = String(tipodoc ?? "").trim();
+        const numdocNormalizado = String(numdoc ?? "").trim();
+        const convenioNormalizado = String(convenio ?? "").trim();
+
+        const datospaciente = consultaUsuarios.filter((encuesta) => {
+          return (
+            String(encuesta?.tipodoc ?? "").trim() === tipodocNormalizado &&
+            String(encuesta?.numdoc ?? "").trim() === numdocNormalizado &&
+            String(encuesta?.convenio ?? "").trim() === convenioNormalizado
+          );
+        });
+
+        commit("setDatosPaciente", datospaciente);
+        return datospaciente;
+      } catch (error) {
+        console.error("Error en getAllByPacientesIDEB:", error);
+        throw error;
+      }
+    },
+
     // ====================================================================
     // CARACTERIZACIÓN
     // ====================================================================
