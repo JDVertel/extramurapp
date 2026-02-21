@@ -55,6 +55,16 @@
                   <i class="bi bi-person-circle"></i> Medico
                 </router-link>
               </li>
+                <li class="nav-item" v-if="userData && userData.cargo === 'Psicologo'">
+                 <router-link class="nav-link" to="/sop_psicologo" @click="onNavLinkClick">
+                  <i class="bi bi-person-circle"></i> Psicologo
+                </router-link>
+              </li>
+              <li class="nav-item" v-if="userData && userData.cargo === 'Tsocial'">
+                <router-link class="nav-link" to="/sop_tsocial" @click="onNavLinkClick">
+                  <i class="bi bi-person-circle"></i> Trabajador Social
+                </router-link>
+              </li>
               <li class="nav-item" v-if="userData && userData.cargo === 'Enfermero'">
                 <router-link class="nav-link" to="/sop_enfermero" @click="onNavLinkClick">
                   <i class="bi bi-person-circle"></i> Enfermer@

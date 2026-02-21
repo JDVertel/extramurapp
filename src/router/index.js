@@ -64,6 +64,18 @@ const routes = [
     meta: { requiresAuth: true },
   },
   {
+    path: "/sop_psicologo",
+    name: "sop_psicologo",
+    component: () => import("../views/sop_psicologo.vue"),
+    meta: { requiresAuth: true },
+  },
+  {
+    path: "/sop_tsocial",
+    name: "sop_tsocial",
+    component: () => import("../views/sop_tsocial.vue"),
+    meta: { requiresAuth: true },
+  },
+  {
     path: "/sop_caracterizacion/:idEncuesta",
     name: "sop_caracterizacion",
     component: () => import("../views/sop_caracterizacion.vue"),

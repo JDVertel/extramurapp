@@ -317,6 +317,12 @@ export default {
         },
 
         userEncuesta() {
+            // Primero intentar con InfoEncuestasById (datos actuales de la encuesta)
+            if (this.InfoEncuestasById && this.InfoEncuestasById.length > 0) {
+                return this.InfoEncuestasById[0];
+            }
+
+            // Si no, buscar en encuestas como respaldo
             const encuestas = this.encuestas || [];
             return encuestas.find((enc) => String(enc.id) === String(this.idEncuesta)) || null;
         },
@@ -346,12 +352,12 @@ export default {
                 return [];
             }
 
-            const epsDelPaciente = this.userEncuesta.eps;
+            let epsDelPaciente = this.userEncuesta.eps;
             const cargoUsuario = this.userData.cargo;
             const nombreActividadSeleccionada = this.obtenerNombreActividadDelContrato(this.idItem);
 
             // Encontrar contratos que coincidan con la EPS del paciente
-            const contratosDelPaciente = this.contratos.filter(contrato => {
+            let contratosDelPaciente = this.contratos.filter(contrato => {
                 if (!contrato.cups || typeof contrato.cups !== 'object') return false;
 
                 // Verificar si tiene CUPS para esta EPS (por nombre de EPS)
@@ -359,6 +365,24 @@ export default {
                     cupContrato.epsNombre === epsDelPaciente
                 );
             });
+
+            // Si no hay contratos para la EPS del paciente, usar el default "*ESEBARRANCABERMEJA"
+            if (contratosDelPaciente.length === 0) {
+                const epsDefault = "*ESEBARRANCABERMEJA";
+                contratosDelPaciente = this.contratos.filter(contrato => {
+                    if (!contrato.cups || typeof contrato.cups !== 'object') return false;
+
+                    // Verificar si tiene CUPS para la EPS default
+                    return Object.values(contrato.cups).some(cupContrato =>
+                        cupContrato.epsNombre === epsDefault
+                    );
+                });
+
+                // Si encontramos contratos con la EPS default, actualizar epsDelPaciente
+                if (contratosDelPaciente.length > 0) {
+                    epsDelPaciente = epsDefault;
+                }
+            }
 
             if (contratosDelPaciente.length === 0) {
                 return [];
