@@ -13,11 +13,7 @@
         </div>
         <div v-else>
             <h1 class="display-6 center">{{ userData.cargo }}</h1>
-            <div class="alert alert-warning shadow-sm d-flex justify-content-between align-items-center" role="alert">
-                Realizar nueva encuesta <RouterLink class="btn btn-warning" to="/sop_encuesta">
-                    <i class="bi bi-file-earmark-plus-fill"></i>
-                </RouterLink>
-            </div>
+
 
             <h4>Detalle de Actividades ({{ cantEncuestasFiltradasPorConvenio }}) <small>Pendientes</small></h4>
 
@@ -34,8 +30,8 @@
                 <div class="row paciente shadow-sm" style="border-radius: 5px;">
                     <div class="col-7 col-md-6">
                         <small class="d-block"><strong>{{ encuesta.nombre1 }} {{ encuesta.nombre2 }} {{
-                                encuesta.apellido1 }} {{
-                                encuesta.apellido2 }}</strong></small>
+                            encuesta.apellido1 }} {{
+                                    encuesta.apellido2 }}</strong></small>
                         <small>EPS: {{ encuesta.eps }} | Riesgo: {{ encuesta.poblacionRiesgo }}</small>
                         <small>Nac: {{ encuesta.fechaNac }} | Enc: {{ encuesta.fecha }}</small>
                     </div>
@@ -43,23 +39,8 @@
                     <div class="col-5 col-md-6 acciones-col">
                         <div class="btn-grid">
                             <div class="btn-row">
-                                <!-- Psicólogo: Visita -->
-                                <template v-if="userData.cargo === 'Psicologo'">
-                                    <div
-                                        v-if="encuesta.Agenda_Visitapsicologica?.cita_visitapsicologica === false || encuesta.Agenda_Visitapsicologica?.cita_visitapsicologica === undefined">
-                                        <button type="button" class="btn btn-info  agendar-btn"
-                                            @click="Agendar(encuesta.id, 'visitapsicologica')">
-                                            <i class="bi bi-houses"></i>
-                                            <span class="agendar-label">Visita</span>
-                                        </button>
-                                    </div>
-                                    <div v-else>
-                                        <button type="button" class="btn btn-secondary  agendar-btn" disabled>
-                                            <i class="bi bi-check2-circle"></i>
-                                            <span class="agendar-label">Visita</span>
-                                        </button>
-                                    </div>
-                                </template>
+                          
+                  
 
                                 <!-- CUPS -->
                                 <div v-if="encuesta.status_caracterizacion === true && userData.cargo === 'Psicologo'">
@@ -70,19 +51,7 @@
                                     </button>
                                 </div>
 
-                                <!-- Eliminar -->
-                                <template v-if="userData.cargo === 'Psicologo'">
-                                    <div>
-                                        <button type="button" class="btn btn-danger  agendar-btn"
-                                            @click="eliminarRegistro(encuesta.id)"
-                                            :disabled="eliminandoRegistro === encuesta.id" :title="'Eliminar registro'">
-                                            <i class="bi bi-trash" v-if="eliminandoRegistro !== encuesta.id"></i>
-                                            <i class="bi bi-hourglass-split" v-else></i>
-                                            <span class="agendar-label">{{ eliminandoRegistro === encuesta.id ? 'Verif'
-                                                : 'Elim' }}</span>
-                                        </button>
-                                    </div>
-                                </template>
+                  
                             </div>
                         </div>
                     </div>
@@ -108,7 +77,7 @@ export default {
     methods: {
         ...mapActions([
             "removeRegEnc",
-            "getAllRegistersByFechaStatus",
+            "getEncuestasPendientesPsicologo",
             "getAsignacionesByEncuesta",
         ]),
 
@@ -171,7 +140,7 @@ export default {
                 }
 
                 await Promise.race([
-                    this.getAllRegistersByFechaStatus({
+                    this.getEncuestasPendientesPsicologo({
                         idUsuario: this.userData.numDocumento,
                     }),
                     new Promise((_, reject) =>

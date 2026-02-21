@@ -85,7 +85,7 @@ const routes = [
   {
     path: "/sop_cups/:idEncuesta",
     name: "sop_cups",
-    component: () => import("../views/sop_cups_auxiliar.vue"),
+    component: () => import("../views/sop_cups.vue"),
     meta: { requiresAuth: true },
   },
   /* Admin */

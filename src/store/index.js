@@ -110,13 +110,14 @@ export default createStore({
           tiporegistro,
           idMedicoAtiende,
           idEnfermeroAtiende,
+          idPsicologoAtiende,
+          idTsocialAtiende,
           fechavisita,
           status_gest_aux,
           status_gest_medica,
           status_gest_enfermera,
           status_gest_psicologo,
           status_gest_tsocial,
-          status_tomamuestras,
           status_caracterizacion,
           status_visita,
           idEncuesta,
@@ -155,7 +156,6 @@ export default createStore({
           status_gest_enfermera,
           status_gest_psicologo,
           status_gest_tsocial,
-          status_tomamuestras,
           status_caracterizacion,
           status_visita,
           idEncuesta,
@@ -332,6 +332,76 @@ export default createStore({
     },
 
     /**
+     * Obtiene registros pendientes para psicologo
+     */
+    getEncuestasPendientesPsicologo: async ({ commit }, { idUsuario }) => {
+      console.log("Obteniendo encuestas pendientes para psicologo:", idUsuario);
+      try {
+        const { data } = await firebase_api.get("/Encuesta.json");
+
+        if (!data) {
+          commit("setEncuestas", []);
+          commit("setcantEncuestas", 0);
+          return [];
+        }
+
+        const encuestas = Object.entries(data).map(([key, value]) => ({
+          id: key,
+          ...value,
+        }));
+
+        const encuestasFiltradas = encuestas.filter(
+          (encuesta) =>
+            encuesta.idPsicologoAtiende === idUsuario &&
+            encuesta.status_gest_psicologo !== true
+        );
+
+        commit("setEncuestas", encuestasFiltradas);
+        commit("setcantEncuestas", encuestasFiltradas.length);
+
+        return encuestasFiltradas;
+      } catch (error) {
+        console.error("Error en getEncuestasPendientesPsicologo:", error);
+        throw error;
+      }
+    },
+
+    /**
+     * Obtiene registros pendientes para trabajador social
+     */
+    getEncuestasPendientesTsocial: async ({ commit }, { idUsuario }) => {
+      console.log("Obteniendo encuestas pendientes para trabajador social:", idUsuario);
+      try {
+        const { data } = await firebase_api.get("/Encuesta.json");
+
+        if (!data) {
+          commit("setEncuestas", []);
+          commit("setcantEncuestas", 0);
+          return [];
+        }
+
+        const encuestas = Object.entries(data).map(([key, value]) => ({
+          id: key,
+          ...value,
+        }));
+
+        const encuestasFiltradas = encuestas.filter(
+          (encuesta) =>
+            encuesta.idTsocialAtiende === idUsuario &&
+            encuesta.status_gest_tsocial !== true
+        );
+
+        commit("setEncuestas", encuestasFiltradas);
+        commit("setcantEncuestas", encuestasFiltradas.length);
+
+        return encuestasFiltradas;
+      } catch (error) {
+        console.error("Error en getEncuestasPendientesTsocial:", error);
+        throw error;
+      }
+    },
+
+    /**
      * Obtiene encuestas con status_gest_aux = true y sus actividades asociadas
      */
     getEncuestasConActividadesAux: async ({ commit }, { idUsuario }) => {
@@ -385,7 +455,7 @@ export default createStore({
     },
 
     /**
-     * Obtiene encuestas con status_gest_aux = true para médico y sus actividades asociadas
+     * Obtiene encuestas para medico y sus actividades asociadas
      */
     getEncuestasConActividadesMedico: async ({ commit }, { idUsuario }) => {
       console.log("Obteniendo encuestas con actividades para médico:", idUsuario);
@@ -397,7 +467,7 @@ export default createStore({
           return [];
         }
 
-        // Filtrar encuestas con status_gest_aux = true y status_gest_medica = false para este médico
+        // Filtrar encuestas con status_gest_medica = false para este medico
         const encuestas = Object.entries(encuestasData)
           .map(([key, value]) => ({
             id: key,
@@ -406,7 +476,6 @@ export default createStore({
           .filter(
             (encuesta) =>
               encuesta.idMedicoAtiende === idUsuario &&
-              encuesta.status_gest_aux === true &&
               encuesta.status_gest_medica === false
           );
 
