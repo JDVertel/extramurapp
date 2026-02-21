@@ -10,10 +10,10 @@
 
 
         <div class="container-fluid">
-            <h4>Detalle de Actividades ({{ cantEncuestas }}) <small>Pendientes</small></h4>
+            <h4>Detalle de Actividades ({{ cantEncuestasFiltradasPorConvenio }}) <small>Pendientes</small></h4>
 
             <!-- Mensaje cuando no hay registros -->
-            <div v-if="!encuestas || encuestas.length === 0" class="alert alert-success shadow-sm text-center"
+            <div v-if="!encuestasFiltradasPorConvenio || encuestasFiltradasPorConvenio.length === 0" class="alert alert-success shadow-sm text-center"
                 role="alert">
                 <i class="bi bi-check-circle-fill" style="font-size: 3rem;"></i>
                 <h5 class="mt-3">¡Todo OK!</h5>
@@ -21,7 +21,7 @@
             </div>
 
             <div v-else class="container-fluid" style="max-height: 500px; overflow-y: auto ">
-                <div v-for="(encuesta, index) in encuestas" :key="index" class="container rounded-lg p-2 mb-2"
+                <div v-for="(encuesta, index) in encuestasFiltradasPorConvenio" :key="index" class="container rounded-lg p-2 mb-2"
                     style="border-radius: 24px;">
                     <div class="row paciente shadow-sm">
                         <div class="col-6 col-md-6">
@@ -144,7 +144,18 @@ export default {
 
     computed: {
         ...mapState(["encuestas", "userData", "cantEncuestas"]),
+        encuestasFiltradasPorConvenio() {
+            if (!this.encuestas || this.encuestas.length === 0) return [];
+            if (!this.userData || !this.userData.convenio) return this.encuestas;
 
+            // Filtrar encuestas donde el convenio coincida con userData.convenio
+            return this.encuestas.filter(encuesta =>
+                encuesta.convenio === this.userData.convenio
+            );
+        },
+        cantEncuestasFiltradasPorConvenio() {
+            return this.encuestasFiltradasPorConvenio.length;
+        },
         documento() {
             return this.userData.numDocumento;
         },

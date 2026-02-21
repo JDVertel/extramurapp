@@ -61,7 +61,7 @@ export default {
 </script>
 
 <template>
-    <div id="app">
+     <div id="app">
         <Navbar v-if="!$route.meta.hideNavbar" />
         <router-view :key="$route.path">
         </router-view>

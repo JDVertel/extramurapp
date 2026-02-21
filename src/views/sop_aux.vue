@@ -19,16 +19,18 @@
         </RouterLink>
       </div>
 
-      <h4>Detalle de Actividades ({{ cantEncuestas }}) <small>Pendientes</small></h4>
+      <h4>Detalle de Actividades ({{ cantEncuestasFiltradasPorConvenio }}) <small>Pendientes</small></h4>
 
       <!-- Mensaje cuando no hay registros -->
-      <div v-if="!encuestas || encuestas.length === 0" class="alert alert-success shadow-sm text-center" role="alert">
+      <div v-if="!encuestasFiltradasPorConvenio || encuestasFiltradasPorConvenio.length === 0"
+        class="alert alert-success shadow-sm text-center" role="alert">
         <i class="bi bi-check-circle-fill" style="font-size: 3rem;"></i>
         <h5 class="mt-3">¡Todo OK!</h5>
         <p class="mb-0">No hay registros pendientes en este momento.</p>
       </div>
 
-      <div v-for="(encuesta, index) in encuestas" :key="index" class="container rounded-lg p-2 mb-2">
+      <div v-for="(encuesta, index) in encuestasFiltradasPorConvenio" :key="index"
+        class="container rounded-lg p-2 mb-2">
         <div class="row paciente shadow-sm" style="border-radius: 5px;">
           <div class="col-7 col-md-6">
             <small class="d-block"><strong>{{ encuesta.nombre1 }} {{ encuesta.nombre2 }} {{ encuesta.apellido1 }} {{
@@ -61,8 +63,7 @@
                 <!-- Auxiliar: Caracterización -->
                 <template v-if="userData.cargo === 'Auxiliar de enfermeria'">
                   <div v-if="encuesta.status_caracterizacion === false">
-                    <button type="button" class="btn btn-warning  agendar-btn"
-                      @click="Caracterizar(encuesta.id)">
+                    <button type="button" class="btn btn-warning  agendar-btn" @click="Caracterizar(encuesta.id)">
                       <i class="bi bi-calendar2-check"></i>
                       <span class="agendar-label">Caract</span>
                     </button>
@@ -78,8 +79,7 @@
                 <!-- CUPS -->
                 <div
                   v-if="encuesta.status_caracterizacion === true && (userData.cargo === 'Auxiliar de enfermeria' || userData.cargo === 'Medico')">
-                  <button type="button" class="btn btn-primary  agendar-btn"
-                    @click="cupsGestion(encuesta.id)">
+                  <button type="button" class="btn btn-primary  agendar-btn" @click="cupsGestion(encuesta.id)">
                     <i class="bi bi-calendar2-heart-fill"></i>
                     <span class="agendar-label">Cups</span>
                   </button>
@@ -88,9 +88,8 @@
                 <!-- Eliminar -->
                 <template v-if="userData.cargo === 'Auxiliar de enfermeria'">
                   <div>
-                    <button type="button" class="btn btn-danger  agendar-btn"
-                      @click="eliminarRegistro(encuesta.id)" :disabled="eliminandoRegistro === encuesta.id"
-                      :title="'Eliminar registro'">
+                    <button type="button" class="btn btn-danger  agendar-btn" @click="eliminarRegistro(encuesta.id)"
+                      :disabled="eliminandoRegistro === encuesta.id" :title="'Eliminar registro'">
                       <i class="bi bi-trash" v-if="eliminandoRegistro !== encuesta.id"></i>
                       <i class="bi bi-hourglass-split" v-else></i>
                       <span class="agendar-label">{{ eliminandoRegistro === encuesta.id ? 'Verif' : 'Elim' }}</span>
@@ -213,6 +212,18 @@ export default {
 
   computed: {
     ...mapState(["encuestas", "userData", "cantEncuestas"]),
+    encuestasFiltradasPorConvenio() {
+      if (!this.encuestas || this.encuestas.length === 0) return [];
+      if (!this.userData || !this.userData.convenio) return this.encuestas;
+
+      // Filtrar encuestas donde el convenio coincida con userData.convenio
+      return this.encuestas.filter(encuesta =>
+        encuesta.convenio === this.userData.convenio
+      );
+    },
+    cantEncuestasFiltradasPorConvenio() {
+      return this.encuestasFiltradasPorConvenio.length;
+    }
   },
 
   watch: {

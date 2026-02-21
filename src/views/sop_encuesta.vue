@@ -249,8 +249,7 @@
 
                         <div v-if="esConvenioEBasicos" class="col-6 col-md-3 mb-3">
                             <label for="psicologo" class="form-label">Psicologo</label>
-                            <select id="psicologo" v-model="psicologo" class="form-select"
-                                :required="esConvenioEBasicos">
+                            <select id="psicologo" v-model="psicologo" class="form-select">
                                 <option value="">---Seleccione---</option>
                                 <option v-for="psicologo in psicologosByGrupo" :key="psicologo.numDocumento"
                                     :value="psicologo.numDocumento">
@@ -261,8 +260,7 @@
 
                         <div v-if="esConvenioEBasicos" class="col-6 col-md-3 mb-3">
                             <label for="trabajadorSocial" class="form-label">T social </label>
-                            <select id="trabajadorSocial" v-model="trabajadorSocial" class="form-select"
-                                :required="esConvenioEBasicos">
+                            <select id="trabajadorSocial" v-model="trabajadorSocial" class="form-select">
                                 <option value="">---Seleccione---</option>
                                 <option v-for="trabajador in tsocialesByGrupo" :key="trabajador.numDocumento"
                                     :value="trabajador.numDocumento">
@@ -406,13 +404,36 @@ export default {
                 !this.requiereRemision ||
                 !this.userData.numDocumento ||
                 !this.medico ||
-                !this.enfermero ||
-                (requiereProfesionalesExtra && !this.psicologo) ||
-                (requiereProfesionalesExtra && !this.trabajadorSocial)
+                !this.enfermero
             ) {
                 alert("Por favor, complete todos los campos obligatorios o logeate nuevamente.");
                 this.enviando = false;
                 return;
+            }
+
+            // Validación especial para Psicólogo y Trabajador Social en E Basicos
+            if (requiereProfesionalesExtra) {
+                let mensajeAdvertencia = "";
+                const faltaPsicologo = !this.psicologo;
+                const faltaTSocial = !this.trabajadorSocial;
+
+                if (faltaPsicologo && faltaTSocial) {
+                    mensajeAdvertencia = "No ha seleccionado Psicólogo ni Trabajador Social.";
+                } else if (faltaPsicologo) {
+                    mensajeAdvertencia = "No ha seleccionado Psicólogo.";
+                } else if (faltaTSocial) {
+                    mensajeAdvertencia = "No ha seleccionado Trabajador Social.";
+                }
+
+                if (mensajeAdvertencia) {
+                    const confirmar = confirm(
+                        mensajeAdvertencia + "\n\n¿Desea cancelar para corregir o continuar de todas formas?"
+                    );
+                    if (!confirmar) {
+                        this.enviando = false;
+                        return;
+                    }
+                }
             }
 
             const registro = {
@@ -703,16 +724,14 @@ export default {
             "actividadesExtra",
         ]),
         esConvenioEBasicos() {
-            const convenioUsuario = String(this.userData?.vconvenio ?? "").trim();
+            const convenioUsuario = String(this.userData?.convenio ?? "").trim();
             return convenioUsuario === "E Basicos";
         },
         epssConContrato() {
-            if (!this.epss || !this.contratos || this.contratos.length === 0) return this.epss || [];
-            const epsIdConContrato = new Set(this.contratos.map(c => c.epsId));
-            return this.epss.filter(eps =>
-                epsIdConContrato.has(eps.id) &&
-                !String(eps.eps || '').includes('*')
-            );
+            if (!this.epss) return [];
+
+            // Mostrar todas las EPS excepto las que contengan asterisco
+            return this.epss.filter(eps => !String(eps.eps || '').includes('*'));
         },
         epsSeleccionada() {
             if (!this.epsId || !this.epss) return null;
