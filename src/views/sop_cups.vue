@@ -171,31 +171,43 @@
                                 <h6>Listado de CUPS:</h6>
                                 <hr />
                                 <div class="cups-listado-scroll" v-if="cupsArray.length > 0">
-                                    <table class="table">
-                                        <thead>
-                                            <tr>
-                                                <th scope="col">CUPS</th>
-                                                <th scope="col">Detalle Ingresado</th>
-                                                <th scope="col">Cantidad</th>
-                                                <th scope="col">Grupo</th>
-                                                <th scope="col">Opción</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <tr v-for="(cup, index) in cupsArray" :key="index">
-                                                <td>{{ cup.cupsNombre }}</td>
-                                                <td>{{ cup.detalle }}</td>
-                                                <td>{{ cup.cantidad }}</td>
-                                                <td>{{ cup.Grupo }}</td>
-                                                <td>
-                                                    <button class="btn btn-danger rounded-circle"
-                                                        @click="eliminarDelListado(index)">
-                                                        <i class="bi bi-trash"></i>
-                                                    </button>
-                                                </td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
+                                    <div class="table-responsive-wrapper">
+                                        <table class="table table-sm table-hover mb-0">
+                                            <thead class="table-light">
+                                                <tr>
+                                                    <th scope="col" class="col-cups">CUPS</th>
+                                                    <th scope="col" class="col-detalle">Detalle Ingresado</th>
+                                                    <th scope="col" class="col-cantidad">Cantidad</th>
+                                                    <th scope="col" class="col-grupo">Grupo</th>
+                                                    <th scope="col" class="col-accion">Opción</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr v-for="(cup, index) in cupsArray" :key="index">
+                                                    <td class="col-cups" data-label="CUPS">
+                                                        <span class="d-inline-block text-truncate"
+                                                            :title="cup.cupsNombre">
+                                                            {{ truncarTexto(cup.cupsNombre, 15) }}
+                                                        </span>
+                                                    </td>
+                                                    <td class="col-detalle" data-label="Detalle">
+                                                        <span class="d-inline-block text-truncate" :title="cup.detalle">
+                                                            {{ truncarTexto(cup.detalle, 12) }}
+                                                        </span>
+                                                    </td>
+                                                    <td class="col-cantidad text-center" data-label="Cantidad">{{
+                                                        cup.cantidad }}</td>
+                                                    <td class="col-grupo" data-label="Grupo">{{ cup.Grupo }}</td>
+                                                    <td class="col-accion text-center" data-label="Opción">
+                                                        <button class="btn btn-danger btn-sm rounded-circle"
+                                                            @click="eliminarDelListado(index)" title="Eliminar CUPS">
+                                                            <i class="bi bi-trash"></i>
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
                                 </div>
                                 <div v-if="cupsArray.length === 0">No hay CUPS seleccionados.</div>
                                 <div class="modal-footer">
@@ -1168,6 +1180,161 @@ export default {
     max-height: 260px;
     overflow-y: scroll;
     -webkit-overflow-scrolling: touch;
+    overflow-x: auto;
+}
+
+.table-responsive-wrapper {
+    width: 100%;
+    border-radius: 4px;
+    border: 1px solid #dee2e6;
+}
+
+.cups-listado-scroll .table {
+    min-width: 100%;
+    margin-bottom: 0;
+    width: 100%;
+}
+
+.cups-listado-scroll .table thead {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background-color: #f8f9fa;
+}
+
+.cups-listado-scroll .table th {
+    padding: 0.75rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    white-space: nowrap;
+    border-color: #dee2e6;
+}
+
+.cups-listado-scroll .table td {
+    padding: 0.5rem;
+    font-size: 0.75rem;
+    word-break: break-word;
+    border-color: #dee2e6;
+}
+
+/* Ancho mínimo de columnas para evitar colapso */
+.col-cups {
+    min-width: 80px;
+}
+
+.col-detalle {
+    min-width: 100px;
+}
+
+.col-cantidad {
+    min-width: 60px;
+}
+
+.col-grupo {
+    min-width: 70px;
+}
+
+.col-accion {
+    min-width: 50px;
+    text-align: center;
+}
+
+/* Hover effect en filas */
+.cups-listado-scroll .table tbody tr:hover {
+    background-color: #f9f9f9;
+}
+
+/* Botones en tabla responsivos */
+.cups-listado-scroll .btn-sm {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.65rem;
+}
+
+.cups-listado-scroll .rounded-circle {
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Responsive para tablets (768px y superior) */
+@media (min-width: 768px) {
+    .cups-listado-scroll .table th {
+        font-size: 0.8rem;
+        padding: 0.875rem;
+    }
+
+    .cups-listado-scroll .table td {
+        font-size: 0.8rem;
+        padding: 0.75rem;
+    }
+
+    .col-cups {
+        min-width: 100px;
+    }
+
+    .col-detalle {
+        min-width: 120px;
+    }
+
+    .col-cantidad {
+        min-width: 70px;
+    }
+
+    .col-grupo {
+        min-width: 80px;
+    }
+
+    .cups-listado-scroll .btn-sm {
+        padding: 0.375rem 0.75rem;
+        font-size: 0.7rem;
+    }
+
+    .cups-listado-scroll .rounded-circle {
+        width: 32px;
+        height: 32px;
+    }
+}
+
+/* Responsive para desktop (992px y superior) */
+@media (min-width: 992px) {
+    .cups-listado-scroll .table th {
+        font-size: 0.9rem;
+        padding: 1rem;
+    }
+
+    .cups-listado-scroll .table td {
+        font-size: 0.85rem;
+        padding: 0.875rem;
+    }
+
+    .col-cups {
+        min-width: 120px;
+    }
+
+    .col-detalle {
+        min-width: 150px;
+    }
+
+    .col-cantidad {
+        min-width: 80px;
+    }
+
+    .col-grupo {
+        min-width: 100px;
+    }
+
+    .cups-listado-scroll .btn-sm {
+        padding: 0.5rem 1rem;
+        font-size: 0.75rem;
+    }
+
+    .cups-listado-scroll .rounded-circle {
+        width: 36px;
+        height: 36px;
+    }
 }
 
 .sop-cups-auxiliar-view .table {

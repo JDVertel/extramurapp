@@ -10,9 +10,11 @@
         <nav>
             <div class="nav nav-tabs" id="nav-tab" role="tablist">
                 <button class="nav-link active" id="nav-home-tab" data-bs-toggle="tab" data-bs-target="#nav-home"
-                    type="button" role="tab" aria-controls="nav-home" aria-selected="true">Pendientes ({{ cantEncuestasPendientes }})</button>
+                    type="button" role="tab" aria-controls="nav-home" aria-selected="true">Pendientes ({{
+                        cantEncuestasPendientes }})</button>
                 <button class="nav-link" id="nav-profile-tab" data-bs-toggle="tab" data-bs-target="#nav-profile"
-                    type="button" role="tab" aria-controls="nav-profile" aria-selected="false">En proceso ({{ cantEncuestasEnProceso }})</button>
+                    type="button" role="tab" aria-controls="nav-profile" aria-selected="false">En proceso ({{
+                        cantEncuestasEnProceso }})</button>
                 <!--     <button class="nav-link" id="nav-contact-tab" data-bs-toggle="tab" data-bs-target="#nav-contact"
                     type="button" role="tab" aria-controls="nav-contact" aria-selected="false">Contact</button>
                 <button class="nav-link" id="nav-disabled-tab" data-bs-toggle="tab" data-bs-target="#nav-disabled"
@@ -25,7 +27,7 @@
                 tabindex="0">
 
                 <div class="container-fluid">
-                    <h4>Detalle de Actividades  <small>Pendientes</small></h4>
+                    <h4>Detalle de Actividades <small>Pendientes</small></h4>
 
                     <!-- Mensaje cuando no hay registros -->
                     <div v-if="!encuestasPendientes || encuestasPendientes.length === 0"
@@ -41,11 +43,11 @@
                             <div class="row paciente shadow-sm">
                                 <div class="col-6 col-md-6">
                                     <small><strong>{{ encuesta.nombre1 }} {{ encuesta.apellido1
-                                    }}</strong></small>
+                                            }}</strong></small>
                                     <small>EPS: {{ encuesta.eps }} | Riesgo: {{
                                         encuesta.poblacionRiesgo }}</small>
                                     <small>Nac: {{ encuesta.fechaNac }} | Enc: {{ encuesta.fecha
-                                    }}</small>
+                                        }}</small>
                                     <!-- Mostrar actividades si existen -->
 
                                 </div>
@@ -92,11 +94,11 @@
                         <div class="row paciente shadow-sm">
                             <div class="col-6 col-md-6">
                                 <small><strong>{{ encuesta.nombre1 }} {{ encuesta.apellido1
-                                }}</strong></small>
+                                        }}</strong></small>
                                 <small>EPS: {{ encuesta.eps }} | Riesgo: {{
                                     encuesta.poblacionRiesgo }}</small>
                                 <small>Nac: {{ encuesta.fechaNac }} | Enc: {{ encuesta.fecha
-                                }}</small>
+                                    }}</small>
                                 <!-- Mostrar actividades si existen -->
 
                             </div>
@@ -107,20 +109,24 @@
                                     <div class="btn-row">
                                         <!-- CUPS (Enfermero y Medico) -->
                                         <div class="status-grid">
-                                            <span v-if="'status_gest_aux' in encuesta" class="badge status-badge"
+                                            <span
+                                                v-if="'status_gest_aux' in encuesta && (userData.convenio !== 'E Basicos' || encuesta.idEncuestador)"
+                                                class="badge status-badge"
                                                 :class="encuesta.status_gest_aux ? 'bg-success' : 'bg-secondary'">
                                                 Aux {{ encuesta.status_gest_aux ? 'OK' : 'No' }}
                                                 <span v-if="encuesta.fechagestAuxiliar" class="status-date">{{
                                                     encuesta.fechagestAuxiliar }}</span>
                                             </span>
-                                            <span v-if="'status_gest_medica' in encuesta" class="badge status-badge"
+                                            <span
+                                                v-if="'status_gest_medica' in encuesta && (userData.convenio !== 'E Basicos' || encuesta.idMedicoAtiende)"
+                                                class="badge status-badge"
                                                 :class="encuesta.status_gest_medica ? 'bg-success' : 'bg-secondary'">
                                                 Med {{ encuesta.status_gest_medica ? 'OK' : 'No' }}
                                                 <span v-if="encuesta.fechagestMedica" class="status-date">{{
                                                     encuesta.fechagestMedica }}</span>
                                             </span>
                                             <span
-                                                v-if="'status_gest_psicologo' in encuesta && userData.convenio !== 'Extramural'"
+                                                v-if="'status_gest_psicologo' in encuesta && userData.convenio !== 'Extramural' && (userData.convenio !== 'E Basicos' || encuesta.idPsicologoAtiende)"
                                                 class="badge status-badge"
                                                 :class="encuesta.status_gest_psicologo ? 'bg-success' : 'bg-secondary'">
                                                 Psi {{ encuesta.status_gest_psicologo ? 'OK' : 'No' }}
@@ -128,7 +134,7 @@
                                                     encuesta.fechagestPsicologo }}</span>
                                             </span>
                                             <span
-                                                v-if="'status_gest_tsocial' in encuesta && userData.convenio !== 'Extramural'"
+                                                v-if="'status_gest_tsocial' in encuesta && userData.convenio !== 'Extramural' && (userData.convenio !== 'E Basicos' || encuesta.idTsocialAtiende)"
                                                 class="badge status-badge"
                                                 :class="encuesta.status_gest_tsocial ? 'bg-success' : 'bg-secondary'">
                                                 TS {{ encuesta.status_gest_tsocial ? 'OK' : 'No' }}
@@ -266,17 +272,37 @@ export default {
             if (!documento) return [];
 
             const esExtramural = this.userData?.convenio === 'Extramural';
+            const esEBasicos = this.userData?.convenio === 'E Basicos';
 
-            return this.encuestasPendientesBase.filter((encuesta) =>
-                encuesta.idEnfermeroAtiende === documento &&
-                encuesta.status_gest_aux === true &&
-                this.estadoGestionMedica(encuesta) &&
-                (esExtramural || (
+            return this.encuestasPendientesBase.filter((encuesta) => {
+                if (encuesta.idEnfermeroAtiende !== documento) return false;
+                if (encuesta.status_gest_enfermera !== false) return false;
+
+                if (esExtramural) {
+                    return encuesta.status_gest_aux === true && this.estadoGestionMedica(encuesta);
+                }
+
+                if (esEBasicos) {
+                    const requiereAux = !!encuesta.idEncuestador;
+                    const requiereMed = !!encuesta.idMedicoAtiende;
+                    const requierePsi = !!encuesta.idPsicologoAtiende;
+                    const requiereTS = !!encuesta.idTsocialAtiende;
+
+                    if (requiereAux && encuesta.status_gest_aux !== true) return false;
+                    if (requiereMed && !this.estadoGestionMedica(encuesta)) return false;
+                    if (requierePsi && encuesta.status_gest_psicologo !== true) return false;
+                    if (requiereTS && encuesta.status_gest_tsocial !== true) return false;
+
+                    return true;
+                }
+
+                return (
+                    encuesta.status_gest_aux === true &&
+                    this.estadoGestionMedica(encuesta) &&
                     encuesta.status_gest_psicologo === true &&
                     encuesta.status_gest_tsocial === true
-                )) &&
-                encuesta.status_gest_enfermera === false
-            );
+                );
+            });
         },
         cantEncuestasPendientes() {
             return this.encuestasPendientes.length;
@@ -288,12 +314,28 @@ export default {
             if (!documento) return [];
 
             const esExtramural = this.userData?.convenio === 'Extramural';
+            const esEBasicos = this.userData?.convenio === 'E Basicos';
 
             return this.encuestasEnProcesoBase.filter((encuesta) => {
                 if (encuesta.idEnfermeroAtiende !== documento) return false;
 
                 if (esExtramural) {
                     return encuesta.status_gest_aux === false || !this.estadoGestionMedica(encuesta);
+                }
+
+                if (esEBasicos) {
+                    const requiereAux = !!encuesta.idEncuestador;
+                    const requiereMed = !!encuesta.idMedicoAtiende;
+                    const requierePsi = !!encuesta.idPsicologoAtiende;
+                    const requiereTS = !!encuesta.idTsocialAtiende;
+
+                    const estados = [];
+                    if (requiereAux) estados.push(encuesta.status_gest_aux);
+                    if (requiereMed) estados.push(this.estadoGestionMedica(encuesta));
+                    if (requierePsi) estados.push(encuesta.status_gest_psicologo);
+                    if (requiereTS) estados.push(encuesta.status_gest_tsocial);
+
+                    return estados.length > 0 ? estados.some((valor) => valor === false) : false;
                 }
 
                 const estados = [
