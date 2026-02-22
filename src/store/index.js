@@ -242,6 +242,14 @@ export default createStore({
         varStatus = "status_gest_medica";
         dateStatus = "fechagestMedica";
         cargoTexto = "médico";
+      } else if (cargo === "Psicologo") {
+        varStatus = "status_gest_psicologo";
+        dateStatus = "fechagestPsicologo";
+        cargoTexto = "psicologo";
+      } else if (cargo === "Tsocial") {
+        varStatus = "status_gest_tsocial";
+        dateStatus = "fechagestTsocial";
+        cargoTexto = "trabajador social";
       } else {
         varStatus = "status_gest_aux";
         dateStatus = "fechagestAuxiliar";
@@ -578,8 +586,8 @@ export default createStore({
     /**
      * Obtiene registros por ID de usuario enfermero
      */
-    getAllRegistersByIduserEnfer: async ({ commit }, { idUsuario }) => {
-      console.log("datos que entran enfermero", idUsuario);
+    getAllRegistersByIduserEnfer: async ({ commit }, { idUsuario, convenio }) => {
+      console.log("datos que entran enfermero", idUsuario, convenio);
       try {
         const { data } = await firebase_api.get("/Encuesta.json");
         if (!data) {
@@ -587,24 +595,24 @@ export default createStore({
           return 0;
         }
 
-        const encuestas = Object.entries(data)
-          .filter(
-            ([_, value]) =>
-              value.idEnfermeroAtiende === idUsuario &&
-              value.status_gest_enfermera === false
-          )
-          .map(([key, value]) => ({
-            id: key,
-            ...value,
-          }));
+        const convenioNormalizado = String(convenio ?? "").trim();
 
-        const encuestasFiltradas = encuestas.filter(
-          (encuesta) =>
-            encuesta.idEnfermeroAtiende === idUsuario &&
-            encuesta.status_gest_enfermera === false &&
-            encuesta.status_gest_medica === true &&
-            encuesta.status_gest_aux === true
-        );
+        const encuestas = Object.entries(data).map(([key, value]) => ({
+          id: key,
+          ...value,
+        }));
+
+        const encuestasFiltradas = encuestas.filter((encuesta) => {
+          if (encuesta.idEnfermeroAtiende !== idUsuario) return false;
+          if (encuesta.status_gest_enfermera !== false) return false;
+          if (encuesta.status_gest_aux !== true) return false;
+
+          if (convenioNormalizado) {
+            return String(encuesta.convenio ?? "").trim() === convenioNormalizado;
+          }
+
+          return true;
+        });
 
         console.log(encuestasFiltradas);
         const cantidad = encuestasFiltradas.length;

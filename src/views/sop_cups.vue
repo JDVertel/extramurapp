@@ -62,7 +62,7 @@
                             <tbody>
                                 <tr v-for="(item, key) in actividadesPaciente" :key="`${item.key}-${key}`">
                                     <td> <button class="btn btn-primary btn-sm"
-                                            v-if="item && puedeMostrarActividad(item.key)" type="button"
+                                            v-if="item && puedeMostrarActividad(item)" type="button"
                                             data-bs-toggle="modal" data-bs-target="#staticBackdrop"
                                             @click="integrarCup(item)">
                                             <i class="bi bi-plus-circle"></i>
@@ -309,6 +309,7 @@ export default {
             "contratos",
             "epss",
             "actividades",
+            "actividadesExtra",
         ]),
 
         //logica para obtener los cups filtrados por EPS y profesional
@@ -426,6 +427,7 @@ export default {
             "getAllCups",
             "getAllContratos",
             "getAllEpss",
+            "getAllActividadesExtra",
             "adicionarCups",
             "selectCupsByActividad",
             "cerrarEncuesta",
@@ -922,13 +924,28 @@ export default {
         },
 
         obtenerProfesionalesActividad(key) {
+            const actividadExtra = Array.isArray(this.actividadesExtra)
+                ? this.actividadesExtra.find((act) => act.key === key)
+                : null;
+
+            if (actividadExtra && Array.isArray(actividadExtra.Profesional) && actividadExtra.Profesional.length > 0) {
+                return actividadExtra.Profesional;
+            }
+
             const actividad = this.tipoActividadExtramural.find((act) => act.key === key);
             return actividad ? actividad.Profesional : [];
         },
 
-        puedeMostrarActividad(key) {
-            const profesionales = this.obtenerProfesionalesActividad(key);
+        puedeMostrarActividad(actividad) {
+            const key = typeof actividad === 'string' ? actividad : actividad?.key;
+
+            const profesionales =
+                Array.isArray(actividad?.Profesional) && actividad.Profesional.length > 0
+                    ? actividad.Profesional
+                    : this.obtenerProfesionalesActividad(key);
+
             const cargo = this.userData && this.userData.cargo ? this.userData.cargo : "";
+
             return Array.isArray(profesionales) && profesionales.includes(cargo);
         },
 
@@ -991,8 +1008,8 @@ export default {
 
                 try {
 
-                    // Si el usuario es Auxiliar de enfermería o Médico, cerrar directamente
-                    if (cargo === "Auxiliar de enfermeria" || cargo === "Medico") {
+                    // Si el usuario es Auxiliar de enfermería, Médico, Psicólogo o Trabajador Social, cerrar directamente
+                    if (cargo === "Auxiliar de enfermeria" || cargo === "Medico" || cargo === "Psicologo" || cargo === "Tsocial") {
                         await this.cerrarEncuesta({
                             id: this.idEncuesta,
                             cargo: cargo,
@@ -1036,7 +1053,7 @@ export default {
                             await this.redirigirPostCierre(cargo);
                         } else {
                             alert(
-                                "Deben estar cerradas las actividades por Auxiliar y Médico antes de cerrar la visita..."
+                                "Deben estar cerradas las actividades por todos los profesionales antes de cerrar la visita..."
                             );
                         }
                     }
@@ -1077,6 +1094,7 @@ export default {
                 this.getAllCups(),
                 this.getAllContratos(),
                 this.getAllEpss(),
+                this.getAllActividadesExtra(),
                 this.cargarAsignaciones()
             ]).catch(error => {
                 console.error("Error al cargar datos complementarios:", error);

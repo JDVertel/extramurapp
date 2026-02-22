@@ -779,7 +779,7 @@ export default {
             {
                 id: 36,
                 valor: "sintomaticoRespiratorio",
-                texto: "Sntomatico respiratorio",
+                texto: "Sintomatico respiratorio",
             },
             {
                 id: 37,
