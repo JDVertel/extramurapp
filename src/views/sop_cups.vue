@@ -128,72 +128,75 @@
                                     aria-label="Close"></button>
                             </div>
                             <div class="modal-body">
-                                Seleccione el CUP que desea asignar a
-                                <strong>{{ actividadSeleccionadaNombre }}</strong>
-                                <div class="row">
-                                    <div class="mb-3">
-                                        <br />
-                                        <select v-model="CupsSeleccionadoId" class="form-select" id="cupSelect">
-                                            <option value="">Seleccione un CUPS</option>
-                                            <option v-for="cup in cupsDisponiblesPorContrato" :key="cup.id"
-                                                :value="cup.id">
-                                                [{{ cup.codigo }}] {{ cup.DescripcionCUP }} - {{ cup.profesional }}
-                                            </option>
-                                        </select>
-                                        <small v-if="cupsDisponiblesPorContrato.length === 0"
-                                            class="text-muted d-block mt-1">
-                                            No hay CUPS disponibles para esta actividad, EPS y profesional.
-                                        </small>
-                                        <div class="row mt-2">
-                                            <div class="col-2">
-                                                Cantidad
-                                                <input type="number" id="cupCantidad" name="cupCantidad"
-                                                    class="form-control" aria-label="Cantidad" v-model="cantidad" />
-                                            </div>
-                                            <div class="col-10">
-                                                <div class="input-group input-group-sm mb-3">
-                                                    <span class="input-group-text">Detalle</span>
-                                                    <textarea id="cupDetalle" name="cupDetalle" class="form-control"
-                                                        aria-label="With textarea" v-model="detalle"></textarea>
+                                <div class="mb-3">
+                                    Seleccione el CUP que desea asignar a
+                                    <strong>{{ actividadSeleccionadaNombre }}</strong>
+                                    <div class="row">
+                                        <div class="mb-3">
+                                            <br />
+                                            <select v-model="CupsSeleccionadoId" class="form-select" id="cupSelect">
+                                                <option value="">Seleccione un CUPS</option>
+                                                <option v-for="cup in cupsDisponiblesPorContrato" :key="cup.id"
+                                                    :value="cup.id">
+                                                    [{{ cup.codigo }}] {{ cup.DescripcionCUP }} - {{ cup.profesional }}
+                                                </option>
+                                            </select>
+                                            <small v-if="cupsDisponiblesPorContrato.length === 0"
+                                                class="text-muted d-block mt-1">
+                                                No hay CUPS disponibles para esta actividad, EPS y profesional.
+                                            </small>
+                                            <div class="row mt-2">
+                                                <div class="col-2">
+                                                    Cantidad
+                                                    <input type="number" id="cupCantidad" name="cupCantidad"
+                                                        class="form-control" aria-label="Cantidad" v-model="cantidad" />
+                                                </div>
+                                                <div class="col-10">
+                                                    <div class="input-group input-group-sm mb-3">
+                                                        <span class="input-group-text">Detalle</span>
+                                                        <textarea id="cupDetalle" name="cupDetalle" class="form-control"
+                                                            aria-label="With textarea" v-model="detalle"></textarea>
+                                                    </div>
                                                 </div>
                                             </div>
+                                            <button class="btn btn-warning rounded-pill mt-2"
+                                                @click="addCups(this.CupsSeleccionadoId, this.cantidad, this.detalle)"
+                                                :disabled="!CupsSeleccionadoId || cantidad < 1 || !detalle.trim()">
+                                                <i class="bi bi-plus-circle-dotted"></i> Agregar al listado
+                                            </button>
                                         </div>
-                                        <button class="btn btn-warning rounded-pill mt-2"
-                                            @click="addCups(this.CupsSeleccionadoId, this.cantidad, this.detalle)"
-                                            :disabled="!CupsSeleccionadoId || cantidad < 1 || !detalle.trim()">
-                                            <i class="bi bi-plus-circle-dotted"></i> Agregar al listado
-                                        </button>
                                     </div>
                                 </div>
-                            </div>
-                            <div class="modal-body">
+
                                 <h6>Listado de CUPS:</h6>
                                 <hr />
-                                <table class="table" v-if="cupsArray.length > 0">
-                                    <thead>
-                                        <tr>
-                                            <th scope="col">CUPS</th>
-                                            <th scope="col">Detalle Ingresado</th>
-                                            <th scope="col">Cantidad</th>
-                                            <th scope="col">Grupo</th>
-                                            <th scope="col">Opción</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <tr v-for="(cup, index) in cupsArray" :key="index">
-                                            <td>{{ cup.cupsNombre }}</td>
-                                            <td>{{ cup.detalle }}</td>
-                                            <td>{{ cup.cantidad }}</td>
-                                            <td>{{ cup.Grupo }}</td>
-                                            <td>
-                                                <button class="btn btn-danger rounded-circle"
-                                                    @click="eliminarDelListado(index)">
-                                                    <i class="bi bi-trash"></i>
-                                                </button>
-                                            </td>
-                                        </tr>
-                                    </tbody>
-                                </table>
+                                <div class="cups-listado-scroll" v-if="cupsArray.length > 0">
+                                    <table class="table">
+                                        <thead>
+                                            <tr>
+                                                <th scope="col">CUPS</th>
+                                                <th scope="col">Detalle Ingresado</th>
+                                                <th scope="col">Cantidad</th>
+                                                <th scope="col">Grupo</th>
+                                                <th scope="col">Opción</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr v-for="(cup, index) in cupsArray" :key="index">
+                                                <td>{{ cup.cupsNombre }}</td>
+                                                <td>{{ cup.detalle }}</td>
+                                                <td>{{ cup.cantidad }}</td>
+                                                <td>{{ cup.Grupo }}</td>
+                                                <td>
+                                                    <button class="btn btn-danger rounded-circle"
+                                                        @click="eliminarDelListado(index)">
+                                                        <i class="bi bi-trash"></i>
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
                                 <div v-if="cupsArray.length === 0">No hay CUPS seleccionados.</div>
                                 <div class="modal-footer">
                                     <button type="button" class="btn btn-danger rounded-pill" data-bs-dismiss="modal">
@@ -237,6 +240,8 @@ export default {
             cargandoDatos: true, // Para mostrar spinner mientras carga datos iniciales
             actividadSeleccionadaNombre: "",
             modalEl: null,
+            modalShownHandler: null,
+            modalHiddenHandler: null,
             isComponentActive: true, // Bandera para cancelar operaciones al desmontar
 
             /*  */
@@ -478,9 +483,16 @@ export default {
                 this.modalEl = modal;
             }
 
+            if (!this.modalShownHandler) {
+                this.modalShownHandler = this.onModalShown.bind(this);
+            }
+            if (!this.modalHiddenHandler) {
+                this.modalHiddenHandler = this.onModalHidden.bind(this);
+            }
+
             // Vincular con métodos de la instancia para poder removerlos después
-            this.modalEl.addEventListener('shown.bs.modal', this.onModalShown.bind(this));
-            this.modalEl.addEventListener('hidden.bs.modal', this.onModalHidden.bind(this));
+            this.modalEl.addEventListener('shown.bs.modal', this.modalShownHandler);
+            this.modalEl.addEventListener('hidden.bs.modal', this.modalHiddenHandler);
         },
 
         quitarEventosModal() {
@@ -497,8 +509,12 @@ export default {
             }
 
             // Remover event listeners
-            this.modalEl.removeEventListener('shown.bs.modal', this.onModalShown.bind(this));
-            this.modalEl.removeEventListener('hidden.bs.modal', this.onModalHidden.bind(this));
+            if (this.modalShownHandler) {
+                this.modalEl.removeEventListener('shown.bs.modal', this.modalShownHandler);
+            }
+            if (this.modalHiddenHandler) {
+                this.modalEl.removeEventListener('hidden.bs.modal', this.modalHiddenHandler);
+            }
 
             // Limpiar TODOS los estados de modal del DOM
             document.body.classList.remove('modal-open');
@@ -516,6 +532,8 @@ export default {
             }
 
             this.modalEl = null;
+            this.modalShownHandler = null;
+            this.modalHiddenHandler = null;
         },
 
         // Función de debugging para diagnosticar problemas de datos
@@ -1146,12 +1164,21 @@ export default {
     font-size: 1rem;
 }
 
+.cups-listado-scroll {
+    max-height: 260px;
+    overflow-y: scroll;
+    -webkit-overflow-scrolling: touch;
+}
+
 .sop-cups-auxiliar-view .table {
     font-size: 0.8rem;
 }
 
 .sop-cups-auxiliar-view .modal-body {
     font-size: 0.85rem;
+    max-height: 70vh;
+    overflow-y: scroll;
+    -webkit-overflow-scrolling: touch;
 }
 
 .texto-guardando {
@@ -1220,6 +1247,9 @@ select {
 
 .sop-cups-auxiliar-view .modal-body {
     font-size: 0.85rem;
+    max-height: 70vh;
+    overflow-y: scroll;
+    -webkit-overflow-scrolling: touch;
 }
 
 .modal-header {
@@ -1236,7 +1266,7 @@ select {
 .modal-content {
     border: none;
     border-radius: 15px;
-    overflow: hidden;
+    overflow: visible;
 }
 
 /* Estilos para botones redondeados */

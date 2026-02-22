@@ -39,8 +39,8 @@
                     <div class="col-5 col-md-6 acciones-col">
                         <div class="btn-grid">
                             <div class="btn-row">
-                          
-                  
+
+
 
                                 <!-- CUPS -->
                                 <div v-if="encuesta.status_caracterizacion === true && userData.cargo === 'Psicologo'">
@@ -51,7 +51,7 @@
                                     </button>
                                 </div>
 
-                  
+
                             </div>
                         </div>
                     </div>
@@ -114,6 +114,41 @@ export default {
                 name: "sop_cups",
                 params: { idEncuesta: id },
             });
+        },
+
+        async cargarEncuestas() {
+            this.cargando = true;
+            this.errorCarga = null;
+
+            try {
+                // Esperar a que App.vue sincronice userData desde localStorage
+                let intentos = 0;
+                while ((!this.userData || !this.userData.numDocumento) && intentos < 30) {
+                    await new Promise(resolve => setTimeout(resolve, 100));
+                    intentos++;
+                }
+
+                if (!this.userData?.numDocumento) {
+                    throw new Error('Usuario no disponible despues de esperar');
+                }
+
+                await Promise.race([
+                    this.getEncuestasPendientesPsicologo({
+                        idUsuario: this.userData.numDocumento,
+                    }),
+                    new Promise((_, reject) =>
+                        setTimeout(() => reject(new Error('Timeout - tardo mas de 10 segundos')), 10000)
+                    )
+                ]);
+            } catch (error) {
+                console.error("Error cargando encuestas:", error.message);
+                this.errorCarga = error.message || 'Error al cargar encuestas';
+            } finally {
+                // Esperar un minimo de 500ms para que se vea el spinner
+                await new Promise(resolve => setTimeout(resolve, 500));
+                this.cargando = false;
+                this.$forceUpdate();
+            }
         },
 
     },

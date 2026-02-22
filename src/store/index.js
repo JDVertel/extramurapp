@@ -605,7 +605,6 @@ export default createStore({
         const encuestasFiltradas = encuestas.filter((encuesta) => {
           if (encuesta.idEnfermeroAtiende !== idUsuario) return false;
           if (encuesta.status_gest_enfermera !== false) return false;
-          if (encuesta.status_gest_aux !== true) return false;
 
           if (convenioNormalizado) {
             return String(encuesta.convenio ?? "").trim() === convenioNormalizado;

@@ -10,9 +10,9 @@
         <nav>
             <div class="nav nav-tabs" id="nav-tab" role="tablist">
                 <button class="nav-link active" id="nav-home-tab" data-bs-toggle="tab" data-bs-target="#nav-home"
-                    type="button" role="tab" aria-controls="nav-home" aria-selected="true">Pendientes</button>
+                    type="button" role="tab" aria-controls="nav-home" aria-selected="true">Pendientes ({{ cantEncuestasPendientes }})</button>
                 <button class="nav-link" id="nav-profile-tab" data-bs-toggle="tab" data-bs-target="#nav-profile"
-                    type="button" role="tab" aria-controls="nav-profile" aria-selected="false">En proceso</button>
+                    type="button" role="tab" aria-controls="nav-profile" aria-selected="false">En proceso ({{ cantEncuestasEnProceso }})</button>
                 <!--     <button class="nav-link" id="nav-contact-tab" data-bs-toggle="tab" data-bs-target="#nav-contact"
                     type="button" role="tab" aria-controls="nav-contact" aria-selected="false">Contact</button>
                 <button class="nav-link" id="nav-disabled-tab" data-bs-toggle="tab" data-bs-target="#nav-disabled"
@@ -25,7 +25,7 @@
                 tabindex="0">
 
                 <div class="container-fluid">
-                    <h4>Detalle de Actividades ({{ cantEncuestasPendientes }}) <small>Pendientes</small></h4>
+                    <h4>Detalle de Actividades  <small>Pendientes</small></h4>
 
                     <!-- Mensaje cuando no hay registros -->
                     <div v-if="!encuestasPendientes || encuestasPendientes.length === 0"
@@ -41,11 +41,11 @@
                             <div class="row paciente shadow-sm">
                                 <div class="col-6 col-md-6">
                                     <small><strong>{{ encuesta.nombre1 }} {{ encuesta.apellido1
-                                            }}</strong></small>
+                                    }}</strong></small>
                                     <small>EPS: {{ encuesta.eps }} | Riesgo: {{
                                         encuesta.poblacionRiesgo }}</small>
                                     <small>Nac: {{ encuesta.fechaNac }} | Enc: {{ encuesta.fecha
-                                        }}</small>
+                                    }}</small>
                                     <!-- Mostrar actividades si existen -->
 
                                 </div>
@@ -76,7 +76,7 @@
             <div class="tab-pane fade" id="nav-profile" role="tabpanel" aria-labelledby="nav-profile-tab" tabindex="0">
 
 
-                <h4>({{ cantEncuestasEnProceso }}) <small>En proceso</small></h4>
+                <h4> <small>En proceso</small></h4>
 
                 <!-- Mensaje cuando no hay registros -->
                 <div v-if="!encuestasEnProceso || encuestasEnProceso.length === 0"
@@ -92,11 +92,11 @@
                         <div class="row paciente shadow-sm">
                             <div class="col-6 col-md-6">
                                 <small><strong>{{ encuesta.nombre1 }} {{ encuesta.apellido1
-                                        }}</strong></small>
+                                }}</strong></small>
                                 <small>EPS: {{ encuesta.eps }} | Riesgo: {{
                                     encuesta.poblacionRiesgo }}</small>
                                 <small>Nac: {{ encuesta.fechaNac }} | Enc: {{ encuesta.fecha
-                                    }}</small>
+                                }}</small>
                                 <!-- Mostrar actividades si existen -->
 
                             </div>
@@ -119,13 +119,17 @@
                                                 <span v-if="encuesta.fechagestMedica" class="status-date">{{
                                                     encuesta.fechagestMedica }}</span>
                                             </span>
-                                            <span v-if="'status_gest_psicologo' in encuesta" class="badge status-badge"
+                                            <span
+                                                v-if="'status_gest_psicologo' in encuesta && userData.convenio !== 'Extramural'"
+                                                class="badge status-badge"
                                                 :class="encuesta.status_gest_psicologo ? 'bg-success' : 'bg-secondary'">
                                                 Psi {{ encuesta.status_gest_psicologo ? 'OK' : 'No' }}
                                                 <span v-if="encuesta.fechagestPsicologo" class="status-date">{{
                                                     encuesta.fechagestPsicologo }}</span>
                                             </span>
-                                            <span v-if="'status_gest_tsocial' in encuesta" class="badge status-badge"
+                                            <span
+                                                v-if="'status_gest_tsocial' in encuesta && userData.convenio !== 'Extramural'"
+                                                class="badge status-badge"
                                                 :class="encuesta.status_gest_tsocial ? 'bg-success' : 'bg-secondary'">
                                                 TS {{ encuesta.status_gest_tsocial ? 'OK' : 'No' }}
                                                 <span v-if="encuesta.fechagestTsocial" class="status-date">{{
@@ -234,6 +238,11 @@ export default {
 
     computed: {
         ...mapState(["encuestas", "userData", "cantEncuestas"]),
+        estadoGestionMedica() {
+            return (encuesta) => {
+                return encuesta?.status_gest_medica === true;
+            };
+        },
         encuestasPendientesBase() {
             if (!this.encuestas || this.encuestas.length === 0) return [];
             if (!this.userData || !this.userData.convenio) return this.encuestas;
@@ -256,12 +265,16 @@ export default {
             const documento = this.userData?.numDocumento;
             if (!documento) return [];
 
+            const esExtramural = this.userData?.convenio === 'Extramural';
+
             return this.encuestasPendientesBase.filter((encuesta) =>
                 encuesta.idEnfermeroAtiende === documento &&
                 encuesta.status_gest_aux === true &&
-                encuesta.status_gest_medica === true &&
-                encuesta.status_gest_psicologo === true &&
-                encuesta.status_gest_tsocial === true &&
+                this.estadoGestionMedica(encuesta) &&
+                (esExtramural || (
+                    encuesta.status_gest_psicologo === true &&
+                    encuesta.status_gest_tsocial === true
+                )) &&
                 encuesta.status_gest_enfermera === false
             );
         },
@@ -274,12 +287,18 @@ export default {
             const documento = this.userData?.numDocumento;
             if (!documento) return [];
 
+            const esExtramural = this.userData?.convenio === 'Extramural';
+
             return this.encuestasEnProcesoBase.filter((encuesta) => {
                 if (encuesta.idEnfermeroAtiende !== documento) return false;
 
+                if (esExtramural) {
+                    return encuesta.status_gest_aux === false || !this.estadoGestionMedica(encuesta);
+                }
+
                 const estados = [
                     encuesta.status_gest_aux,
-                    encuesta.status_gest_medica,
+                    this.estadoGestionMedica(encuesta),
                     encuesta.status_gest_psicologo,
                     encuesta.status_gest_tsocial,
                 ];
@@ -301,7 +320,7 @@ export default {
     async mounted() {
         this.fechaActual = moment().format("YYYY-MM-DD");
         try {
-            // Obtener encuestas del enfermero con status_gest_medica = true
+            // Obtener encuestas asignadas al enfermero; filtros por pestaña se aplican en computed
             await this.getAllRegistersByIduserEnfer({
                 idUsuario: this.userData.numDocumento,
                 convenio: this.userData.convenio,
