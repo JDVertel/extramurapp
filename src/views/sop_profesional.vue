@@ -10,21 +10,21 @@
 
 
         <div class="container-fluid">
-            <h4>Detalle de Actividades ({{ cantEncuestasFiltradasPorConvenio }}) <small>Pendientes</small></h4>
+            <h4>Detalle de Actividades ({{ cantEncuestasConCupsActivo }}) <small>Pendientes</small></h4>
 
             <!-- Mensaje cuando no hay registros -->
-            <div v-if="!encuestasFiltradasPorConvenio || encuestasFiltradasPorConvenio.length === 0"
+            <div v-if="!encuestasConCupsActivo || encuestasConCupsActivo.length === 0"
                 class="alert alert-success shadow-sm text-center" role="alert">
                 <i class="bi bi-check-circle-fill" style="font-size: 3rem;"></i>
                 <h5 class="mt-3">¡Todo OK!</h5>
                 <p class="mb-0">No hay registros pendientes en este momento.</p>
             </div>
 
-            <div v-else class="container-fluid" style="max-height: 500px; overflow-y: auto ">
-                <div v-for="(encuesta, index) in encuestasFiltradasPorConvenio" :key="index"
+            <div v-else class="container-fluid" >
+                <div v-for="(encuesta, index) in encuestasConCupsActivo" :key="index"
                     class="container rounded-lg p-2 mb-2" style="border-radius: 24px;">
                     <div class="row paciente shadow-sm">
-                        <div class="col-6 col-md-6">
+                        <div class="col-10 col-md-10">
                             <small><strong>{{ encuesta.nombre1 }} {{ encuesta.apellido1
                                     }}</strong></small>
                             <small>EPS: {{ encuesta.eps }} | Riesgo: {{
@@ -35,7 +35,7 @@
 
                         </div>
 
-                        <div class="col-6 col-md-6 acciones-col ">
+                        <div class="col-2 col-md-2 acciones-col ">
                             <div class="btn-grid">
                                 <!-- Fila única: Visita, Caracterización y CUPS (3 botones) -->
                                 <div class="btn-row">
@@ -153,8 +153,16 @@ export default {
                 encuesta.convenio === this.userData.convenio
             );
         },
-        cantEncuestasFiltradasPorConvenio() {
-            return this.encuestasFiltradasPorConvenio.length;
+        encuestasConCupsActivo() {
+            return this.encuestasFiltradasPorConvenio.filter(
+                (encuesta) =>
+                    encuesta.status_caracterizacion === true &&
+                    (this.userData?.cargo === "Auxiliar de enfermeria" ||
+                        this.userData?.cargo === "Medico")
+            );
+        },
+        cantEncuestasConCupsActivo() {
+            return this.encuestasConCupsActivo.length;
         },
         documento() {
             return this.userData.numDocumento;

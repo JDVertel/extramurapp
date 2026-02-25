@@ -79,8 +79,8 @@
                             </thead>
                             <tbody>
                                 <tr v-for="(item, key) in actividadesPaciente" :key="`${item.key}-${key}`">
-                                    <td> <button class="btn btn-primary btn-sm"
-                                            v-if="item && puedeMostrarActividad(item)" type="button"
+                                        <td> <button class="btn btn-primary btn-sm"
+                                            v-if="item && puedeMostrarActividad(item) && tieneCupsDisponiblesActividad(item.key)" type="button"
                                             data-bs-toggle="modal" data-bs-target="#staticBackdrop"
                                             @click="integrarCup(item)">
                                             <i class="bi bi-plus-circle"></i>
@@ -135,7 +135,7 @@
                 </div>
                 <!-- El modal queda igual, puedes mejorar clase 'modal-content' por 'shadow-lg' si gustas -->
                 <div class="modal fade" id="staticBackdrop" tabindex="-1" aria-labelledby="staticBackdropLabel">
-                    <div class="modal-dialog">
+                    <div class="modal-dialog modal-xl modal-dialog-scrollable">
                         <div class="modal-content shadow-lg">
                             <div class="modal-header">
                                 <h1 class="modal-title fs-5" id="staticBackdropLabel">
@@ -154,12 +154,12 @@
                                             <br />
                                             <select v-model="CupsSeleccionadoId" class="form-select" id="cupSelect">
                                                 <option value="">Seleccione un CUPS</option>
-                                                <option v-for="cup in cupsDisponiblesPorContrato" :key="cup.id"
+                                                <option v-for="cup in cupsDisponiblesFiltradas" :key="cup.id"
                                                     :value="cup.id">
                                                     [{{ cup.codigo }}] {{ cup.DescripcionCUP }} - {{ cup.profesional }}
                                                 </option>
                                             </select>
-                                            <small v-if="cupsDisponiblesPorContrato.length === 0"
+                                            <small v-if="cupsDisponiblesFiltradas.length === 0"
                                                 class="text-muted d-block mt-1">
                                                 No hay CUPS disponibles para esta actividad, EPS y profesional.
                                             </small>
@@ -177,7 +177,8 @@
                                                     </div>
                                                 </div>
                                             </div>
-                                            <button class="btn btn-warning rounded-pill mt-2"
+                                            <button v-if="cupsDisponiblesFiltradas.length > 0"
+                                                class="btn btn-warning rounded-pill mt-2"
                                                 @click="addCups(this.CupsSeleccionadoId, this.cantidad, this.detalle)"
                                                 :disabled="!CupsSeleccionadoId || cantidad < 1 || !detalle.trim()">
                                                 <i class="bi bi-plus-circle-dotted"></i> Agregar al listado
@@ -193,19 +194,18 @@
                                         <table class="table table-sm table-hover mb-0">
                                             <thead class="table-light">
                                                 <tr>
-                                                    <th scope="col" class="col-cups">CUPS</th>
+                                                    <th scope="col" class="col-cups col-cups-wide">CUPS</th>
                                                     <th scope="col" class="col-detalle">Detalle Ingresado</th>
-                                                    <th scope="col" class="col-cantidad">Cantidad</th>
+                                                    <th scope="col" class="col-cantidad text-center">Cantidad</th>
                                                     <th scope="col" class="col-grupo">Grupo</th>
-                                                    <th scope="col" class="col-accion">Opción</th>
+                                                    <th scope="col" class="col-accion text-center">Opción</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
                                                 <tr v-for="(cup, index) in cupsArray" :key="index">
-                                                    <td class="col-cups" data-label="CUPS">
-                                                        <span class="d-inline-block text-truncate"
-                                                            :title="cup.cupsNombre">
-                                                            {{ truncarTexto(cup.cupsNombre, 15) }}
+                                                    <td class="col-cups col-cups-wide" data-label="CUPS">
+                                                        <span class="cup-texto-completo" :title="cup.cupsNombre">
+                                                            {{ cup.cupsNombre }}
                                                         </span>
                                                     </td>
                                                     <td class="col-detalle" data-label="Detalle">
@@ -228,16 +228,16 @@
                                     </div>
                                 </div>
                                 <div v-if="cupsArray.length === 0">No hay CUPS seleccionados.</div>
-                                <div class="modal-footer">
-                                    <button type="button" class="btn btn-danger rounded-pill" data-bs-dismiss="modal">
-                                        <i class="bi bi-x-square"></i> Cancelar
-                                    </button>
-                                    <button type="button" class="btn btn-primary rounded-pill"
-                                        @click="confirmarSeleccion(userEncuesta?.id)" data-bs-dismiss="modal"
-                                        v-if="cupsArray.length !== 0">
-                                        <i class="bi bi-floppy"></i> Guardar Listado
-                                    </button>
-                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-danger rounded-pill" data-bs-dismiss="modal">
+                                    <i class="bi bi-x-square"></i> Cancelar
+                                </button>
+                                <button type="button" class="btn btn-primary rounded-pill"
+                                    @click="confirmarSeleccion(userEncuesta?.id)" data-bs-dismiss="modal"
+                                    v-if="cupsArray.length !== 0">
+                                    <i class="bi bi-floppy"></i> Guardar Listado
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -453,6 +453,35 @@ export default {
             // Filtrar el catálogo de CUPS para mostrar solo los permitidos
             return this.cups.filter(cup => idsPermitidos.has(cup.id));
         },
+
+        cupsDisponiblesFiltradas() {
+            const disponibles = this.cupsDisponiblesPorContrato || [];
+            if (!this.idItem) return disponibles;
+
+            const idsBloqueados = new Set();
+
+            // Locales en el modal
+            this.cupsArray.forEach((cup) => {
+                if (cup && cup.actividadId === this.idItem) {
+                    idsBloqueados.add(this.obtenerIdCup(cup));
+                }
+            });
+
+            // Guardados en Firebase
+            if (this.asignaciones && this.asignaciones.cups) {
+                const cupsGuardados = Array.isArray(this.asignaciones.cups)
+                    ? this.asignaciones.cups
+                    : Object.values(this.asignaciones.cups);
+
+                cupsGuardados.forEach((cup) => {
+                    if (cup && cup.actividadId === this.idItem) {
+                        idsBloqueados.add(this.obtenerIdCup(cup));
+                    }
+                });
+            }
+
+            return disponibles.filter((cup) => !idsBloqueados.has(String(cup.id)));
+        },
     },
     /* ----------------------------------------------------------------------------------------------- */
     methods: {
@@ -468,6 +497,68 @@ export default {
             "cerrarEncuesta",
             "getAsignacionesByEncuesta",
         ]),
+
+        tieneCupsDisponiblesActividad(actividadId) {
+            if (!this.userEncuesta || !this.contratos || !this.userData || !actividadId) {
+                return false;
+            }
+
+            let epsDelPaciente = this.userEncuesta.eps;
+            const cargoUsuario = this.userData.cargo;
+            const nombreActividadSeleccionada = this.obtenerNombreActividadDelContrato(actividadId);
+
+            let contratosDelPaciente = this.contratos.filter((contrato) => {
+                if (!contrato.cups || typeof contrato.cups !== "object") return false;
+                return Object.values(contrato.cups).some(
+                    (cupContrato) => cupContrato.epsNombre === epsDelPaciente
+                );
+            });
+
+            if (contratosDelPaciente.length === 0) {
+                const epsDefault = "*ESEBARRANCABERMEJA";
+                contratosDelPaciente = this.contratos.filter((contrato) => {
+                    if (!contrato.cups || typeof contrato.cups !== "object") return false;
+                    return Object.values(contrato.cups).some(
+                        (cupContrato) => cupContrato.epsNombre === epsDefault
+                    );
+                });
+
+                if (contratosDelPaciente.length > 0) {
+                    epsDelPaciente = epsDefault;
+                }
+            }
+
+            if (contratosDelPaciente.length === 0) {
+                return false;
+            }
+
+            const idsPermitidos = new Set();
+
+            contratosDelPaciente.forEach((contrato) => {
+                Object.values(contrato.cups).forEach((cupContrato) => {
+                    const coincideEps = cupContrato.epsNombre === epsDelPaciente;
+                    const coincideProfesional = cupContrato.cupsProfesional === cargoUsuario;
+                    const coincideActividad =
+                        cupContrato.actividadNombre === nombreActividadSeleccionada ||
+                        cupContrato.actividadNombre === null ||
+                        cupContrato.actividadNombre === "";
+
+                    if (coincideEps && coincideProfesional && coincideActividad) {
+                        const cupEnCatalogo = this.cups.find(
+                            (cup) =>
+                                cup.DescripcionCUP === cupContrato.cupsNombre &&
+                                cup.profesional === cupContrato.cupsProfesional
+                        );
+
+                        if (cupEnCatalogo) {
+                            idsPermitidos.add(cupEnCatalogo.id);
+                        }
+                    }
+                });
+            });
+
+            return idsPermitidos.size > 0;
+        },
 
         truncarTexto(texto, max = 28) {
             const valor = String(texto || "").trim();
