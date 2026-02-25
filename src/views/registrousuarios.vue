@@ -71,58 +71,67 @@
                                     <span class="convenio-count">{{ contarUsuariosConvenio(gruposPorConvenio) }}</span>
                                 </div>
 
-                                <!-- Grupos dentro de cada convenio -->
-                                <div class="grupos-wrapper">
+                                <!-- Acordeón con grupos colapsables -->
+                                <div class="accordion" :id="'accordion-' + sanitizeId(convenio)">
                                     <div v-for="(usuariosGrupo, grupo) in gruposPorConvenio" :key="grupo"
-                                        class="grupo-section">
-                                        <div class="grupo-header" :class="'color-' + getColorIndexByGrupo(grupo)">
-                                            <span class="grupo-title">
+                                        class="accordion-item">
+                                        <h2 class="accordion-header">
+                                            <button class="accordion-button collapsed" type="button"
+                                                data-bs-toggle="collapse" :data-bs-target="'#collapse-' + sanitizeId(convenio) + '-' + grupo"
+                                                :aria-controls="'collapse-' + sanitizeId(convenio) + '-' + grupo">
                                                 <i class="bi bi-people-fill me-2"></i>
-                                                {{ grupo === 'sin-grupo' ? 'Sin Grupo' : `Grupo ${grupo}` }}
-                                            </span>
-                                            <span class="grupo-count">{{ usuariosGrupo.length }}</span>
-                                        </div>
-                                        <div class="tabla-usuarios">
-                                            <table class="table table-sm table-hover mb-0">
-                                                <thead>
-                                                    <tr>
-                                                        <th>Nombre</th>
-                                                        <th>Cargo</th>
-                                                        <th>Email</th>
-                                                        <th>Documento</th>
-                                                        <th>Acciones</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    <tr v-for="(user, index) in usuariosGrupo" :key="index"
-                                                        :class="'cargo-' + getCargoClass(user.cargo)">
-                                                        <td class="fw-bold">{{ user.nombre }}</td>
-                                                        <td>
-                                                            <span class="badge" :class="getCargoColorClass(user.cargo)">
-                                                                {{ getCargoShortName(user.cargo) }}
-                                                            </span>
-                                                        </td>
-                                                        <td class="small">{{ user.email }}</td>
-                                                        <td class="small text-muted">{{ user.numDocumento || 'N/A' }}
-                                                        </td>
-                                                        <td>
-                                                            <button class="btn btn-sm btn-primary me-1"
-                                                                @click="abrirModalEdicion(user)" title="Editar usuario">
-                                                                <i class="bi bi-pencil-fill"></i>
-                                                            </button>
-                                                            <button class="btn btn-sm btn-warning me-1"
-                                                                @click="resetPassword(user.email)"
-                                                                title="Restablecer contraseña">
-                                                                <i class="bi bi-key-fill"></i>
-                                                            </button>
-                                                            <button class="btn btn-sm btn-danger"
-                                                                @click="deleteUser(user)" title="Eliminar usuario">
-                                                                <i class="bi bi-trash-fill"></i>
-                                                            </button>
-                                                        </td>
-                                                    </tr>
-                                                </tbody>
-                                            </table>
+                                                <span class="grupo-title-text">
+                                                    {{ grupo === 'sin-grupo' ? 'Sin Grupo' : `Grupo ${grupo}` }}
+                                                </span>
+                                                <span class="ms-auto grupo-count">{{ usuariosGrupo.length }}</span>
+                                            </button>
+                                        </h2>
+                                        <div :id="'collapse-' + sanitizeId(convenio) + '-' + grupo" class="accordion-collapse collapse"
+                                            :data-bs-parent="'#accordion-' + sanitizeId(convenio)">
+                                            <div class="accordion-body p-0">
+                                                <div class="tabla-usuarios">
+                                                    <table class="table table-sm table-hover mb-0">
+                                                        <thead>
+                                                            <tr>
+                                                                <th>Nombre</th>
+                                                                <th>Cargo</th>
+                                                                <th>Email</th>
+                                                                <th>Documento</th>
+                                                                <th>Acciones</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            <tr v-for="(user, index) in usuariosGrupo" :key="index"
+                                                                :class="'cargo-' + getCargoClass(user.cargo)">
+                                                                <td>{{ user.nombre }}</td>
+                                                                <td>
+                                                                    <span class="badge" :class="getCargoColorClass(user.cargo)">
+                                                                        {{ getCargoShortName(user.cargo) }}
+                                                                    </span>
+                                                                </td>
+                                                                <td class="small">{{ user.email }}</td>
+                                                                <td class="small text-muted">{{ user.numDocumento || 'N/A' }}
+                                                                </td>
+                                                                <td>
+                                                                    <button class="btn btn-sm btn-primary me-1"
+                                                                        @click="abrirModalEdicion(user)" title="Editar usuario">
+                                                                        <i class="bi bi-pencil-fill"></i>
+                                                                    </button>
+                                                                    <button class="btn btn-sm btn-warning me-1"
+                                                                        @click="resetPassword(user.email)"
+                                                                        title="Restablecer contraseña">
+                                                                        <i class="bi bi-key-fill"></i>
+                                                                    </button>
+                                                                    <button class="btn btn-sm btn-danger"
+                                                                        @click="deleteUser(user)" title="Eliminar usuario">
+                                                                        <i class="bi bi-trash-fill"></i>
+                                                                    </button>
+                                                                </td>
+                                                            </tr>
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -426,6 +435,11 @@ export default {
         }
     },
     methods: {
+        sanitizeId(str) {
+            // Reemplaza espacios y caracteres especiales con guiones para crear IDs válidos
+            return str.replace(/\s+/g, '-').replace(/[^a-zA-Z0-9-]/g, '').toLowerCase();
+        },
+
         contarUsuariosConvenio(gruposPorConvenio) {
             let total = 0;
             Object.keys(gruposPorConvenio).forEach(grupo => {
@@ -767,28 +781,32 @@ Esta acción eliminará el usuario de la base de datos.`)) {
 }
 
 .convenio-header {
-    padding: 12px 16px;
+    padding: 16px 20px;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
     color: white;
     font-weight: 700;
     border-radius: 8px;
-    margin-bottom: 15px;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    font-size: 1.2rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
 .convenio-title {
     display: flex;
     align-items: center;
-    font-size: 1.05rem;
+    font-size: 1.2rem;
 }
 
 .convenio-count {
-    background: rgba(255, 255, 255, 0.3);
-    padding: 4px 12px;
-    border-radius: 12px;
-    font-size: 0.9rem;
+    background: rgba(255, 255, 255, 0.25);
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 0.95rem;
     font-weight: 700;
 }
 
@@ -841,6 +859,80 @@ Esta acción eliminará el usuario de la base de datos.`)) {
     border-radius: 12px;
     font-size: 0.85rem;
     font-weight: 700;
+}
+
+/* Estilos para Acordeón de Grupos */
+.accordion {
+    gap: 12px;
+}
+
+.accordion-item {
+    border: none;
+    border-radius: 8px;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+    margin-bottom: 12px;
+}
+
+.accordion-button {
+    padding: 12px 16px;
+    font-weight: 600;
+    font-size: 0.95rem;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+}
+
+.accordion-button:not(.collapsed) {
+    box-shadow: none;
+    background: inherit;
+}
+
+.accordion-button::after {
+    margin-left: auto;
+}
+
+.grupo-title-text {
+    display: flex;
+    align-items: center;
+}
+
+.accordion-item:nth-child(1) .accordion-button {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.accordion-item:nth-child(2) .accordion-button {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+}
+
+.accordion-item:nth-child(3) .accordion-button {
+    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+}
+
+.accordion-item:nth-child(4) .accordion-button {
+    background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+}
+
+.accordion-item:nth-child(5) .accordion-button {
+    background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+}
+
+.accordion-item:nth-child(6) .accordion-button {
+    background: linear-gradient(135deg, #30cfd0 0%, #330867 100%);
+}
+
+.accordion-item:nth-child(7) .accordion-button {
+    background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+}
+
+.accordion-button.collapsed {
+    color: white;
+}
+
+.accordion-button:focus {
+    box-shadow: none;
+    border-color: transparent;
 }
 
 /* Colores para grupos (7 colores rotantes) */
@@ -896,7 +988,7 @@ Esta acción eliminará el usuario de la base de datos.`)) {
 /* Anchos de columnas */
 .tabla-usuarios th:nth-child(1),
 .tabla-usuarios td:nth-child(1) {
-    width: 25%;
+    width: 33%;
 }
 
 .tabla-usuarios th:nth-child(2),
@@ -916,7 +1008,7 @@ Esta acción eliminará el usuario de la base de datos.`)) {
 
 .tabla-usuarios th:nth-child(5),
 .tabla-usuarios td:nth-child(5) {
-    width: 20%;
+    width: 12%;
 }
 
 .tabla-usuarios thead {
@@ -1275,16 +1367,16 @@ Esta acción eliminará el usuario de la base de datos.`)) {
     }
 
     .usuarios-container {
-        padding: 5px;
+        padding: 0;
     }
 
     .convenio-section {
-        padding: 10px 8px;
-        margin-bottom: 15px;
+        padding: 8px 0;
+        margin-bottom: 10px;
     }
 
     .convenio-header {
-        padding: 9px 10px;
+        padding: 8px 8px;
         font-size: 0.9rem;
     }
 
@@ -1302,7 +1394,7 @@ Esta acción eliminará el usuario de la base de datos.`)) {
     }
 
     .grupos-wrapper {
-        gap: 8px;
+        gap: 0;
     }
 
     .grupo-section {
@@ -1310,7 +1402,7 @@ Esta acción eliminará el usuario de la base de datos.`)) {
     }
 
     .grupo-header {
-        padding: 8px 10px;
+        padding: 6px 8px;
         border-radius: 6px 6px 0 0;
     }
 
@@ -1331,37 +1423,45 @@ Esta acción eliminará el usuario de la base de datos.`)) {
     .tabla-usuarios {
         overflow-x: auto;
         -webkit-overflow-scrolling: touch;
+        display: block;
     }
 
     .tabla-usuarios .table {
         font-size: 0.8rem;
-        min-width: 100%;
-        table-layout: fixed;
+        min-width: 550px;
+        width: 100%;
+        table-layout: auto;
     }
 
     .tabla-usuarios th:nth-child(1),
     .tabla-usuarios td:nth-child(1) {
-        width: 20%;
+        width: auto;
+        min-width: 120px;
     }
 
     .tabla-usuarios th:nth-child(2),
     .tabla-usuarios td:nth-child(2) {
-        width: 12%;
+        width: auto;
+        min-width: 70px;
     }
 
     .tabla-usuarios th:nth-child(3),
     .tabla-usuarios td:nth-child(3) {
-        width: 25%;
+        width: auto;
+        min-width: 150px;
     }
 
     .tabla-usuarios th:nth-child(4),
     .tabla-usuarios td:nth-child(4) {
-        width: 13%;
+        width: auto;
+        min-width: 70px;
     }
 
     .tabla-usuarios th:nth-child(5),
     .tabla-usuarios td:nth-child(5) {
-        width: 30%;
+        width: auto;
+        min-width: 85px;
+        white-space: nowrap;
     }
 
     .tabla-usuarios thead {
@@ -1369,11 +1469,12 @@ Esta acción eliminará el usuario de la base de datos.`)) {
     }
 
     .tabla-usuarios thead th {
-        padding: 7px 8px;
+        padding: 5px 4px;
         font-size: 0.7rem;
         border: none;
         text-transform: capitalize;
         font-weight: 600;
+        line-height: 1.2;
     }
 
     .tabla-usuarios tbody tr {
@@ -1381,7 +1482,7 @@ Esta acción eliminará el usuario de la base de datos.`)) {
     }
 
     .tabla-usuarios tbody td {
-        padding: 7px 8px;
+        padding: 5px 4px;
         font-size: 0.8rem;
         word-break: break-word;
     }
@@ -1406,19 +1507,21 @@ Esta acción eliminará el usuario de la base de datos.`)) {
 
     /* Botones responsivos */
     .btn-sm {
-        padding: 3px 6px;
-        font-size: 0.7rem;
+        padding: 1px 3px;
+        font-size: 0.55rem;
         height: auto;
-        line-height: 1.2;
+        line-height: 1;
+        margin-right: 1px;
+        min-width: auto;
     }
 
     .btn-sm i {
-        font-size: 0.8rem;
+        font-size: 0.6rem;
     }
 
     .btn-warning,
     .btn-danger {
-        margin-right: 2px;
+        margin-right: 1px;
     }
 
     /* Modal responsivo */
@@ -1521,49 +1624,64 @@ Esta acción eliminará el usuario de la base de datos.`)) {
     /* Tabla horizontal scroll en móvil pequeño */
     .tabla-usuarios {
         overflow-x: auto;
+        display: block;
+        -webkit-overflow-scrolling: touch;
     }
 
     .tabla-usuarios .table {
         font-size: 0.75rem;
         margin-bottom: 0;
-        table-layout: fixed;
+        table-layout: auto;
+        min-width: 600px;
+        width: 100%;
     }
 
     .tabla-usuarios th:nth-child(1),
     .tabla-usuarios td:nth-child(1) {
-        width: 18%;
+        width: auto;
+        min-width: 110px;
     }
 
     .tabla-usuarios th:nth-child(2),
     .tabla-usuarios td:nth-child(2) {
-        width: 11%;
+        width: auto;
+        min-width: 65px;
     }
 
     .tabla-usuarios th:nth-child(3),
     .tabla-usuarios td:nth-child(3) {
-        width: 24%;
+        width: auto;
+        min-width: 140px;
     }
 
     .tabla-usuarios th:nth-child(4),
     .tabla-usuarios td:nth-child(4) {
-        width: 12%;
+        width: auto;
+        min-width: 65px;
     }
 
     .tabla-usuarios th:nth-child(5),
     .tabla-usuarios td:nth-child(5) {
-        width: 35%;
+        width: auto;
+        min-width: 130px;
+        white-space: nowrap;
     }
 
     .tabla-usuarios thead th {
-        padding: 6px 6px;
-        font-size: 0.65rem;
-        white-space: nowrap;
+        padding: 4px 3px;
+        font-size: 0.6rem;
+        white-space: normal;
+        overflow: hidden;
+        text-overflow: ellipsis;
         background: #f5f5f5;
+        line-height: 1.2;
     }
 
     .tabla-usuarios tbody td {
-        padding: 6px 6px;
+        padding: 4px 3px;
         font-size: 0.75rem;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
 
     .tabla-usuarios tbody td.fw-bold {
@@ -1581,12 +1699,17 @@ Esta acción eliminará el usuario de la base de datos.`)) {
     }
 
     .btn-sm {
-        padding: 2px 4px;
-        font-size: 0.65rem;
+        padding: 2px 3px;
+        font-size: 0.6rem;
+        margin-right: 1px;
     }
 
     .btn-sm i {
-        font-size: 0.75rem;
+        font-size: 0.7rem;
+    }
+
+    .btn-sm.me-1 {
+        margin-right: 1px !important;
     }
 
     /* Modal para móvil pequeño */
@@ -1627,18 +1750,30 @@ Esta acción eliminará el usuario de la base de datos.`)) {
     }
 
     .tabla-usuarios thead th {
-        padding: 5px 4px;
-        font-size: 0.6rem;
+        padding: 3px 2px;
+        font-size: 0.55rem;
+        line-height: 1.1;
     }
 
     .tabla-usuarios tbody td {
-        padding: 5px 4px;
-        font-size: 0.7rem;
+        padding: 3px 2px;
+        font-size: 0.65rem;
+    }
+
+    .tabla-usuarios {
+        overflow-x: auto;
+        display: block;
+    }
+
+    .tabla-usuarios .table {
+        table-layout: auto;
+        min-width: 600px;
     }
 
     .btn-sm {
-        padding: 1px 3px;
-        font-size: 0.6rem;
+        padding: 1px 2px;
+        font-size: 0.55rem;
+        margin-right: 1px;
     }
 }
 
