@@ -689,33 +689,38 @@ export default {
             if (cupSeleccionado) {
                 const cupId = cupSeleccionado.id;
 
-                const existeEnListado = this.cupsArray.some(
-                    (cup) => cup.id === cupId
+                const existeEnActividad = this.cupsArray.some(
+                    (cup) => cup.id === cupId && cup.actividadId === this.idItem
                 );
 
                 let existeEnAsignaciones = false;
                 if (this.asignaciones && this.asignaciones.cups) {
-                    const cupsGuardados = Array.isArray(this.asignaciones.cups) ?
-                        this.asignaciones.cups :
-                        Object.values(this.asignaciones.cups);
+                    const cupsGuardados = Array.isArray(this.asignaciones.cups)
+                        ? this.asignaciones.cups
+                        : Object.values(this.asignaciones.cups);
 
                     existeEnAsignaciones = cupsGuardados.some(
-                        (cup) => cup.id === cupId && cup.actividadId === this.idItem
+                        (cup) => cup && cup.id === cupId && cup.actividadId === this.idItem
                     );
                 }
 
-                if (existeEnListado || existeEnAsignaciones) {
+                if (existeEnActividad || existeEnAsignaciones) {
                     alert("Este CUPS ya fue agregado a esta actividad.");
-                } else {
-                    this.cupsArray.push({
-                        ...cupSeleccionado,
-                        id: cupId,
-                        cupsId: cupId,
-                        cupsNombre: cupSeleccionado.DescripcionCUP,
-                        cantidad: cant,
-                        detalle: detalle,
-                    });
+                    this.CupsSeleccionadoId = "";
+                    this.cantidad = 1;
+                    this.detalle = "";
+                    return;
                 }
+
+                this.cupsArray.push({
+                    ...cupSeleccionado,
+                    id: cupId,
+                    cupsId: cupId,
+                    cupsNombre: cupSeleccionado.DescripcionCUP,
+                    cantidad: cant,
+                    detalle: detalle,
+                    actividadId: this.idItem,
+                });
                 this.CupsSeleccionadoId = "";
                 this.cantidad = 1;
             } else {

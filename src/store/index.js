@@ -1965,26 +1965,61 @@ export default createStore({
         const response = await firebase_api.get(Ruta);
         const datosExistentes = response.data || {};
 
-        // 2. Obtener objeto actual de cups o inicializar vacío
+        // 2. Normalizar cups existentes sin sobrescribir por cup.id
         let cupsExistentesObj = {};
         if (Array.isArray(datosExistentes.cups)) {
           datosExistentes.cups.forEach((cup) => {
-            if (cup.id) {
-              cupsExistentesObj[cup.id] = cup;
+            if (cup) {
+              const key = generarId();
+              cupsExistentesObj[key] = cup;
             }
           });
         } else if (
           typeof datosExistentes.cups === "object" &&
           datosExistentes.cups !== null
         ) {
-          cupsExistentesObj = datosExistentes.cups;
+          const valores = Object.values(datosExistentes.cups);
+          const esNested = valores.some(
+            (val) =>
+              val &&
+              typeof val === "object" &&
+              !("id" in val) &&
+              !("cupsNombre" in val) &&
+              !("DescripcionCUP" in val) &&
+              !("codigo" in val)
+          );
+
+          if (esNested) {
+            Object.entries(datosExistentes.cups).forEach(
+              ([actividadId, cupsPorActividad]) => {
+                if (cupsPorActividad && typeof cupsPorActividad === "object") {
+                  Object.values(cupsPorActividad).forEach((cup) => {
+                    if (cup) {
+                      const key = generarId();
+                      cupsExistentesObj[key] = {
+                        ...cup,
+                        actividadId: cup.actividadId ?? actividadId,
+                      };
+                    }
+                  });
+                }
+              }
+            );
+          } else {
+            Object.entries(datosExistentes.cups).forEach(([key, cup]) => {
+              if (cup) {
+                cupsExistentesObj[key] = cup;
+              }
+            });
+          }
         }
 
-        // 3. Generar id para nuevos cups que no tengan id y convertir a objeto
+        // 3. Crear entradas nuevas con llave unica
         const nuevosCupsObj = {};
         nuevosCups.forEach((cup) => {
           const id = cup.id || generarId();
-          nuevosCupsObj[id] = {
+          const key = generarId();
+          nuevosCupsObj[key] = {
             ...cup,
             id,
             convenio: cup?.convenio ?? convenio ?? "",
