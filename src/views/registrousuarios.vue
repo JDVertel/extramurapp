@@ -882,8 +882,8 @@ Esta acción eliminará el usuario de la base de datos.`)) {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
-    color: white;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    color: #212529;
     font-weight: 700;
     border-radius: 8px;
     margin-bottom: 20px;
@@ -891,6 +891,7 @@ Esta acción eliminará el usuario de la base de datos.`)) {
     font-size: 1.2rem;
     text-transform: uppercase;
     letter-spacing: 0.5px;
+    text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.8);
 }
 
 .convenio-title {
@@ -900,11 +901,12 @@ Esta acción eliminará el usuario de la base de datos.`)) {
 }
 
 .convenio-count {
-    background: rgba(255, 255, 255, 0.25);
+    background: rgba(33, 37, 41, 0.15);
     padding: 6px 14px;
     border-radius: 20px;
     font-size: 0.95rem;
     font-weight: 700;
+    color: #212529;
 }
 
 .grupos-wrapper {
@@ -995,36 +997,20 @@ Esta acción eliminará el usuario de la base de datos.`)) {
     align-items: center;
 }
 
-.accordion-item:nth-child(1) .accordion-button {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+.accordion-item:nth-child(odd) .accordion-button {
+    background: linear-gradient(135deg, #4facfe 0%, #fcffff 100%);
+    color: #212529 !important;
+    text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.8);
 }
 
-.accordion-item:nth-child(2) .accordion-button {
-    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-}
-
-.accordion-item:nth-child(3) .accordion-button {
-    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-}
-
-.accordion-item:nth-child(4) .accordion-button {
-    background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
-}
-
-.accordion-item:nth-child(5) .accordion-button {
-    background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
-}
-
-.accordion-item:nth-child(6) .accordion-button {
-    background: linear-gradient(135deg, #30cfd0 0%, #330867 100%);
-}
-
-.accordion-item:nth-child(7) .accordion-button {
-    background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+.accordion-item:nth-child(even) .accordion-button {
+    background: linear-gradient(135deg, #d7e51a 0%, #f6f7f6 100%);
+    color: #212529 !important;
+    text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.8);
 }
 
 .accordion-button.collapsed {
-    color: white;
+    color: inherit;
 }
 
 .accordion-button:focus {
