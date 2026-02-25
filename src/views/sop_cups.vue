@@ -50,6 +50,24 @@
                         <h5 class="fw-bold text-success mb-3">
                             <i class="bi bi-person-check-fill"></i> Actividades del Paciente
                         </h5>
+                        
+                        <!-- Convenciones -->
+                        <div class="convenciones-cups mb-3">
+                            <small class="text-muted me-3"><strong>Convenciones:</strong></small>
+                            <span class="convencion-item">
+                                <span class="cantidad-cups-circulo-small">1</span>
+                                <small>Cantidad</small>
+                            </span>
+                            <span class="convencion-item">
+                                <span class="nombre-cups">●</span>
+                                <small>Nombre CUPS</small>
+                            </span>
+                            <span class="convencion-item">
+                                <span class="detalle-cups">●</span>
+                                <small>Detalle</small>
+                            </span>
+                        </div>
+
                         <table class="table">
                             <thead>
                                 <tr>
@@ -73,12 +91,12 @@
                                         <div v-if="obtenerCupsArrayPorActividad(item.key).length > 0">
                                             <div v-for="(cup, idx) in obtenerCupsArrayPorActividad(item.key)" :key="idx"
                                                 class="d-flex align-items-center justify-content-between mb-1 p-1 border-bottom">
-                                                <div>
-                                                    <small class="cup-texto-corto"
-                                                        :title="cup.cupsNombre || cup.DescripcionCUP">
-                                                        {{ truncarTexto(cup.cupsNombre || cup.DescripcionCUP, 28) }}
-                                                    </small>
-                                                    <br>
+                                                <div style="flex: 1; min-width: 0;">
+                                                    <div class="cup-texto-completo">
+                                                        <span class="cantidad-cups-circulo">{{ cup.cantidad }}</span>
+                                                        <span v-if="cup.cupsNombre" class="nombre-cups">{{ cup.cupsNombre }}</span>
+                                                        <span v-if="cup.detalle" class="detalle-cups"> - {{ cup.detalle }}</span>
+                                                    </div>
                                                     <small class="text-muted">
                                                         <i class="bi bi-person-fill"></i> {{ cup.nombreProf || 'N/D' }}
                                                         <span class="badge ms-1" :class="{
@@ -1472,5 +1490,75 @@ select {
 .cup-texto-corto {
     display: inline-block;
     font-size: 0.75rem;
+}
+
+.cup-texto-completo {
+    font-size: 0.85rem;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    white-space: normal;
+    line-height: 1.4;
+    margin-bottom: 4px;
+}
+
+.cantidad-cups-circulo {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background-color: #dc3545;
+    color: white;
+    font-size: 0.75rem;
+    margin-right: 6px;
+    flex-shrink: 0;
+}
+
+.nombre-cups {
+    color: #0d6efd;
+}
+
+.separador-cups {
+    color: #6c757d;
+}
+
+.descripcion-cups {
+    color: #6f42c1;
+}
+
+.detalle-cups {
+    color: #198754;
+    font-style: italic;
+}
+
+/* Estilos para convenciones */
+.convenciones-cups {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 15px;
+    padding: 10px 15px;
+    background-color: #f8f9fa;
+    border-radius: 6px;
+    border-left: 4px solid #198754;
+}
+
+.convencion-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.cantidad-cups-circulo-small {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background-color: #dc3545;
+    color: white;
+    font-size: 0.7rem;
 }
 </style>
