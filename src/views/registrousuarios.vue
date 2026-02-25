@@ -1,136 +1,118 @@
 <template>
-    <div>
-        <!-- Modal de mensajes con estilo -->
-        <div v-if="message" class="modal-overlay" @click="closeMessage">
-            <div class="modal-message" :class="messageType" @click.stop>
-                <div class="modal-header-custom">
-                    <i
-                        :class="messageType === 'success' ? 'bi bi-check-circle-fill' : 'bi bi-exclamation-triangle-fill'"></i>
-                    <h5>{{ messageType === 'success' ? '¡Éxito!' : 'Atención' }}</h5>
-                </div>
-                <div class="modal-body-custom">
-                    <p>{{ message }}</p>
-                </div>
-                <div class="modal-footer-custom">
-                    <button class="btn-close-modal" @click="closeMessage">
-                        <i class="bi bi-x-circle"></i> Cerrar
-                    </button>
-                </div>
+<div>
+    <!-- Modal de mensajes con estilo -->
+    <div v-if="message" class="modal-overlay" @click="closeMessage">
+        <div class="modal-message" :class="messageType" @click.stop>
+            <div class="modal-header-custom">
+                <i :class="messageType === 'success' ? 'bi bi-check-circle-fill' : 'bi bi-exclamation-triangle-fill'"></i>
+                <h5>{{ messageType === 'success' ? '¡Éxito!' : 'Atención' }}</h5>
+            </div>
+            <div class="modal-body-custom">
+                <p>{{ message }}</p>
+            </div>
+            <div class="modal-footer-custom">
+                <button class="btn-close-modal" @click="closeMessage">
+                    <i class="bi bi-x-circle"></i> Cerrar
+                </button>
             </div>
         </div>
+    </div>
 
-        <div class="container">
-            <nav>
-                <div class="nav nav-tabs" id="nav-tab" role="tablist">
-                    <button class="nav-link active" id="nav-home-tab" data-bs-toggle="tab" data-bs-target="#nav-home"
-                        type="button" role="tab" aria-controls="nav-home" aria-selected="true">
-                        Gestionar
-                    </button>
-                    <button class="nav-link" id="nav-profile-tab" data-bs-toggle="tab" data-bs-target="#nav-profile"
-                        type="button" role="tab" aria-controls="nav-profile" aria-selected="false">
-                        + Crear
-                    </button>
-                    <!-- <button class="nav-link" id="nav-contact-tab" data-bs-toggle="tab" data-bs-target="#nav-contact" type="button" role="tab" aria-controls="nav-contact" aria-selected="false">Contact</button>
+    <div class="container">
+        <nav>
+            <div class="nav nav-tabs" id="nav-tab" role="tablist">
+                <button class="nav-link active" id="nav-home-tab" data-bs-toggle="tab" data-bs-target="#nav-home" type="button" role="tab" aria-controls="nav-home" aria-selected="true">
+                    Gestionar
+                </button>
+                <button class="nav-link" id="nav-profile-tab" data-bs-toggle="tab" data-bs-target="#nav-profile" type="button" role="tab" aria-controls="nav-profile" aria-selected="false">
+                    + Crear
+                </button>
+                <!-- <button class="nav-link" id="nav-contact-tab" data-bs-toggle="tab" data-bs-target="#nav-contact" type="button" role="tab" aria-controls="nav-contact" aria-selected="false">Contact</button>
         <button class="nav-link" id="nav-disabled-tab" data-bs-toggle="tab" data-bs-target="#nav-disabled" type="button" role="tab" aria-controls="nav-disabled" aria-selected="false" disabled>Disabled</button> -->
-                </div>
-            </nav>
-            <div class="tab-content" id="nav-tabContent">
-                <div class="tab-pane fade show active" id="nav-home" role="tabpanel" aria-labelledby="nav-home-tab"
-                    tabindex="0">
-                    <h1 class="display-6"><i class="bi bi-people-fill display-6"></i> Listado de usuarios del sistema
-                    </h1>
+            </div>
+        </nav>
+        <div class="tab-content" id="nav-tabContent">
+            <div class="tab-pane fade show active" id="nav-home" role="tabpanel" aria-labelledby="nav-home-tab" tabindex="0">
+                <h1 class="display-6"><i class="bi bi-people-fill display-6"></i> Listado de usuarios del sistema
+                </h1>
 
-                    <!-- Filtro por Convenio -->
-                    <div class="filter-section mb-3">
-                        <label class="me-2"><strong>Filtrar por Convenio:</strong></label>
-                        <button v-for="conv in convenios" :key="conv"
-                            @click="convenioSeleccionado = convenioSeleccionado === conv ? '' : conv"
-                            :class="['btn btn-sm me-2 mb-2', convenioSeleccionado === conv ? 'btn-primary' : 'btn-outline-primary']">
-                            {{ conv === 'sin-convenio' ? 'Usuarios Administrativos' : conv }} ({{
+                <!-- Filtro por Convenio -->
+                <div class="filter-section mb-3">
+                    <label class="me-2"><strong>Filtrar por Convenio:</strong></label>
+                    <button v-for="conv in convenios" :key="conv" @click="convenioSeleccionado = convenioSeleccionado === conv ? '' : conv" :class="['btn btn-sm me-2 mb-2', convenioSeleccionado === conv ? 'btn-primary' : 'btn-outline-primary']">
+                        {{ conv === 'sin-convenio' ? 'Usuarios Administrativos' : conv }} ({{
                                 usuariosPorConvenio[conv] || 0 }})
-                        </button>
+                    </button>
+                </div>
+
+                <div class="usuarios-container">
+                    <!-- Mostrar mensaje si no hay usuarios -->
+                    <div v-if="!users || users.length === 0" class="alert alert-warning">
+                        No hay usuarios registrados en el sistema.
                     </div>
 
-                    <div class="usuarios-container">
-                        <!-- Mostrar mensaje si no hay usuarios -->
-                        <div v-if="!users || users.length === 0" class="alert alert-warning">
-                            No hay usuarios registrados en el sistema.
-                        </div>
+                    <!-- Tabla compacta agrupada por convenio y luego por grupo -->
+                    <div v-else>
+                        <!-- Convenios -->
+                        <div v-for="(gruposPorConvenio, convenio) in usuariosAgrupadosPorConvenioYGrupoFiltrado" :key="convenio" class="convenio-section mb-4">
+                            <div class="convenio-header">
+                                <span class="convenio-title">
+                                    <i :class="convenio === 'sin-convenio' ? 'bi bi-shield-check' : 'bi bi-building'" class="me-2"></i>
+                                    {{ convenio === 'sin-convenio' ? 'Usuarios Administrativos' : convenio }}
+                                </span>
+                                <span class="convenio-count">{{ contarUsuariosConvenio(gruposPorConvenio) }}</span>
+                            </div>
 
-                        <!-- Tabla compacta agrupada por convenio y luego por grupo -->
-                        <div v-else>
-                            <!-- Convenios -->
-                            <div v-for="(gruposPorConvenio, convenio) in usuariosAgrupadosPorConvenioYGrupoFiltrado"
-                                :key="convenio" class="convenio-section mb-4">
-                                <div class="convenio-header">
-                                    <span class="convenio-title">
-                                        <i :class="convenio === 'sin-convenio' ? 'bi bi-shield-check' : 'bi bi-building'"
-                                            class="me-2"></i>
-                                        {{ convenio === 'sin-convenio' ? 'Usuarios Administrativos' : convenio }}
-                                    </span>
-                                    <span class="convenio-count">{{ contarUsuariosConvenio(gruposPorConvenio) }}</span>
-                                </div>
-
-                                <!-- Acordeón con grupos colapsables -->
-                                <div class="accordion" :id="'accordion-' + sanitizeId(convenio)">
-                                    <div v-for="(usuariosGrupo, grupo) in gruposPorConvenio" :key="grupo"
-                                        class="accordion-item">
-                                        <h2 class="accordion-header">
-                                            <button class="accordion-button collapsed" type="button"
-                                                data-bs-toggle="collapse" :data-bs-target="'#collapse-' + sanitizeId(convenio) + '-' + grupo"
-                                                :aria-controls="'collapse-' + sanitizeId(convenio) + '-' + grupo">
-                                                <i class="bi bi-people-fill me-2"></i>
-                                                <span class="grupo-title-text">
-                                                    {{ grupo === 'sin-grupo' ? 'Sin Grupo' : `Grupo ${grupo}` }}
-                                                </span>
-                                                <span class="ms-auto grupo-count">{{ usuariosGrupo.length }}</span>
-                                            </button>
-                                        </h2>
-                                        <div :id="'collapse-' + sanitizeId(convenio) + '-' + grupo" class="accordion-collapse collapse"
-                                            :data-bs-parent="'#accordion-' + sanitizeId(convenio)">
-                                            <div class="accordion-body p-0">
-                                                <div class="tabla-usuarios">
-                                                    <table class="table table-sm table-hover mb-0">
-                                                        <thead>
-                                                            <tr>
-                                                                <th>Nombre</th>
-                                                                <th>Cargo</th>
-                                                                <th>Email</th>
-                                                                <th>Documento</th>
-                                                                <th>Acciones</th>
-                                                            </tr>
-                                                        </thead>
-                                                        <tbody>
-                                                            <tr v-for="(user, index) in usuariosGrupo" :key="index"
-                                                                :class="'cargo-' + getCargoClass(user.cargo)">
-                                                                <td>{{ user.nombre }}</td>
-                                                                <td>
-                                                                    <span class="badge" :class="getCargoColorClass(user.cargo)">
-                                                                        {{ getCargoShortName(user.cargo) }}
-                                                                    </span>
-                                                                </td>
-                                                                <td class="small">{{ user.email }}</td>
-                                                                <td class="small text-muted">{{ user.numDocumento || 'N/A' }}
-                                                                </td>
-                                                                <td>
-                                                                    <button class="btn btn-sm btn-primary me-1"
-                                                                        @click="abrirModalEdicion(user)" title="Editar usuario">
-                                                                        <i class="bi bi-pencil-fill"></i>
-                                                                    </button>
-                                                                    <button class="btn btn-sm btn-warning me-1"
-                                                                        @click="resetPassword(user.email)"
-                                                                        title="Restablecer contraseña">
-                                                                        <i class="bi bi-key-fill"></i>
-                                                                    </button>
-                                                                    <button class="btn btn-sm btn-danger"
-                                                                        @click="deleteUser(user)" title="Eliminar usuario">
-                                                                        <i class="bi bi-trash-fill"></i>
-                                                                    </button>
-                                                                </td>
-                                                            </tr>
-                                                        </tbody>
-                                                    </table>
-                                                </div>
+                            <!-- Acordeón con grupos colapsables -->
+                            <div class="accordion" :id="'accordion-' + sanitizeId(convenio)">
+                                <div v-for="(usuariosGrupo, grupo) in gruposPorConvenio" :key="grupo" class="accordion-item">
+                                    <h2 class="accordion-header">
+                                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" :data-bs-target="'#collapse-' + sanitizeId(convenio) + '-' + grupo" :aria-controls="'collapse-' + sanitizeId(convenio) + '-' + grupo">
+                                            <i class="bi bi-people-fill me-2"></i>
+                                            <span class="grupo-title-text">
+                                                {{ grupo === 'sin-grupo' ? 'Sin Grupo' : `Grupo ${grupo}` }}
+                                            </span>
+                                            <span class="ms-auto grupo-count">{{ usuariosGrupo.length }}</span>
+                                        </button>
+                                    </h2>
+                                    <div :id="'collapse-' + sanitizeId(convenio) + '-' + grupo" class="accordion-collapse collapse" :data-bs-parent="'#accordion-' + sanitizeId(convenio)">
+                                        <div class="accordion-body p-0">
+                                            <div class="tabla-usuarios">
+                                                <table class="table table-sm table-hover mb-0">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>Nombre</th>
+                                                            <th>Cargo</th>
+                                                            <th>Email</th>
+                                                            <th>Documento</th>
+                                                            <th>Acciones</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        <tr v-for="(user, index) in usuariosGrupo" :key="index" :class="'cargo-' + getCargoClass(user.cargo)">
+                                                            <td>{{ user.nombre }}</td>
+                                                            <td>
+                                                                <span class="badge" :class="getCargoColorClass(user.cargo)">
+                                                                    {{ getCargoShortName(user.cargo) }}
+                                                                </span>
+                                                            </td>
+                                                            <td class="small">{{ user.email }}</td>
+                                                            <td class="small text-muted">{{ user.numDocumento || 'N/A' }}
+                                                            </td>
+                                                            <td>
+                                                                <button class="btn btn-sm btn-primary me-1" @click="abrirModalEdicion(user)" title="Editar usuario">
+                                                                    <i class="bi bi-pencil-fill"></i>
+                                                                </button>
+                                                                <button class="btn btn-sm btn-warning me-1" @click="resetPassword(user.email)" title="Restablecer contraseña">
+                                                                    <i class="bi bi-key-fill"></i>
+                                                                </button>
+                                                                <button class="btn btn-sm btn-danger" @click="deleteUser(user)" title="Eliminar usuario">
+                                                                    <i class="bi bi-trash-fill"></i>
+                                                                </button>
+                                                            </td>
+                                                        </tr>
+                                                    </tbody>
+                                                </table>
                                             </div>
                                         </div>
                                     </div>
@@ -139,118 +121,157 @@
                         </div>
                     </div>
                 </div>
+            </div>
 
-                <!-- Modal de Edición de Usuario -->
-                <div v-if="mostrarModalEdicion" class="modal-overlay" @click="cerrarModalEdicion">
-                    <div class="modal-content" @click.stop>
-                        <div class="modal-header-custom">
-                            <h5>Editar Usuario</h5>
-                            <button type="button" class="btn-close" @click="cerrarModalEdicion"></button>
-                        </div>
-                        <div class="modal-body-custom">
-                            <form @submit.prevent="guardarCambiosUsuario">
-                                <div class="row">
-                                    <div class="col col-12 col-md-6 mb-3">
-                                        <label for="editConvenio">IPS / Programa</label>
-                                        <select id="editConvenio" v-model="editConvenio" class="form-select">
-                                            <option value="Extramural">Extramural</option>
-                                            <option value="E Basicos">E Basicos</option>
-                                            <option value="sin-convenio">Usuarios Administrativos</option>
-                                        </select>
-                                    </div>
-                                    <div class="col col-12 col-md-6 mb-3">
-                                        <label for="editCargo">Cargo</label>
-                                        <select id="editCargo" v-model="editCargo" class="form-select">
-                                            <option value="Auxiliar de enfermeria">Auxiliar</option>
-                                            <option value="Medico">Medico</option>
-                                            <option value="Enfermero">Enfermero</option>
-                                            <option value="Psicologo">Psicologo</option>
-                                            <option value="Tsocial">Trabajador social</option>
-                                            <option value="Fact">Facturador</option>
-                                            <option value="admin">--Administrador--</option>
-                                        </select>
-                                    </div>
-                                    <div class="col col-12 mb-3">
-                                        <label for="editNombre">Nombre Completo</label>
-                                        <input type="text" id="editNombre" v-model="editNombre" class="form-control"
-                                            required />
-                                    </div>
-                                    <div class="col col-12 mb-3">
-                                        <label for="editEmail">Email</label>
-                                        <input type="email" id="editEmail" v-model="editEmail" class="form-control"
-                                            required />
-                                    </div>
-                                    <div class="col col-12 col-md-6 mb-3">
-                                        <label for="editNumDocumento">Número de Documento</label>
-                                        <input type="text" id="editNumDocumento" v-model="editNumDocumento"
-                                            class="form-control" required />
-                                    </div>
-                                    <div class="col col-12 col-md-6 mb-3" v-if="
+            <!-- Modal de Edición de Usuario -->
+            <div v-if="mostrarModalEdicion" class="modal-overlay" @click="cerrarModalEdicion">
+                <div class="modal-content" @click.stop>
+                    <div class="modal-header-custom">
+                        <h5>Editar Usuario</h5>
+                        <button type="button" class="btn-close" @click="cerrarModalEdicion"></button>
+                    </div>
+                    <div class="modal-body-custom">
+                        <form @submit.prevent="guardarCambiosUsuario">
+                            <div class="row">
+                                <div class="col col-12 col-md-6 mb-3">
+                                    <label for="editConvenio">IPS / Programa</label>
+                                    <select id="editConvenio" v-model="editConvenio" class="form-select">
+                                        <option value="Extramural">Extramural</option>
+                                        <option value="E Basicos">E Basicos</option>
+                                        <option value="sin-convenio">Usuarios Administrativos</option>
+                                    </select>
+                                </div>
+                                <div class="col col-12 col-md-6 mb-3">
+                                    <label for="editCargo">Cargo</label>
+                                    <select id="editCargo" v-model="editCargo" class="form-select">
+                                        <option value="Auxiliar de enfermeria">Auxiliar</option>
+                                        <option value="Medico">Medico</option>
+                                        <option value="Enfermero">Enfermero</option>
+                                        <option value="Psicologo">Psicologo</option>
+                                        <option value="Tsocial">Trabajador social</option>
+                                        <option value="Fact">Facturador</option>
+                                        <option value="admin">--Administrador--</option>
+                                    </select>
+                                </div>
+                                <div class="col col-12 mb-3">
+                                    <label for="editNombre">Nombre Completo</label>
+                                    <input type="text" id="editNombre" v-model="editNombre" class="form-control" required />
+                                </div>
+                                <div class="col col-12 mb-3">
+                                    <label for="editEmail">Email</label>
+                                    <input type="email" id="editEmail" v-model="editEmail" class="form-control" required />
+                                </div>
+                                <div class="col col-12 col-md-6 mb-3">
+                                    <label for="editNumDocumento">Número de Documento</label>
+                                    <input type="text" id="editNumDocumento" v-model="editNumDocumento" class="form-control" required />
+                                </div>
+                                <div class="col col-12 col-md-6 mb-3" v-if="
                                         editCargo === 'Auxiliar de enfermeria' ||
                                         editCargo === 'Enfermero' ||
                                         editCargo === 'Medico' ||
                                         editCargo === 'Psicologo' ||
                                         editCargo === 'Tsocial'
                                     ">
-                                        <label for="editGrupo"># Grupo</label>
-                                        <input type="text" id="editGrupo" v-model="editGrupo" class="form-control"
-                                            placeholder="Ej: 1, 2, F" />
-                                    </div>
+                                    <label for="editGrupo"># Grupo</label>
+                                    <input type="text" id="editGrupo" v-model="editGrupo" class="form-control" placeholder="Ej: 1, 2, F" />
                                 </div>
-                                <div class="alert alert-info mt-3">
-                                    <small><strong>Nota:</strong> Si cambia el email, se enviará un nuevo enlace para
-                                        establecer contraseña. De lo contrario, solo se actualizarán los datos.</small>
-                                </div>
-                                <button type="submit" :disabled="loading" class="btn btn-primary">
-                                    {{ loading ? "Guardando..." : "Guardar Cambios" }}
-                                </button>
-                                <button type="button" @click="cerrarModalEdicion" class="btn btn-secondary ms-2">
-                                    Cancelar
-                                </button>
-                            </form>
-                        </div>
+                            </div>
+                            <div class="alert alert-info mt-3">
+                                <small><strong>Nota:</strong> Si cambia el email, se enviará un nuevo enlace para
+                                    establecer contraseña. De lo contrario, solo se actualizarán los datos.</small>
+                            </div>
+                            <button type="submit" :disabled="loading" class="btn btn-primary">
+                                {{ loading ? "Guardando..." : "Guardar Cambios" }}
+                            </button>
+                            <button type="button" @click="cerrarModalEdicion" class="btn btn-secondary ms-2">
+                                Cancelar
+                            </button>
+                        </form>
                     </div>
                 </div>
+            </div>
 
-                <div class="tab-pane fade" id="nav-profile" role="tabpanel" aria-labelledby="nav-profile-tab"
-                    tabindex="0">
-                    <h1>Crear Nuevo Usuario (por Administrador)</h1>
-                    <form @submit.prevent="createUserByAdmin">
-                        <div class="row">
-                            <div class="col col-12 col-md-4 mb-3">
-                                <label for="convenio">IPS / Programa</label>
-                                <select id="convenio" v-model="convenio" class="form-select" required>
-                                    <option value="">Seleccione una opción</option>
-                                    <option value="Extramural">Extramural</option>
-                                    <option value="E Basicos">E Basicos</option>
-                                </select>
+            <div class="tab-pane fade" id="nav-profile" role="tabpanel" aria-labelledby="nav-profile-tab" tabindex="0">
+                <h1 class="display-6">Crear Usuario </h1>
+                <form @submit.prevent="createUserByAdmin">
+                    <div class="row">
+                        <div class="col col-12 col-md-4 mb-3">
+                            <label for="convenio">IPS / Programa</label>
+                            <select id="convenio" v-model="convenio" class="form-select" required>
+                                <option value="">Seleccione una opción</option>
+                                <option value="Extramural">Extramural</option>
+                                <option value="E Basicos">E Basicos</option>
+                            </select>
+                        </div>
+                        <div class="col col-12 col-md-4 mb-3">
+                            <label for="ips">Cargo</label>
+                            <select id="rol" v-model="cargo" class="form-select" required>
+                                <option value="Auxiliar de enfermeria">Auxiliar</option>
+                                <option value="Enfermero">Enfermero</option>
+                                <option value="Medico">Medico</option>
+                                <option value="Fact">Facturador</option>
+                                <option value="admin">Administrador</option>
+                                <option value="Psicologo">Psicologo</option>
+                                <option value="Nutricionista">Nutricionista</option>
+                                <option value="Tsocial">Trabajador social</option>
+                            </select>
+                        </div>
+                        <div class="col col-12 col-md-4 mb-3">
+                            <label for="numDocumento">Número de Documento:</label>
+                            <div class="input-group">
+                                <input type="text" id="numDocumento" v-model="numDocumento" 
+                                    @blur="verificarDocumento" 
+                                    class="form-control" 
+                                    :class="{'is-valid': documentoValido === true, 'is-invalid': documentoValido === false}"
+                                    required />
+                                <span class="input-group-text" v-if="verificandoDocumento">
+                                    <span class="spinner-border spinner-border-sm" role="status"></span>
+                                </span>
+                                <span class="input-group-text" v-else-if="documentoValido === true">
+                                    <i class="bi bi-check-circle-fill text-success"></i>
+                                </span>
+                                <span class="input-group-text" v-else-if="documentoValido === false">
+                                    <i class="bi bi-x-circle-fill text-danger"></i>
+                                </span>
                             </div>
-                            <div class="col col-12 col-md-4 mb-3">
-                                <label for="ips">Cargo</label>
-                                <select id="rol" v-model="cargo" class="form-select" required>
-                                    <option value="Auxiliar de enfermeria">Auxiliar</option>
-                                    <option value="Enfermero">Enfermero</option>
-                                    <option value="Medico">Medico</option>
-                                    <option value="Fact">Facturador</option>
-                                    <option value="admin">Administrador</option>
-                                    <option value="Psicologo">Psicologo</option>
-                                    <option value="Nutricionista">Nutricionista</option>
-                                    <option value="Tsocial">Trabajador social</option>
-                                </select>
+                            <div class="valid-feedback" v-if="documentoValido === true">
+                                Documento disponible
                             </div>
-                            <div class="col col-12 col-md-4">
-                                <label for="email">Email del Usuario:</label>
-                                <input type="email" id="email" v-model="userEmail" required />
+                            <div class="invalid-feedback" v-if="documentoValido === false">
+                                Este documento ya está registrado
                             </div>
-                            <div class="col col-12 col-md-4">
-                                <label for="nombre">Nombre Completo:</label>
-                                <input type="text" id="nombre" v-model="nombre" required />
+                        </div>
+                        <div class="col col-12 col-md-4 mb-3">
+                            <label for="email">Email del Usuario:</label>
+                            <div class="input-group">
+                                <input type="email" id="email" v-model="userEmail" 
+                                    @blur="verificarEmail" 
+                                    class="form-control" 
+                                    :class="{'is-valid': emailValido === true, 'is-invalid': emailValido === false}"
+                                    required />
+                                <span class="input-group-text" v-if="verificandoEmail">
+                                    <span class="spinner-border spinner-border-sm" role="status"></span>
+                                </span>
+                                <span class="input-group-text" v-else-if="emailValido === true">
+                                    <i class="bi bi-check-circle-fill text-success"></i>
+                                </span>
+                                <span class="input-group-text" v-else-if="emailValido === false">
+                                    <i class="bi bi-x-circle-fill text-danger"></i>
+                                </span>
                             </div>
-                            <div class="col col-12 col-md-4">
-                                <label for="numDocumento">Número de Documento:</label>
-                                <input type="text" id="numDocumento" v-model="numDocumento" required />
+                            <div class="valid-feedback" v-if="emailValido === true">
+                                Email disponible
                             </div>
-                            <div class="col col-12 col-md-4 mb-3" v-if="
+                            <div class="invalid-feedback" v-if="emailValido === false">
+                                Este email ya está registrado
+                            </div>
+                        </div>
+                        <div class="col col-12 col-md-4">
+                            <label for="nombre">Nombre Completo:</label>
+                            <input type="text" id="nombre" v-model="nombre" required />
+                        </div>
+
+                        <div class="col col-12 col-md-4 mb-3" v-if="
                                 cargo === 'Auxiliar de enfermeria' ||
                                 cargo === 'Enfermero' ||
                                 cargo === 'Medico' ||
@@ -258,27 +279,28 @@
                                 cargo === 'Nutricionista' ||
                                 cargo === 'Tsocial'
                             ">
-                                <label for="grupo"># Grupo</label>
-                                <input type="text" id="grupo" v-model="grupo" placeholder="Ej: 1, 2, F" />
-                            </div>
+                            <label for="grupo"># Grupo</label>
+                            <input type="text" id="grupo" v-model="grupo" placeholder="Ej: 1, 2, F" required />
                         </div>
+                    </div>
 
-                        <button type="submit" :disabled="loading" class="btn btn-warning">
-                            {{ loading ? "Creando..." : "Crear Usuario y Enviar Enlace de Contraseña" }}
-                        </button>
-                    </form>
-                </div>
-                <div class="tab-pane fade" id="nav-contact" role="tabpanel" aria-labelledby="nav-contact-tab"
-                    tabindex="0">
-                    ...
-                </div>
-                <div class="tab-pane fade" id="nav-disabled" role="tabpanel" aria-labelledby="nav-disabled-tab"
-                    tabindex="0">
-                    ...
-                </div>
+                    <button type="submit" :disabled="loading || !formularioValido" class="btn btn-warning">
+                        {{ loading ? "Creando..." : "Crear Usuario y Enviar Enlace de Contraseña" }}
+                    </button>
+                    <small class="text-muted ms-2" v-if="!formularioValido">
+                        * Completa todos los campos requeridos y verifica que documento y email sean válidos
+                    </small>
+                </form>
+            </div>
+            <div class="tab-pane fade" id="nav-contact" role="tabpanel" aria-labelledby="nav-contact-tab" tabindex="0">
+                ...
+            </div>
+            <div class="tab-pane fade" id="nav-disabled" role="tabpanel" aria-labelledby="nav-disabled-tab" tabindex="0">
+                ...
             </div>
         </div>
     </div>
+</div>
 </template>
 
 <script>
@@ -331,6 +353,14 @@ export default {
             users: [],
             ips: 1,
             convenioSeleccionado: "",
+            
+            /* Validación documento */
+            verificandoDocumento: false,
+            documentoValido: null,
+            
+            /* Validación email */
+            verificandoEmail: false,
+            emailValido: null,
         };
     },
     computed: {
@@ -413,7 +443,24 @@ export default {
                 return todosLosConvenios;
             }
 
-            return { [this.convenioSeleccionado]: todosLosConvenios[this.convenioSeleccionado] };
+            return {
+                [this.convenioSeleccionado]: todosLosConvenios[this.convenioSeleccionado]
+            };
+        },
+
+        formularioValido() {
+            // Verificar campos obligatorios básicos
+            const camposBasicos = this.convenio && 
+                                  this.cargo && 
+                                  this.numDocumento && 
+                                  this.userEmail && 
+                                  this.nombre;
+            
+            // Verificar validaciones de documento y email
+            const validaciones = this.documentoValido === true && 
+                                this.emailValido === true;
+            
+            return camposBasicos && validaciones;
         }
     },
     watch: {
@@ -435,6 +482,54 @@ export default {
         }
     },
     methods: {
+        async verificarDocumento() {
+            if (!this.numDocumento || this.numDocumento.trim() === '') {
+                this.documentoValido = null;
+                return;
+            }
+
+            this.verificandoDocumento = true;
+            this.documentoValido = null;
+
+            try {
+                const querySnapshot = await getDocs(collection(db, "users"));
+                const existe = querySnapshot.docs.some(doc => 
+                    doc.data().numDocumento === this.numDocumento.trim()
+                );
+
+                this.documentoValido = !existe;
+            } catch (error) {
+                console.error("Error al verificar documento:", error);
+                this.documentoValido = null;
+            } finally {
+                this.verificandoDocumento = false;
+            }
+        },
+
+        async verificarEmail() {
+            if (!this.userEmail || this.userEmail.trim() === '') {
+                this.emailValido = null;
+                return;
+            }
+
+            this.verificandoEmail = true;
+            this.emailValido = null;
+
+            try {
+                const querySnapshot = await getDocs(collection(db, "users"));
+                const existe = querySnapshot.docs.some(doc => 
+                    doc.data().email === this.userEmail.trim().toLowerCase()
+                );
+
+                this.emailValido = !existe;
+            } catch (error) {
+                console.error("Error al verificar email:", error);
+                this.emailValido = null;
+            } finally {
+                this.verificandoEmail = false;
+            }
+        },
+
         sanitizeId(str) {
             // Reemplaza espacios y caracteres especiales con guiones para crear IDs válidos
             return str.replace(/\s+/g, '-').replace(/[^a-zA-Z0-9-]/g, '').toLowerCase();
@@ -619,7 +714,9 @@ Esta acción eliminará el usuario de la base de datos.`)) {
                     convenio: this.editConvenio,
                     ips: this.ips,
                     updatedAt: new Date()
-                }, { merge: true });
+                }, {
+                    merge: true
+                });
 
                 if (cambioEmail) {
                     this.message = `Usuario actualizado exitosamente. Se ha enviado un nuevo enlace para establecer contraseña al nuevo email.`;
@@ -1797,5 +1894,24 @@ Esta acción eliminará el usuario de la base de datos.`)) {
 
 .bg-teal {
     background-color: #20c997 !important;
+}
+
+/* Estilos para validación de documento */
+.input-group-text {
+    background-color: transparent;
+    border-left: none;
+}
+
+.form-control.is-valid {
+    border-color: #198754;
+}
+
+.form-control.is-invalid {
+    border-color: #dc3545;
+}
+
+.valid-feedback,
+.invalid-feedback {
+    display: block;
 }
 </style>
