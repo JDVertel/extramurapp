@@ -103,6 +103,13 @@ const routes = [
     meta: { requiresAuth: true },
   },
   {
+    path: "/consulta_pacientes",
+    name: "consulta_pacientes",
+    component: () =>
+      import("../views/consulta_pacientes.vue"),
+    meta: { requiresAuth: true },
+  },
+  {
     path: "/aux_informes",
     name: "aux_informes",
     component: () => import("../views/aux_informes.vue"),

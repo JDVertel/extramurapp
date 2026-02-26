@@ -16,10 +16,6 @@
           role="tab" aria-controls="nav-contact" aria-selected="false">
           CUPS
         </button>
-        <button class="nav-link" id="nav-pacientes-tab" data-bs-toggle="tab" data-bs-target="#nav-pacientes"
-          type="button" role="tab" aria-controls="nav-pacientes" aria-selected="false">
-          PACIENTES
-        </button>
         <button class="nav-link" id="nav-contratos-tab" data-bs-toggle="tab" data-bs-target="#nav-contratos"
           type="button" role="tab" aria-controls="nav-contratos" aria-selected="false">
           CONTRATOS
@@ -260,174 +256,6 @@
               </tr>
             </tbody>
           </table>
-        </div>
-      </div>
-
-      <!-- ========== TAB: PACIENTES ========== -->
-      <div class="tab-pane fade" id="nav-pacientes" role="tabpanel" aria-labelledby="nav-pacientes-tab" tabindex="0">
-        <h5>Gestion de Pacientes</h5>
-        <hr />
-        <div class="row">
-          <div class="col-6 col-md-3 mb-3">
-            <label for="tipodoc" class="form-label">Tipo de Documento</label>
-            <select id="tipodoc" v-model="tipodoc" class="form-select" required>
-              <option value="">Seleccione</option>
-              <option value="RC">Registro Civil</option>
-              <option value="TI">Tarjeta de Identidad</option>
-              <option value="CC">Cédula de Ciudadanía</option>
-              <option value="CE">Cédula de Extranjería</option>
-              <option value="NV">Certificado nacido vivo</option>
-              <option value="PA">Pasaporte</option>
-              <option value="PE">Permiso Especial de Permanencia</option>
-              <option value="MS">Menos sin identificacion</option>
-              <option value="AS">Adulto sin identificacion</option>
-              <option value="PT">Permiso por proteccion temporal</option>
-            </select>
-          </div>
-          <div class="col-6 col-md-3 mb-3">
-            <label for="numdoc" class="form-label">Número de Documento</label>
-            <input type="text" id="numdoc" v-model="numdoc" class="form-control" required />
-          </div>
-          <div class="col-6 col-md-2">
-            <button class="btn btn-sm btn-primary mt-4" :disabled="cargandoPacientes" @click="consultarP">
-              <i class="bi bi-search"></i> Consultar
-            </button>
-          </div>
-        </div>
-        <!-- Spinner de consulta -->
-        <div class="mt-2">
-          <div v-if="cargandoPacientes" class="d-flex align-items-center">
-            <div class="spinner-border text-primary me-2" role="status">
-              <span class="visually-hidden">Consultando...</span>
-            </div>
-            <div>Consultando...</div>
-          </div>
-        </div>
-        <div class="container-fluid">
-          <div v-if="
-            !cargandoPacientes &&
-            searchPerformed &&
-            (!datosPaciente || datosPaciente.length === 0)
-          " class="alert alert-warning">
-            No hay registros para esa consulta.
-          </div>
-          <div v-if="datosPaciente && datosPaciente.length > 0" style="overflow-x: auto; width: 100%">
-            <table class="table table-bordered table-sm" style="min-width: 900px">
-              <thead>
-                <tr>
-                  <th>Campo</th>
-                  <th v-for="paciente in datosPaciente" :key="paciente.id" class="text-center">
-                    <div>
-                      {{ paciente.nombre1 }} {{ paciente.apellido1 }}
-                      {{ paciente.apellido2 }}
-                    </div>
-                    <div>
-                      <small>{{ paciente.tipodoc }}-{{ paciente.numdoc }}</small>
-                    </div>
-                    <div class="btn-group mt-2" role="group">
-                      <!-- <button class="btn btn-warning btn-sm" type="button" @click.stop="editarP(paciente.id)"><i class="bi bi-pencil-square"></i></button> -->
-                      <button class="btn btn-sm btn-danger" type="button" @click.stop="eliminarPaciente(paciente.id)">
-                        <i class="bi bi-trash"></i>
-                      </button>
-                    </div>
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <th>EPS</th>
-                  <td v-for="paciente in datosPaciente" :key="'eps-' + paciente.id">
-                    <div class="cell-content">{{ paciente.eps }}</div>
-                  </td>
-                </tr>
-                <tr>
-                  <th>Fecha Nac.</th>
-                  <td v-for="paciente in datosPaciente" :key="'fnac-' + paciente.id">
-                    <div class="cell-content">{{ paciente.fechaNac }}</div>
-                  </td>
-                </tr>
-                <tr>
-                  <th>Sexo</th>
-                  <td v-for="paciente in datosPaciente" :key="'sexo-' + paciente.id">
-                    <div class="cell-content">{{ paciente.sexo }}</div>
-                  </td>
-                </tr>
-                <tr>
-                  <th>Dirección</th>
-                  <td v-for="paciente in datosPaciente" :key="'dir-' + paciente.id">
-                    <div class="cell-content">{{ paciente.direccion }}</div>
-                  </td>
-                </tr>
-                <tr>
-                  <th>Comuna</th>
-                  <td v-for="paciente in datosPaciente" :key="'comuna-' + paciente.id">
-                    <div class="cell-content">
-                      {{ paciente.barrioVeredacomuna?.comuna }}
-                    </div>
-                  </td>
-                </tr>
-                <tr>
-                  <th>Barrio</th>
-                  <td v-for="paciente in datosPaciente" :key="'barrio-' + paciente.id">
-                    <div class="cell-content">
-                      {{ paciente.barrioVeredacomuna?.barrio }}
-                    </div>
-                  </td>
-                </tr>
-                <tr v-for="item in activityKeys" :key="'act-' + item.key">
-                  <th>{{ item.actividad.nombre }}</th>
-                  <td v-for="paciente in datosPaciente" :key="'actcell-' + paciente.id + '-' + item.key">
-                    <div class="cell-content">
-                      <div v-if="
-                        paciente.tipoActividad &&
-                        paciente.tipoActividad[item.key]
-                      ">
-                        <div>
-                          <strong>Profesionales:</strong>
-                          <span v-for="(prof, pidx) in paciente.tipoActividad[
-                            item.key
-                          ].Profesional || []" :key="prof">
-                            {{ prof
-                            }}<span v-if="
-                              pidx <
-                              (
-                                paciente.tipoActividad[item.key]
-                                  .Profesional || []
-                              ).length -
-                              1
-                            ">,
-                            </span>
-                          </span>
-                        </div>
-                        <div v-if="paciente.tipoActividad[item.key].cups">
-                          <div v-for="(cupsObj, profKey) in paciente.tipoActividad[
-                            item.key
-                          ].cups" :key="profKey">
-                            <strong>{{ profKey }}:</strong>
-                            <ul class="mb-0">
-                              <li v-for="cup in Object.values(cupsObj.cups || {})" :key="cup.id">
-                                <span><strong>{{
-                                  cup.DescripcionCUP
-                                    }}</strong></span><br />
-                                EPS:
-                                <span v-for="(eps, eidx) in cup.Eps || []" :key="eps">{{ eps
-                                }}<span v-if="eidx < (cup.Eps || []).length - 1">,
-                                  </span></span><br />
-                                Grupo: {{ cup.Grupo }}<br />
-                                Homolog: {{ cup.Homolog }}<br />
-                                Cantidad: {{ cup.cantidad }}<br />
-                                Detalle: {{ cup.detalle }}
-                              </li>
-                            </ul>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
         </div>
       </div>
 
@@ -692,27 +520,11 @@ export default {
       Scups: [], // Array para selección múltiple de CUPS
       Sactividad: "", // Nueva variable para actividad seleccionada
       contratosTemp: [], // Array temporal para CUPS antes de guardar
-
-      // ===== PACIENTES =====
-      cargandoPacientes: false,
-      searchPerformed: false,
-      tipodoc: "",
-      numdoc: "",
       sinEspecificar: "Sin especificar",
     };
   },
   computed: {
-    ...mapState(["comunasBarrios", "epss", "cups", "datosPaciente", "contratos", "actividadesExtra"]),
-    activityKeys() {
-      if (!this.datosPaciente || !this.datosPaciente.length) return [];
-      const first = this.datosPaciente[0];
-      if (!first.tipoActividad || typeof first.tipoActividad !== "object")
-        return [];
-      return Object.entries(first.tipoActividad).map(([key, actividad]) => ({
-        key,
-        actividad,
-      }));
-    },
+    ...mapState(["comunasBarrios", "epss", "cups", "contratos", "actividadesExtra", "userData"]),
     // Filtrar contratos por EPS seleccionada
     contratosFiltrados() {
       if (!this.Seps) {
@@ -799,8 +611,6 @@ export default {
       "getAllEps",
       "deleteEps",
       "getAllCups",
-      "getAllByPacientesID",
-      "deletePaciente",
       "crearCups",
       "editarCups",
       "eliminarCups",
@@ -1384,84 +1194,10 @@ export default {
       }
     },
 
-    // ===== PACIENTES =====
-    async consultarP() {
-      if (this.tipodoc === "" || this.numdoc === "") {
-        alert("Por favor, complete todos los campos.");
-        return;
-      }
-      this.cargandoPacientes = true;
-      this.searchPerformed = true;
-      try {
-        await this.getAllByPacientesID({
-          tipodoc: this.tipodoc,
-          numdoc: this.numdoc,
-        });
-      } catch (error) {
-        console.error("[consultarP] Error:", error);
-        alert("Error al consultar pacientes: " + (error?.message || error));
-      } finally {
-        this.cargandoPacientes = false;
-      }
-    },
-
-    async editarP(pacienteId) {
-      try {
-        if (!pacienteId) return;
-        this.$router.push({
-          name: "registrousuarios",
-          query: { editPacienteId: pacienteId },
-        });
-      } catch (error) {
-        console.error("[editarP] Error al navegar:", error);
-      }
-    },
-
-    async eliminarPaciente(pacienteId) {
-      if (!pacienteId) return;
-
-      const mensaje = `⚠️ ATENCIÓN: Esta acción eliminará:
-      
-1. El paciente del sistema
-2. Todos sus registros de encuestas
-3. Todas sus actividades asociadas
-4. Todas las asignaciones de esas actividades
-
-¿Está seguro de que desea continuar? Esta acción NO se puede deshacer.`;
-
-      const confirmed = confirm(mensaje);
-      if (!confirmed) return;
-
-      try {
-        // Confirmación adicional para mayor seguridad
-        const confirmacionFinal = confirm("Esta es su última oportunidad para cancelar. ¿Desea eliminar este paciente y TODOS sus datos asociados?");
-        if (!confirmacionFinal) return;
-
-        // 1. Eliminar el paciente de la tabla encuestas
-        await this.deletePaciente(pacienteId);
-
-        // 2. Eliminar actividades del paciente
-        if (this.$store._actions.deleteActividadesByPacienteId) {
-          await this.$store.dispatch('deleteActividadesByPacienteId', pacienteId);
-        }
-
-        // 3. Eliminar asignaciones asociadas del paciente
-        if (this.$store._actions.deleteAsignacionesByPacienteId) {
-          await this.$store.dispatch('deleteAsignacionesByPacienteId', pacienteId);
-        }
-
-        alert("✓ Paciente y todos sus datos asociados han sido eliminados correctamente.");
-
-        // Recargar la consulta
-        if (this.tipodoc && this.numdoc) {
-          await this.consultarP();
-        } else {
-          this.$store.commit("setDatosPaciente", []);
-        }
-      } catch (error) {
-        console.error("[eliminarPaciente] Error:", error);
-        alert("Error al eliminar paciente: " + (error?.message || error));
-      }
+    getCupsInfo(cupsId) {
+      // Buscar información del CUPS en el estado
+      const cup = this.cups?.find(c => c.id === cupsId || c.codigo === cupsId);
+      return cup || { codigo: cupsId, DescripcionCUP: 'CUPS no encontrado' };
     },
 
     getColorClassByProfesional(profesional) {

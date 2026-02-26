@@ -135,8 +135,13 @@ export default {
       try {
         const asignaciones = await this.getAsignacionesByEncuesta(idEncuesta);
 
-        if (asignaciones && Object.keys(asignaciones).length > 0) {
-          alert('⚠️ No se puede eliminar el registro\n\nEste registro tiene asignaciones activas. Debe eliminar primero todas las asignaciones antes de eliminar el registro principal.');
+        // Validar específicamente si hay CUPS (no solo propiedades del objeto)
+        const hayCups = asignaciones && asignaciones.cups && 
+          ((Array.isArray(asignaciones.cups) && asignaciones.cups.length > 0) ||
+           (typeof asignaciones.cups === 'object' && Object.keys(asignaciones.cups).length > 0));
+
+        if (hayCups) {
+          alert('⚠️ No se puede eliminar el registro\n\nEste registro tiene CUPS asignados. Debe eliminar primero todos los CUPS antes de eliminar el registro principal.');
           return;
         }
 

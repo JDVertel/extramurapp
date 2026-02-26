@@ -44,7 +44,7 @@
                   <i class="bi bi-person-circle"></i> Auxiliar
                 </router-link>
               </li>
-              <li class="nav-item" v-if="userData && userData.cargo === 'Auxiliar de enfermeria'">
+              <li class="nav-item" v-if="userData && userData.cargo === 'Auxiliar de enfermeria' && userData.convenio !== 'E Basicos'">
                 <router-link class="nav-link" to="/sop_agendas" @click="onNavLinkClick">
                   <i class="bi bi-calendar2-date"></i> Agendas
                 </router-link>
@@ -88,6 +88,12 @@
               <li class="nav-item" v-if="userData && userData.cargo === 'Enfermero'">
                 <router-link class="nav-link" to="/enfermero_informes" @click="onNavLinkClick">
                   <i class="bi bi-bar-chart-fill"></i> Informes
+                </router-link>
+              </li>
+
+              <li class="nav-item">
+                <router-link class="nav-link" to="/consulta_pacientes" @click="onNavLinkClick">
+                  <i class="bi bi-search"></i> Pacientes
                 </router-link>
               </li>
 
@@ -151,7 +157,7 @@
                 color: #333;
                 opacity: 0.7;
               ">
-              <p style="margin: 0; padding: 0;">Version 2.0 - 15/02/2026</p>
+              <p style="margin: 0; padding: 0;">Version 2.1 - 26/02/2026</p>
             </div>
           </div>
         </div>

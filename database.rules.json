@@ -1,0 +1,71 @@
+{
+  "rules": {
+    ".read": "auth != null",
+    ".write": "auth != null",
+    
+    "Asignaciones": {
+      ".read": true,
+      ".write": true,
+      "$idEncuesta": {
+        ".indexOn": ["key", "nombreProf", "convenio", "idEncuesta"],
+        "cups": {
+          ".indexOn": ["actividadId", "cupsId", "key", "rol"]
+        }
+      }
+    },
+    
+    "Encuesta": {
+      ".read": true,
+      ".write": true,
+      ".indexOn": [
+        "idEncuestador",
+        "idMedicoAtiende", 
+        "idProfesionalAtiende",
+        "status_visita",
+        "status_gest_aux",
+        "status_gest_medica",
+        "fechavisita",
+        "eps",
+        "convenio"
+      ]
+    },
+    
+    "Actividades": {
+      ".read": true,
+      ".write": true,
+      "$idEncuesta": {
+        ".indexOn": ["tipoActividad"]
+      }
+    },
+    
+    "CUPS": {
+      ".read": true,
+      ".write": true,
+      ".indexOn": ["id", "codigo", "DescripcionCUP"]
+    },
+    
+    "Contratos": {
+      ".read": true,
+      ".write": true,
+      ".indexOn": ["epsId", "eps", "profesional", "actividadId"]
+    },
+    
+    "EPS": {
+      ".read": true,
+      ".write": true,
+      ".indexOn": ["id", "eps"]
+    },
+    
+    "Usuario": {
+      ".read": true,
+      ".write": true,
+      ".indexOn": ["cargo", "convenio", "nombre"]
+    },
+    
+    "ActividadesExtra": {
+      ".read": true,
+      ".write": true,
+      ".indexOn": ["key", "nombre", "Profesional"]
+    }
+  }
+}

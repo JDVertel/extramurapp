@@ -822,32 +822,72 @@ export default createStore({
     // ====================================================================
 
     /**
-     * Obtiene datos de paciente por número de documento
+     * Obtiene datos de paciente por tipodoc y numdoc
+     * Busca el paciente en Encuesta y luego carga datos relacionados
      */
-    getAllByPacientesID: async ({ commit }, { numdoc }) => {
-      console.log("datos que entran - numdoc:", numdoc);
+    getAllByPacientesID: async ({ commit }, { tipodoc, numdoc }) => {
       try {
+        // Obtener todas las encuestas (contienen datos básicos del paciente)
         const { data } = await firebase_api.get("/Encuesta.json");
 
-        // Si no hay datos, retornar array vacío
         if (!data || data === null) {
-          console.log("No hay encuestas registradas");
+          commit("setDatosPaciente", []);
           return [];
         }
 
-        const consultaUsuarios = Object.entries(data).map(([key, value]) => ({
-          id: key,
-          ...value,
-        }));
+        // Convertir a array con IDs y buscar por tipodoc y numdoc
+        const pacientesEncontrados = [];
+        
+        for (const [encuestaId, encuesta] of Object.entries(data)) {
+          if (encuesta.tipodoc === tipodoc && encuesta.numdoc === numdoc) {
+            pacientesEncontrados.push({
+              id: encuestaId,
+              ...encuesta,
+            });
+          }
+        }
 
-        const datospaciente = consultaUsuarios.filter(
-          (encuesta) => encuesta.numdoc === numdoc
+        if (pacientesEncontrados.length === 0) {
+          commit("setDatosPaciente", []);
+          return [];
+        }
+
+        // Para cada paciente encontrado, cargar datos relacionados
+        const pacientesConDatos = await Promise.all(
+          pacientesEncontrados.map(async (paciente) => {
+            const encuestaId = paciente.id; // ID de Firebase usado como parámetro
+
+            try {
+              // Obtener caracterización buscando por idEncuesta
+              const caracResp = await firebase_api.get(`/caracterizacion.json`);
+              let caracterizacion = {};
+              if (caracResp.data) {
+                const caracterizacionEncontrada = Object.values(caracResp.data).find(
+                  (carac) => carac.idEncuesta === encuestaId
+                );
+                caracterizacion = caracterizacionEncontrada || {};
+              }
+
+              // Obtener asignaciones usando encuestaId
+              const asignResp = await firebase_api.get(`/Asignaciones/${encuestaId}.json`);
+              const asignaciones = asignResp.data || {};
+              
+              // Crear un nuevo objeto con todas las propiedades para garantizar reactividad
+              const pacienteCompleto = {
+                ...paciente,
+                caracterizacion,
+                asignaciones
+              };
+              return pacienteCompleto;
+            } catch (err) {
+              return paciente;
+            }
+          })
         );
 
-        commit("setDatosPaciente", datospaciente);
-        return datospaciente;
+        commit("setDatosPaciente", pacientesConDatos);
+        return pacientesConDatos;
       } catch (error) {
-        console.error("Error en getAllByPacientesID:", error);
         throw error;
       }
     },
@@ -858,6 +898,7 @@ export default createStore({
     getAllByPacientesIDEB: async ({ commit }, { tipodoc, numdoc, convenio }) => {
       console.log("datos que entran EB - tipodoc, numdoc, convenio:", tipodoc, numdoc, convenio);
       try {
+        // Obtener todas las encuestas
         const { data } = await firebase_api.get("/Encuesta.json");
 
         if (!data || data === null) {
@@ -865,22 +906,25 @@ export default createStore({
           return [];
         }
 
-        const consultaUsuarios = Object.entries(data).map(([key, value]) => ({
-          id: key,
-          ...value,
-        }));
-
         const tipodocNormalizado = String(tipodoc ?? "").trim();
         const numdocNormalizado = String(numdoc ?? "").trim();
         const convenioNormalizado = String(convenio ?? "").trim();
 
-        const datospaciente = consultaUsuarios.filter((encuesta) => {
-          return (
+        // Buscar en las encuestas por tipodoc, numdoc y convenio
+        const datospaciente = [];
+        
+        for (const [encuestaId, encuesta] of Object.entries(data)) {
+          if (
             String(encuesta?.tipodoc ?? "").trim() === tipodocNormalizado &&
             String(encuesta?.numdoc ?? "").trim() === numdocNormalizado &&
             String(encuesta?.convenio ?? "").trim() === convenioNormalizado
-          );
-        });
+          ) {
+            datospaciente.push({
+              id: encuestaId,
+              ...encuesta,
+            });
+          }
+        }
 
         commit("setDatosPaciente", datospaciente);
         return datospaciente;
