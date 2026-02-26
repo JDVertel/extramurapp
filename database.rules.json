@@ -66,6 +66,12 @@
       ".read": true,
       ".write": true,
       ".indexOn": ["key", "nombre", "Profesional"]
+    },
+    
+    "agendas": {
+      ".read": true,
+      ".write": true,
+      ".indexOn": ["fecha", "grupo"]
     }
   }
 }

@@ -1203,16 +1203,16 @@ export default createStore({
     getListAgendas: async ({ commit }, fecha) => {
       console.log("consultando agendas desde:", fecha);
       try {
-        const fechaQuery = `"${fecha}"`;
-        const url = `/agendas.json?orderBy="fecha"&startAt=${fechaQuery}`;
-
-        const { data } = await firebase_api.get(url);
+        // Obtener todas las agendas y filtrar en el cliente
+        const { data } = await firebase_api.get("/agendas.json");
 
         const agendas = data
-          ? Object.entries(data).map(([key, value]) => ({
-            id: key,
-            ...value,
-          }))
+          ? Object.entries(data)
+              .map(([key, value]) => ({
+                id: key,
+                ...value,
+              }))
+              .filter((agenda) => agenda.fecha === fecha)
           : [];
 
         commit("setAgendas", agendas);
