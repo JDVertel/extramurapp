@@ -2,7 +2,7 @@
   <div class="container-fluid mt-5 pt-3">
     <h3 class="mb-4"><i class="bi bi-search"></i> Consulta de Pacientes</h3>
     <hr />
-    
+
     <!-- FORMULARIO DE BÚSQUEDA -->
     <div class="row">
       <div class="col-6 col-md-3 mb-3">
@@ -57,55 +57,113 @@
           <div class="card-header bg-primary text-white">
             <div class="d-flex justify-content-between align-items-center">
               <div>
-                <strong>{{ paciente.nombre1 }} {{ paciente.nombre2 }} {{ paciente.apellido1 }} {{ paciente.apellido2 }}</strong>
+                <strong>{{ paciente.nombre1 }} {{ paciente.nombre2 }} {{ paciente.apellido1 }} {{ paciente.apellido2
+                }}</strong>
                 <span class="badge bg-light text-dark ms-2">{{ paciente.tipodoc }}-{{ paciente.numdoc }}</span>
                 <span class="badge bg-light text-dark ms-2">{{ paciente.eps }}</span>
               </div>
-              <!-- Botón de eliminar solo visible para administradores -->
-              <button v-if="esAdministrador" class="btn btn-sm btn-danger" type="button" @click="eliminarPaciente(paciente.id)">
-                <i class="bi bi-trash"></i> Eliminar
-              </button>
+              <div class="d-flex gap-2">
+                <button class="btn btn-sm btn-warning" type="button" @click="iniciarEdicionEncuesta(paciente)">
+                  <i class="bi bi-pencil-square"></i> Editar encuesta
+                </button>
+                <button v-if="esAdministrador" class="btn btn-sm btn-danger" type="button"
+                  @click="eliminarPaciente(paciente.id)">
+                  <i class="bi bi-trash"></i> Eliminar
+                </button>
+              </div>
             </div>
           </div>
           <div class="card-body">
+            <div v-if="pacienteEditandoId === paciente.id" class="alert alert-light border mb-3">
+              <h6 class="mb-3"><i class="bi bi-pencil"></i> Editar datos de la encuesta</h6>
+              <div class="row g-2">
+                <div class="col-6 col-md-3">
+                  <label class="form-label">Primer Nombre</label>
+                  <input v-model="encuestaEdit.nombre1" class="form-control form-control-sm" type="text" />
+                </div>
+                <div class="col-6 col-md-3">
+                  <label class="form-label">Segundo Nombre</label>
+                  <input v-model="encuestaEdit.nombre2" class="form-control form-control-sm" type="text" />
+                </div>
+                <div class="col-6 col-md-3">
+                  <label class="form-label">Primer Apellido</label>
+                  <input v-model="encuestaEdit.apellido1" class="form-control form-control-sm" type="text" />
+                </div>
+                <div class="col-6 col-md-3">
+                  <label class="form-label">Segundo Apellido</label>
+                  <input v-model="encuestaEdit.apellido2" class="form-control form-control-sm" type="text" />
+                </div>
+                <div class="col-6 col-md-3">
+                  <label class="form-label">Fecha Nacimiento</label>
+                  <input v-model="encuestaEdit.fechaNac" class="form-control form-control-sm" type="date" />
+                </div>
+                <div class="col-6 col-md-3">
+                  <label class="form-label">Sexo</label>
+                  <select v-model="encuestaEdit.sexo" class="form-select form-select-sm">
+                    <option value="">Seleccione</option>
+                    <option value="M">Masculino</option>
+                    <option value="F">Femenino</option>
+                  </select>
+                </div>
+                <div class="col-6 col-md-3">
+                  <label class="form-label">Teléfono</label>
+                  <input v-model="encuestaEdit.telefono" class="form-control form-control-sm" type="text" />
+                </div>
+                <div class="col-6 col-md-3">
+                  <label class="form-label">EPS</label>
+                  <input v-model="encuestaEdit.eps" class="form-control form-control-sm" type="text" disabled />
+                </div>
+                <div class="col-12 col-md-6">
+                  <label class="form-label">Dirección</label>
+                  <input v-model="encuestaEdit.direccion" class="form-control form-control-sm" type="text" />
+                </div>
+                <div class="col-6 col-md-3">
+                  <label class="form-label">Régimen</label>
+                  <select v-model="encuestaEdit.regimen" class="form-select form-select-sm">
+                    <option value="">Seleccione</option>
+                    <option v-for="reg in regimenOptions" :key="reg" :value="reg">{{ reg }}</option>
+                  </select>
+                </div>
+                <div class="col-6 col-md-3">
+                  <label class="form-label">Convenio</label>
+                  <select v-model="encuestaEdit.convenio" class="form-select form-select-sm">
+                    <option value="">Seleccione</option>
+                    <option v-for="conv in convenioOptions" :key="conv" :value="conv">{{ conv }}</option>
+                  </select>
+                </div>
+                <div class="col-12 d-flex gap-2 mt-2">
+                  <button class="btn btn-sm btn-success" type="button" :disabled="guardandoEdicion"
+                    @click="guardarEdicionEncuesta()">
+                    <i class="bi bi-check-circle"></i>
+                    {{ guardandoEdicion ? 'Guardando...' : 'Guardar cambios' }}
+                  </button>
+                  <button class="btn btn-sm btn-secondary" type="button" @click="cancelarEdicionEncuesta()">
+                    <i class="bi bi-x-circle"></i> Cancelar
+                  </button>
+                </div>
+              </div>
+            </div>
+
             <!-- PESTAÑAS -->
             <ul class="nav nav-tabs mb-3" :id="'tabs-' + index" role="tablist">
               <li class="nav-item" role="presentation">
-                <button 
-                  class="nav-link active" 
-                  :id="'tab-encuesta-' + index" 
-                  data-bs-toggle="tab"
-                  :data-bs-target="'#content-encuesta-' + index"
-                  type="button" 
-                  role="tab"
-                  :aria-controls="'content-encuesta-' + index"
-                  aria-selected="true">
+                <button class="nav-link active" :id="'tab-encuesta-' + index" data-bs-toggle="tab"
+                  :data-bs-target="'#content-encuesta-' + index" type="button" role="tab"
+                  :aria-controls="'content-encuesta-' + index" aria-selected="true">
                   <i class="bi bi-file-earmark-text"></i> Encuesta
                 </button>
               </li>
               <li class="nav-item" role="presentation">
-                <button 
-                  class="nav-link" 
-                  :id="'tab-caracteres-' + index" 
-                  data-bs-toggle="tab"
-                  :data-bs-target="'#content-caracteres-' + index"
-                  type="button" 
-                  role="tab"
-                  :aria-controls="'content-caracteres-' + index"
-                  aria-selected="false">
+                <button class="nav-link" :id="'tab-caracteres-' + index" data-bs-toggle="tab"
+                  :data-bs-target="'#content-caracteres-' + index" type="button" role="tab"
+                  :aria-controls="'content-caracteres-' + index" aria-selected="false">
                   <i class="bi bi-card-checklist"></i> Caracterización
                 </button>
               </li>
               <li class="nav-item" role="presentation">
-                <button 
-                  class="nav-link" 
-                  :id="'tab-asignaciones-' + index" 
-                  data-bs-toggle="tab"
-                  :data-bs-target="'#content-asignaciones-' + index"
-                  type="button" 
-                  role="tab"
-                  :aria-controls="'content-asignaciones-' + index"
-                  aria-selected="false">
+                <button class="nav-link" :id="'tab-asignaciones-' + index" data-bs-toggle="tab"
+                  :data-bs-target="'#content-asignaciones-' + index" type="button" role="tab"
+                  :aria-controls="'content-asignaciones-' + index" aria-selected="false">
                   <i class="bi bi-clipboard-check"></i> Asignaciones (CUPS)
                 </button>
               </li>
@@ -114,10 +172,7 @@
             <!-- CONTENIDO DE PESTAÑAS -->
             <div class="tab-content" :id="'tabContent-' + index">
               <!-- TAB: ENCUESTA -->
-              <div 
-                :id="'content-encuesta-' + index" 
-                class="tab-pane fade show active" 
-                role="tabpanel"
+              <div :id="'content-encuesta-' + index" class="tab-pane fade show active" role="tabpanel"
                 :aria-labelledby="'tab-encuesta-' + index">
                 <div class="table-responsive">
                   <table class="table table-sm table-striped">
@@ -128,7 +183,8 @@
                       </tr>
                       <tr>
                         <th>Nombre</th>
-                        <td>{{ paciente.nombre1 }} {{ paciente.nombre2 }} {{ paciente.apellido1 }} {{ paciente.apellido2 }}</td>
+                        <td>{{ paciente.nombre1 }} {{ paciente.nombre2 }} {{ paciente.apellido1 }} {{ paciente.apellido2
+                        }}</td>
                       </tr>
                       <tr>
                         <th>Documento</th>
@@ -180,12 +236,10 @@
               </div>
 
               <!-- TAB: CARACTERIZACIÓN -->
-              <div 
-                :id="'content-caracteres-' + index" 
-                class="tab-pane fade" 
-                role="tabpanel"
+              <div :id="'content-caracteres-' + index" class="tab-pane fade" role="tabpanel"
                 :aria-labelledby="'tab-caracteres-' + index">
-                <div v-if="paciente.caracterizacion && Object.keys(paciente.caracterizacion).length > 0" class="table-responsive">
+                <div v-if="paciente.caracterizacion && Object.keys(paciente.caracterizacion).length > 0"
+                  class="table-responsive">
                   <table class="table table-sm table-striped">
                     <tbody>
                       <tr v-for="(valor, clave) in paciente.caracterizacion" :key="clave">
@@ -203,13 +257,11 @@
               </div>
 
               <!-- TAB: ASIGNACIONES (CUPS) -->
-              <div 
-                :id="'content-asignaciones-' + index" 
-                class="tab-pane fade" 
-                role="tabpanel"
+              <div :id="'content-asignaciones-' + index" class="tab-pane fade" role="tabpanel"
                 :aria-labelledby="'tab-asignaciones-' + index">
-                
-                <div v-if="paciente.asignaciones && paciente.asignaciones.cups && Object.keys(paciente.asignaciones.cups).length > 0">
+
+                <div
+                  v-if="paciente.asignaciones && paciente.asignaciones.cups && Object.keys(paciente.asignaciones.cups).length > 0">
                   <table class="table table-sm table-striped table-bordered">
                     <thead class="table-light">
                       <tr>
@@ -237,7 +289,8 @@
                     </tbody>
                   </table>
                   <div class="alert alert-success mt-2">
-                    <i class="bi bi-check-circle"></i> Total de CUPS: <strong>{{ Object.keys(paciente.asignaciones.cups).length }}</strong>
+                    <i class="bi bi-check-circle"></i> Total de CUPS: <strong>{{
+                      Object.keys(paciente.asignaciones.cups).length }}</strong>
                   </div>
                 </div>
                 <div v-else class="alert alert-info">
@@ -256,21 +309,53 @@
 
 <script>
 import { mapState, mapActions } from "vuex";
+import firebase_api from "@/api/ApiFirebase";
 
 export default {
   name: "ConsultaPacientes",
   data() {
     return {
       cargandoPacientes: false,
+      guardandoEdicion: false,
       searchPerformed: false,
       tipodoc: "",
       numdoc: "",
+      pacienteEditandoId: null,
+      encuestaEdit: {
+        nombre1: "",
+        nombre2: "",
+        apellido1: "",
+        apellido2: "",
+        fechaNac: "",
+        sexo: "",
+        direccion: "",
+        telefono: "",
+        eps: "",
+        regimen: "",
+        convenio: "",
+      },
+      regimenOptions: ["Contributivo", "Subsidiado", "Especial", "PPNA"],
     };
   },
   computed: {
     ...mapState(["datosPaciente", "userData", "actividadesExtra"]),
     esAdministrador() {
       return this.userData && (this.userData.cargo === "Administrador" || this.userData.cargo === "admin");
+    },
+    convenioOptions() {
+      const opciones = new Set();
+      const convenioUsuario = String(this.userData?.convenio || "").trim();
+      const convenioEdit = String(this.encuestaEdit?.convenio || "").trim();
+
+      if (convenioUsuario) opciones.add(convenioUsuario);
+      if (convenioEdit) opciones.add(convenioEdit);
+
+      (this.datosPaciente || []).forEach((paciente) => {
+        const convenio = String(paciente?.convenio || "").trim();
+        if (convenio) opciones.add(convenio);
+      });
+
+      return Array.from(opciones);
     }
   },
   methods: {
@@ -329,6 +414,47 @@ export default {
         return JSON.stringify(valor);
       }
       return valor || 'N/A';
+    },
+
+    iniciarEdicionEncuesta(paciente) {
+      this.pacienteEditandoId = paciente.id;
+      this.encuestaEdit = {
+        nombre1: paciente.nombre1 || "",
+        nombre2: paciente.nombre2 || "",
+        apellido1: paciente.apellido1 || "",
+        apellido2: paciente.apellido2 || "",
+        fechaNac: paciente.fechaNac || "",
+        sexo: paciente.sexo || "",
+        direccion: paciente.direccion || "",
+        telefono: paciente.telefono || "",
+        eps: paciente.eps || "",
+        regimen: paciente.regimen || "",
+        convenio: paciente.convenio || "",
+      };
+    },
+
+    cancelarEdicionEncuesta() {
+      this.pacienteEditandoId = null;
+    },
+
+    async guardarEdicionEncuesta() {
+      if (!this.pacienteEditandoId) return;
+      this.guardandoEdicion = true;
+
+      try {
+        await firebase_api.patch(`/Encuesta/${this.pacienteEditandoId}.json`, {
+          ...this.encuestaEdit,
+        });
+
+        alert("✅ Datos de encuesta actualizados correctamente.");
+        this.pacienteEditandoId = null;
+        await this.consultarP();
+      } catch (error) {
+        console.error("[guardarEdicionEncuesta] Error:", error);
+        alert("❌ Error al guardar cambios: " + (error?.message || error));
+      } finally {
+        this.guardandoEdicion = false;
+      }
     },
 
     async eliminarPaciente(idEncuesta) {
@@ -391,7 +517,7 @@ Esta acción NO se puede deshacer.`;
         }
 
         alert("✅ Registro eliminado exitosamente\n\nSe ha eliminado la encuesta y todos sus datos asociados.");
-        
+
         // Limpiar los datos del paciente
         this.tipodoc = "";
         this.numdoc = "";

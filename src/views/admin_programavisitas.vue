@@ -49,7 +49,7 @@
                             <tr>
                                 <th scope="col">Fecha</th>
                                 <th scope="col">Grupo</th>
-                                <th scope="col">Toma de muestras</th>
+                               <!--  <th scope="col">Toma de muestras</th> -->
                                 <th scope="col">Visitas</th>
                                 <th scope="col">Eliminar</th>
                             </tr>
@@ -58,7 +58,7 @@
                             <tr v-for="(agenda, index) in agendas" :key="index">
                                 <td>{{ agenda.fecha }}</td>
                                 <td>{{ agenda.grupo }}</td>
-                                <td>
+                           <!--      <td>
                                     <table class="table table-bordered table-sm table-warning">
                                         <thead>
                                             <tr>
@@ -86,7 +86,7 @@
                                             </template>
                                         </tbody>
                                     </table>
-                                </td>
+                                </td> -->
                                 <td>
                                     <table class="table table-bordered table-sm table-success">
                                         <thead>

@@ -104,8 +104,8 @@
                                             <span class="input-group-text">Convenio</span>
                                             <select v-model="convenioFiltro" class="form-select" required>
                                                 <option value="">Seleccione</option>
-                                                <option value="Extramural">Extramural</option>
-                                                <option value="E Basicos">E Basicos</option>
+                                                <option v-for="opcion in convenioOpciones" :key="opcion"
+                                                    :value="opcion">{{ opcion }}</option>
                                             </select>
                                         </div>
                                     </div>
@@ -523,8 +523,24 @@ export default {
             });
 
             return !anyCup;
+        },
+        convenioOpciones() {
+            const opciones = new Set(["Extramural", "E Basicos"]);
+            const convenioUsuario = String(this.userData?.convenio || "").trim();
+            if (convenioUsuario) opciones.add(convenioUsuario);
+            return Array.from(opciones);
         }
 
+    },
+    watch: {
+        "userData.convenio": {
+            immediate: true,
+            handler(nuevoConvenio) {
+                if (!this.convenioFiltro) {
+                    this.convenioFiltro = String(nuevoConvenio || "").trim();
+                }
+            },
+        },
     },
     methods: {
         ...mapActions([

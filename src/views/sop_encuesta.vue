@@ -523,8 +523,16 @@ export default {
         ]),
 
         async consultar() {
-            // Validar que el campo de número de documento esté lleno
-            if (!this.numdoc) {
+            const tipodocNormalizado = String(this.tipodoc ?? "").trim();
+            const numdocNormalizado = String(this.numdoc ?? "").trim();
+
+            // Validar datos mínimos de búsqueda
+            if (!tipodocNormalizado) {
+                alert("Por favor, seleccione el tipo de documento.");
+                return;
+            }
+
+            if (!numdocNormalizado) {
                 alert("Por favor, ingrese el número de documento.");
                 return;
             }
@@ -532,22 +540,18 @@ export default {
             const convenioUsuario = String(this.userData?.convenio ?? "").trim();
             const esConvenioEBasicos = convenioUsuario === "E Basicos";
 
-            if (esConvenioEBasicos && !this.tipodoc) {
-                alert("Por favor, seleccione el tipo de documento.");
-                return;
-            }
-
             try {
                 // Si el usuario es E Basicos, consultar por tipo + número + convenio
-                // En otros convenios, mantener la consulta general por número
+                // En otros convenios, consultar por tipo + número para evitar falsos disponibles
                 const resultado = esConvenioEBasicos
                     ? await this.$store.dispatch('getAllByPacientesIDEB', {
-                        tipodoc: this.tipodoc,
-                        numdoc: this.numdoc,
+                        tipodoc: tipodocNormalizado,
+                        numdoc: numdocNormalizado,
                         convenio: "E Basicos",
                     })
                     : await this.$store.dispatch('getAllByPacientesID', {
-                        numdoc: this.numdoc,
+                        tipodoc: tipodocNormalizado,
+                        numdoc: numdocNormalizado,
                     });
 
                 // Si hay resultados, el paciente ya fue encuestado
@@ -754,6 +758,11 @@ export default {
     },
     watch: {
         numdoc() {
+            this.estadoConsulta = null;
+            this.pacienteEncontrado = null;
+            this.nombreEncuestador = "";
+        },
+        tipodoc() {
             this.estadoConsulta = null;
             this.pacienteEncontrado = null;
             this.nombreEncuestador = "";

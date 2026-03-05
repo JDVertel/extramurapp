@@ -835,11 +835,20 @@ export default createStore({
           return [];
         }
 
-        // Convertir a array con IDs y buscar por tipodoc y numdoc
+        const tipodocNormalizado = String(tipodoc ?? "").trim();
+        const numdocNormalizado = String(numdoc ?? "").trim();
+
+        // Convertir a array con IDs y buscar por numdoc (y tipodoc cuando se envía)
         const pacientesEncontrados = [];
-        
+
         for (const [encuestaId, encuesta] of Object.entries(data)) {
-          if (encuesta.tipodoc === tipodoc && encuesta.numdoc === numdoc) {
+          const tipodocEncuesta = String(encuesta?.tipodoc ?? "").trim();
+          const numdocEncuesta = String(encuesta?.numdoc ?? "").trim();
+          const coincideTipodoc = tipodocNormalizado
+            ? tipodocEncuesta === tipodocNormalizado
+            : true;
+
+          if (coincideTipodoc && numdocEncuesta === numdocNormalizado) {
             pacientesEncontrados.push({
               id: encuestaId,
               ...encuesta,
@@ -871,7 +880,7 @@ export default createStore({
               // Obtener asignaciones usando encuestaId
               const asignResp = await firebase_api.get(`/Asignaciones/${encuestaId}.json`);
               const asignaciones = asignResp.data || {};
-              
+
               // Crear un nuevo objeto con todas las propiedades para garantizar reactividad
               const pacienteCompleto = {
                 ...paciente,
@@ -912,7 +921,7 @@ export default createStore({
 
         // Buscar en las encuestas por tipodoc, numdoc y convenio
         const datospaciente = [];
-        
+
         for (const [encuestaId, encuesta] of Object.entries(data)) {
           if (
             String(encuesta?.tipodoc ?? "").trim() === tipodocNormalizado &&
@@ -1208,11 +1217,11 @@ export default createStore({
 
         const agendas = data
           ? Object.entries(data)
-              .map(([key, value]) => ({
-                id: key,
-                ...value,
-              }))
-              .filter((agenda) => agenda.fecha === fecha)
+            .map(([key, value]) => ({
+              id: key,
+              ...value,
+            }))
+            .filter((agenda) => agenda.fecha === fecha)
           : [];
 
         commit("setAgendas", agendas);

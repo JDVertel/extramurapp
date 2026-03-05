@@ -1,8 +1,8 @@
 // Importa las funciones necesarias de Firebase
 import { initializeApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";       // Importa Firestore
-import { getStorage } from "firebase/storage"; 
-import { getAuth } from 'firebase/auth';   
+import { getStorage } from "firebase/storage";
+import { getAuth } from 'firebase/auth';
 // Configuración de Firebase
 const firebaseConfig = {
     apiKey: "AIzaSyBNONgNVG8dJX-A52EAa_53RMvq3jO-Njg",
