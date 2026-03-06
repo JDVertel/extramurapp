@@ -272,11 +272,21 @@ export default {
             await Promise.all(
                 encuestas.map(async (encuesta) => {
                     try {
-                        const {
-                            data
-                        } = await firebase_api.get(`/Actividades/${encuesta.id}/tipoActividad.json`);
-                        const actividades = data ? Object.values(data) : [];
-                        mapa[encuesta.id] = actividades;
+                        const { data } = await firebase_api.get(`/Asignaciones/${encuesta.id}.json`);
+                        const cups = data?.cups && typeof data.cups === "object"
+                            ? Object.values(data.cups).filter(Boolean)
+                            : [];
+
+                        // Solo se consideran actividades que realmente tienen registros en cups.
+                        const actividadIds = cups
+                            .map((cup) => cup?.actividadId ?? cup?.idActividad)
+                            .filter(Boolean);
+
+                        const nombresActividades = Array.from(new Set(actividadIds))
+                            .map((idActividad) => this.obtenerNombreActividadExtra(idActividad))
+                            .filter(Boolean);
+
+                        mapa[encuesta.id] = nombresActividades;
                     } catch (error) {
                         mapa[encuesta.id] = [];
                     }
@@ -286,14 +296,7 @@ export default {
             this.actividadesPorEncuesta = mapa;
         },
         obtenerNombresTipoActividad(encuesta) {
-            const actividades = this.actividadesPorEncuesta[encuesta.id] || [];
-            const claves = actividades
-                .map((item) => item?.key)
-                .filter(Boolean);
-
-            return claves
-                .map((key) => this.obtenerNombreActividadExtra(key))
-                .filter(Boolean);
+            return this.actividadesPorEncuesta[encuesta.id] || [];
         },
         obtenerNombreActividadExtra(key) {
             if (!key || !this.actividadesExtra) return "";

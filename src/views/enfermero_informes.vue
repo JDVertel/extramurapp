@@ -88,8 +88,7 @@
                         <td>{{ usuario.desplazamiento }}</td>
                         <!-- TIPO ACTIVIDAD REALIZADA -->
                         <td v-for="col in columnasTipoActividad" :key="col" style="text-align: center">
-                            <span
-                                v-if="usuario.actividadesRealizadas && usuario.actividadesRealizadas.some(act => act.nombre === col)">X</span>
+                            <span v-if="actividadRealizada(usuario, col)">X</span>
                         </td>
                         <!-- POBLACIÓN DE RIESGO -->
                         <td v-for="col in columnasPoblacionRiesgo" :key="col" style="text-align: center">
@@ -113,12 +112,14 @@ import {
     mapState,
     mapActions
 } from "vuex";
+import firebase_api from "@/api/ApiFirebase";
 export default {
     data() {
         return {
             fechaInicio: "",
             fechaFin: "",
             activacion: false,
+            actividadesPorEncuesta: {},
             columnasTipoActividad: [
                 "Consulta PYMS",
                 "Consulta Morbilidad",
@@ -170,27 +171,77 @@ export default {
                 alert('Tabla copiada al portapapeles');
             }
         },
-        ...mapActions(["GetAllRegistersbyRangeEnf"]),
+        ...mapActions(["GetAllRegistersbyRangeEnf", "getAllActividadesExtra"]),
 
         /* metodo para cargar los datos del profesional, y los datos de la ips */
-        generarInforme() {
+        async generarInforme() {
             let rango = {
                 fechaInicio: this.fechaInicio,
                 fechaFin: this.fechaFin,
                 idempleado: this.userData.numDocumento,
                 cargo: this.userData.cargo,
             };
-            this.GetAllRegistersbyRangeEnf(rango);
+            await this.GetAllRegistersbyRangeEnf(rango);
+            await this.getAllActividadesExtra();
+            await this.cargarActividadesPorEncuesta();
             this.activacion = true;
         },
+        async cargarActividadesPorEncuesta() {
+            const mapa = {};
+            const encuestas = this.encuestasFiltradas || [];
+
+            await Promise.all(
+                encuestas.map(async (encuesta) => {
+                    try {
+                        const { data } = await firebase_api.get(`/Asignaciones/${encuesta.id}.json`);
+                        const cups = data?.cups && typeof data.cups === "object"
+                            ? Object.values(data.cups).filter(Boolean)
+                            : [];
+
+                        const actividadIds = cups
+                            .map((cup) => cup?.actividadId ?? cup?.idActividad)
+                            .filter(Boolean);
+
+                        const nombresActividades = Array.from(new Set(actividadIds))
+                            .map((idActividad) => this.obtenerNombreActividadExtra(idActividad))
+                            .filter(Boolean);
+
+                        mapa[encuesta.id] = nombresActividades;
+                    } catch (error) {
+                        mapa[encuesta.id] = [];
+                    }
+                })
+            );
+
+            this.actividadesPorEncuesta = mapa;
+        },
         obtenerNombresTipoActividad(encuesta) {
-            if (!encuesta.tipoActividad) return [];
-            return Object.values(encuesta.tipoActividad).map(item => item.nombre);
+            return this.actividadesPorEncuesta[encuesta.id] || [];
+        },
+        obtenerNombreActividadExtra(key) {
+            if (!key || !this.actividadesExtra) return "";
+            const encontrada = this.actividadesExtra.find(
+                (act) => String(act.key) === String(key) || String(act.id) === String(key)
+            );
+            return encontrada ? encontrada.nombre : "";
+        },
+        normalizarTexto(texto) {
+            return String(texto || "")
+                .trim()
+                .toLowerCase()
+                .normalize("NFD")
+                .replace(/[\u0300-\u036f]/g, "");
+        },
+        actividadRealizada(encuesta, nombreColumna) {
+            const objetivo = this.normalizarTexto(nombreColumna);
+            return this.obtenerNombresTipoActividad(encuesta)
+                .map((nombre) => this.normalizarTexto(nombre))
+                .includes(objetivo);
         }
 
     },
     computed: {
-        ...mapState(["encuestasFiltradas", "dataips", "userData"]),
+        ...mapState(["encuestasFiltradas", "dataips", "userData", "actividadesExtra"]),
 
     },
 

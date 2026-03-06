@@ -42,7 +42,8 @@
                     </div>
                 </div>
                 <div class="table-responsive" v-if="activacion" style="max-height: 60vh; overflow-y: auto;">
-                    <table class="table table-bordered table-striped table-sm" style="border-collapse: collapse; width: 100%">
+                    <table class="table table-bordered table-striped table-sm"
+                        style="border-collapse: collapse; width: 100%">
                         <thead>
                             <tr>
                                 <th colspan="5" style="background: #d0e6f7">DATOS DE IPS</th>
@@ -97,10 +98,11 @@
                                 <td>{{ usuario.barrioVeredacomuna?.barrio }}</td>
                                 <td>{{ usuario.desplazamiento }}</td>
                                 <td v-for="col in columnasTipoActividad" :key="col" style="text-align: center">
-                                    <span v-if="usuario.actividadesRealizadas && usuario.actividadesRealizadas.some(act => act.nombre === col)">X</span>
+                                    <span v-if="actividadRealizada(usuario, col)">X</span>
                                 </td>
                                 <td v-for="col in columnasPoblacionRiesgo" :key="col" style="text-align: center">
-                                    <span v-if="usuario.poblacionRiesgo && usuario.poblacionRiesgo.includes(col)">X</span>
+                                    <span
+                                        v-if="usuario.poblacionRiesgo && usuario.poblacionRiesgo.includes(col)">X</span>
                                 </td>
                                 <td style="text-align: center">{{ usuario.requiereRemision }}</td>
                                 <td>{{ userData.nombre }}</td>
@@ -123,7 +125,8 @@
                                 <i class="bi bi-chevron-left"></i>
                             </a>
                         </li>
-                        <li v-for="pagina in paginasVisibles" :key="pagina" class="page-item" :class="{ active: pagina === paginaActual }">
+                        <li v-for="pagina in paginasVisibles" :key="pagina" class="page-item"
+                            :class="{ active: pagina === paginaActual }">
                             <a class="page-link" href="#" @click.prevent="cambiarPagina(pagina)">{{ pagina }}</a>
                         </li>
                         <li class="page-item" :class="{ disabled: paginaActual === totalPaginas }">
@@ -148,12 +151,14 @@ import {
     mapState,
     mapActions
 } from "vuex";
+import firebase_api from "@/api/ApiFirebase";
 export default {
     data() {
         return {
             fechaInicio: "",
             fechaFin: "",
             activacion: false,
+            actividadesPorEncuesta: {},
             paginaActual: 1,
             itemsPorPagina: 25,
             columnasTipoActividad: [
@@ -203,7 +208,7 @@ export default {
                 alert('Tabla copiada al portapapeles');
             }
         },
-        ...mapActions(["GetAllRegistersbyRangeMed"]),
+        ...mapActions(["GetAllRegistersbyRangeMed", "getAllActividadesExtra"]),
 
         async generarInforme() {
             let rango = {
@@ -213,6 +218,8 @@ export default {
                 cargo: this.userData.cargo,
             };
             await this.GetAllRegistersbyRangeMed(rango);
+            await this.getAllActividadesExtra();
+            await this.cargarActividadesPorEncuesta();
             this.paginaActual = 1;
             this.activacion = true;
         },
@@ -233,13 +240,61 @@ export default {
                 });
             }
         },
+        async cargarActividadesPorEncuesta() {
+            const mapa = {};
+            const encuestas = this.encuestasFiltradas || [];
+
+            await Promise.all(
+                encuestas.map(async (encuesta) => {
+                    try {
+                        const { data } = await firebase_api.get(`/Asignaciones/${encuesta.id}.json`);
+                        const cups = data?.cups && typeof data.cups === "object"
+                            ? Object.values(data.cups).filter(Boolean)
+                            : [];
+
+                        const actividadIds = cups
+                            .map((cup) => cup?.actividadId ?? cup?.idActividad)
+                            .filter(Boolean);
+
+                        const nombresActividades = Array.from(new Set(actividadIds))
+                            .map((idActividad) => this.obtenerNombreActividadExtra(idActividad))
+                            .filter(Boolean);
+
+                        mapa[encuesta.id] = nombresActividades;
+                    } catch (error) {
+                        mapa[encuesta.id] = [];
+                    }
+                })
+            );
+
+            this.actividadesPorEncuesta = mapa;
+        },
         obtenerNombresTipoActividad(encuesta) {
-            if (!encuesta.tipoActividad) return [];
-            return Object.values(encuesta.tipoActividad).map(item => item.nombre);
+            return this.actividadesPorEncuesta[encuesta.id] || [];
+        },
+        obtenerNombreActividadExtra(key) {
+            if (!key || !this.actividadesExtra) return "";
+            const encontrada = this.actividadesExtra.find(
+                (act) => String(act.key) === String(key) || String(act.id) === String(key)
+            );
+            return encontrada ? encontrada.nombre : "";
+        },
+        normalizarTexto(texto) {
+            return String(texto || "")
+                .trim()
+                .toLowerCase()
+                .normalize("NFD")
+                .replace(/[\u0300-\u036f]/g, "");
+        },
+        actividadRealizada(encuesta, nombreColumna) {
+            const objetivo = this.normalizarTexto(nombreColumna);
+            return this.obtenerNombresTipoActividad(encuesta)
+                .map((nombre) => this.normalizarTexto(nombre))
+                .includes(objetivo);
         }
     },
     computed: {
-        ...mapState(["encuestasFiltradas", "dataips", "userData", "uid"]),
+        ...mapState(["encuestasFiltradas", "dataips", "userData", "uid", "actividadesExtra"]),
         totalRegistros() {
             return this.encuestasFiltradas?.length || 0;
         },
