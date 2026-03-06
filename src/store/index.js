@@ -2148,6 +2148,23 @@ export default createStore({
     },
 
     /**
+     * Revierte aprovisionamiento de facturación
+     */
+    revertirAprovisionFacturacion: async ({ commit }, idEnc) => {
+      try {
+        const response = await firebase_api.patch(`/Encuesta/${idEnc}.json`, {
+          asigfact: null,
+          status_facturacion: false,
+        });
+        console.log("Aprovisionamiento revertido:", response.data);
+        return response.data;
+      } catch (error) {
+        console.error("Error al revertir aprovisionamiento:", error);
+        throw error;
+      }
+    },
+
+    /**
      * Cierra la facturación de una encuesta
      */
     cerrarFacturacion: async ({ commit }, idEnc) => {
@@ -2354,6 +2371,7 @@ export default createStore({
       try {
         const { data: actividades } = await firebase_api.get("/Actividades.json");
         const { data: encuestas } = await firebase_api.get("/Encuesta.json");
+        const { data: asignaciones } = await firebase_api.get("/Asignaciones.json");
 
         if (!actividades || !encuestas) {
           commit("setEncuestasFactAprov", []);
@@ -2374,10 +2392,18 @@ export default createStore({
           );
 
           if (encuestaAsociada && actividadData) {
+            const cups = asignaciones?.[idActividad]?.cups;
+            const listaCups = cups && typeof cups === "object" ? Object.values(cups) : [];
+            const allFacturasVacias = listaCups.length === 0 || listaCups.every(cup => {
+              const fact = String(cup?.FactNum ?? "").trim();
+              return !fact;
+            });
+
             resultados.push({
               id: idActividad,
               ...encuestaAsociada,
-              tipoActividad: actividadData
+              tipoActividad: actividadData,
+              allFacturasVacias,
             });
           }
         });

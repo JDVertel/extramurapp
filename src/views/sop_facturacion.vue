@@ -65,7 +65,7 @@
                                         indicadorOrdenPendientes('fecha') }}</th>
                                     <th @click="ordenarPendientes('fechagestEnfermera')" role="button">Fecha cierre {{
                                         indicadorOrdenPendientes('fechagestEnfermera') }}</th>
-                                    <th>Facturar</th>
+                                    <th>Acciones</th>
                                 </tr>
                                 <tr>
                                     <th></th>
@@ -141,10 +141,17 @@
                                     <td>{{ paciente.fecha }}</td>
                                     <td>{{ paciente.fechagestEnfermera }}</td>
                                     <td>
-                                        <button type="button" class="btn btn-primary" data-bs-toggle="modal"
-                                            data-bs-target="#staticBackdrop" @click="setPacienteId(paciente.id)">
-                                            <i class="bi bi-bookmark-check-fill"></i>
-                                        </button>
+                                        <div class="d-flex gap-2">
+                                            <button type="button" class="btn btn-primary" data-bs-toggle="modal"
+                                                data-bs-target="#staticBackdrop" @click="setPacienteId(paciente.id)">
+                                                <i class="bi bi-bookmark-check-fill"></i>
+                                            </button>
+                                            <button v-if="paciente.allFacturasVacias" type="button"
+                                                class="btn btn-outline-danger" :disabled="devolverDisabled[paciente.id]"
+                                                @click="devolverARegistroInicial(paciente.id)">
+                                                <i class="bi bi-arrow-counterclockwise"></i>
+                                            </button>
+                                        </div>
                                     </td>
                                 </tr>
                             </tbody>
@@ -246,7 +253,7 @@
                                 <tr>
                                     <!--  <th>id</th> -->
                                     <th @click="ordenarRegistro('grupo')" role="button">Grupo {{ indicadorOrden('grupo')
-                                    }}</th>
+                                        }}</th>
                                     <th @click="ordenarRegistro('paciente')" role="button">Paciente {{
                                         indicadorOrden('paciente') }}</th>
                                     <th @click="ordenarRegistro('sexo')" role="button">Sexo {{ indicadorOrden('sexo') }}
@@ -472,82 +479,92 @@
                         <div class="table-responsive" ref="tablaHtml">
 
                             <!-- *************************************************************************************************************** -->
-                            <div class="container-fluid ">
-                                <table class="table table-bordered table-striped table-sm align-middle">
-                                    <!--  {{ conteoCupsFactNum }} -->
-                                    <thead class="table-light table-bordered">
-                                        <tr>
-                                            <th>Procedimientos y Actividades</th>
 
-                                        </tr>
+                            <table class="table table-bordered table-striped table-sm align-middle">
+                                <!--  {{ conteoCupsFactNum }} -->
+                                <thead class="table-light table-bordered">
+                                    <tr>
+                                        <th>
+                                            <h3>Procedimientos y Actividades</h3>
+                                        </th>
+                                    </tr>
 
-                                    </thead>
-                                    <tbody>
-                                        <tr v-for="paciente in InfoEncuestasById" :key="paciente.id">
-                                            <td>
-                                                <table class="table table-bordered table-striped table-sm align-middle">
-                                                    <thead>
-                                                        <tr>
+                                </thead>
+                                <tbody>
+                                    <tr v-for="paciente in InfoEncuestasById" :key="paciente.id">
+                                        <td>
+                                            <table class="table table-bordered table-striped table-sm align-middle">
+                                                <thead>
+                                                    <tr>
 
-                                                            <th>Actividad</th>
-                                                            <th>Rol</th>
-                                                            <th>Profesional</th>
-                                                            <th>Cantidad</th>
-                                                            <th>Homolog</th>
-                                                            <th>Descripción CUP</th>
-                                                            <th>Detalle</th>
-                                                            <th>Grupo</th>
-                                                            <th>Factura</th>
-                                                        </tr>
-                                                    </thead>
-                                                    <tbody>
-                                                        <tr v-for="(cup, cupId) in paciente.cups" :key="cupId">
-                                                            <td>{{ obtenerNombreActividad(cup.actividadId) }}</td>
-                                                            <td>{{ cup.nombreProf || '-' }}</td>
-                                                            <td>{{ cup.key || '-' }}</td>
-                                                            <td>{{ cup.cantidad || '-' }}</td>
-                                                            <td>{{ cup.codigo || '-' }}</td>
-                                                            <td>{{ cup.DescripcionCUP || '-' }}</td>
-                                                            <td>{{ cup.detalle || '-' }}</td>
-                                                            <td>{{ cup.Grupo || '-' }}</td>
-                                                            <td>
-                                                                <template v-if="cup.facturado && !modoEdicion">
-                                                                    {{ cup.FactNum }}
-                                                                </template>
-                                                                <template v-if="cup.facturado && modoEdicion">
-                                                                    <div class="input-group mb-3">
-                                                                        <input type="text"
-                                                                            :id="`editar-factura-${cupId}`"
-                                                                            class="form-control"
-                                                                            v-model="facturaEditables[cupId]"
-                                                                            placeholder="#factura">
-                                                                    </div>
-                                                                </template>
-                                                                <template v-if="!cup.facturado">
-                                                                    <div class="input-group mb-3">
-                                                                        <input type="text" :id="`factura-${cupId}`"
-                                                                            class="form-control"
-                                                                            :disabled="facturaDisabled[cupId]"
-                                                                            v-model="facturaInputs[cupId]"
-                                                                            placeholder="#factura">
-                                                                        <button
-                                                                            :class="['btn', (facturaInputs[cupId] && facturaInputs[cupId].length >= 5) || facturaDisabled[cupId] ? 'btn-success' : 'btn-outline-secondary']"
-                                                                            type="button"
-                                                                            :disabled="!facturaInputs[cupId] || facturaInputs[cupId].length < 5 || facturaDisabled[cupId]"
-                                                                            @click="regFactCup(cupId, facturaInputs[cupId])">
-                                                                            <i class="bi bi-bookmark-check-fill"></i>
-                                                                        </button>
-                                                                    </div>
-                                                                </template>
-                                                            </td>
-                                                        </tr>
-                                                    </tbody>
-                                                </table>
-                                            </td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>
+                                                        <th @click="ordenarCups('actividad')" role="button">
+                                                            Actividad {{ indicadorOrdenCups('actividad') }}</th>
+                                                        <th @click="ordenarCups('rol')" role="button">Rol {{
+                                                            indicadorOrdenCups('rol') }}</th>
+                                                        <th @click="ordenarCups('profesional')" role="button">
+                                                            Profesional {{ indicadorOrdenCups('profesional') }}</th>
+                                                        <th @click="ordenarCups('cantidad')" role="button">Cantidad
+                                                            {{ indicadorOrdenCups('cantidad') }}</th>
+                                                        <th @click="ordenarCups('codigo')" role="button">Homolog {{
+                                                            indicadorOrdenCups('codigo') }}</th>
+                                                        <th @click="ordenarCups('descripcion')" role="button">
+                                                            Descripción CUP {{ indicadorOrdenCups('descripcion') }}
+                                                        </th>
+                                                        <th @click="ordenarCups('detalle')" role="button">Detalle {{
+                                                            indicadorOrdenCups('detalle') }}</th>
+                                                        <th @click="ordenarCups('grupo')" role="button">Grupo {{
+                                                            indicadorOrdenCups('grupo') }}</th>
+                                                        <th>Factura</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <tr v-for="([cupId, cup]) in getCupsOrdenados(paciente)"
+                                                        :key="cupId">
+                                                        <td>{{ obtenerNombreActividad(cup.actividadId) }}</td>
+                                                        <td>{{ cup.nombreProf || '-' }}</td>
+                                                        <td>{{ cup.key || '-' }}</td>
+                                                        <td>{{ cup.cantidad || '-' }}</td>
+                                                        <td>{{ cup.codigo || '-' }}</td>
+                                                        <td>{{ cup.DescripcionCUP || '-' }}</td>
+                                                        <td>{{ cup.detalle || '-' }}</td>
+                                                        <td>{{ cup.Grupo || '-' }}</td>
+                                                        <td>
+                                                            <template v-if="cup.facturado && !modoEdicion">
+                                                                {{ cup.FactNum }}
+                                                            </template>
+                                                            <template v-if="cup.facturado && modoEdicion">
+                                                                <div class="input-group mb-3">
+                                                                    <input type="text" :id="`editar-factura-${cupId}`"
+                                                                        class="form-control"
+                                                                        v-model="facturaEditables[cupId]"
+                                                                        placeholder="#factura">
+                                                                </div>
+                                                            </template>
+                                                            <template v-if="!cup.facturado">
+                                                                <div class="input-group mb-3">
+                                                                    <input type="text" :id="`factura-${cupId}`"
+                                                                        class="form-control"
+                                                                        :disabled="facturaDisabled[cupId]"
+                                                                        v-model="facturaInputs[cupId]"
+                                                                        placeholder="#factura">
+                                                                    <button
+                                                                        :class="['btn', (facturaInputs[cupId] && facturaInputs[cupId].length >= 5) || facturaDisabled[cupId] ? 'btn-success' : 'btn-outline-secondary']"
+                                                                        type="button"
+                                                                        :disabled="!facturaInputs[cupId] || facturaInputs[cupId].length < 5 || facturaDisabled[cupId]"
+                                                                        @click="regFactCup(cupId, facturaInputs[cupId])">
+                                                                        <i class="bi bi-bookmark-check-fill"></i>
+                                                                    </button>
+                                                                </div>
+                                                            </template>
+                                                        </td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+
                         </div>
                         <!--  -->
 
@@ -600,6 +617,7 @@ export default {
             cargando: false,
             activeTab: "pendientes", // Control de pestaña activa
             aprovDisabled: {}, // Estado de desactivación por paciente
+            devolverDisabled: {}, // Estado de desactivación para devolver en pendientes
             pacienteIdModal: null,
             facturaDisabled: {}, // Estado de desactivación por cupId
             facturaInputs: {}, // Valores de factura por cupId
@@ -631,6 +649,10 @@ export default {
             },
             ordenPendientes: {
                 campo: "",
+                direccion: "asc",
+            },
+            ordenCups: {
+                campo: "profesional",
                 direccion: "asc",
             },
         }
@@ -824,6 +846,7 @@ export default {
             "GetRegistersbyRangeGeneralFactAprov",
             "GetRegistersbyRangeGeneralFactByID",
             "aprovicionarP",
+            "revertirAprovisionFacturacion",
             "getEncuestaById",
             "asigFacturacion",
             "cerrarFacturacion",
@@ -881,6 +904,32 @@ export default {
                 idProf: this.userData.numDocumento,
             };
             this.aprovicionarP(data);
+        },
+        async devolverARegistroInicial(id) {
+            const confirmar = confirm("Este registro se devolverá a la tabla inicial. ¿Desea continuar?");
+            if (!confirmar) return;
+
+            this.devolverDisabled[id] = true;
+            this.cargando = true;
+            try {
+                await this.revertirAprovisionFacturacion(id);
+
+                await this.GetRegistersbyRangeGeneralFactAprov(this.userData.numDocumento);
+
+                if (this.fechaInicio && this.fechaFin) {
+                    await this.getdataEncuestas(this.fechaInicio, this.fechaFin, this.convenioFiltro);
+                } else if (this.tipodoc && this.numdoc) {
+                    await this.getdataEncuestasById(this.tipodoc, this.numdoc);
+                }
+
+                alert("Registro devuelto a la tabla inicial correctamente.");
+            } catch (error) {
+                console.error("Error al devolver registro:", error);
+                alert("No se pudo devolver el registro: " + (error?.message || error));
+            } finally {
+                this.devolverDisabled[id] = false;
+                this.cargando = false;
+            }
         },
         obtenerValorColumnaRegistro(paciente, campo) {
             const mapaValores = {
@@ -975,6 +1024,46 @@ export default {
                 campo: "",
                 direccion: "asc",
             };
+        },
+        obtenerValorColumnaCup(cup, campo) {
+            const mapaValores = {
+                actividad: this.obtenerNombreActividad(cup?.actividadId),
+                rol: cup?.nombreProf,
+                profesional: cup?.key,
+                cantidad: cup?.cantidad,
+                codigo: cup?.codigo,
+                descripcion: cup?.DescripcionCUP,
+                detalle: cup?.detalle,
+                grupo: cup?.Grupo,
+            };
+
+            return String(mapaValores[campo] || "").trim();
+        },
+        ordenarCups(campo) {
+            if (this.ordenCups.campo === campo) {
+                this.ordenCups.direccion = this.ordenCups.direccion === "asc" ? "desc" : "asc";
+                return;
+            }
+
+            this.ordenCups.campo = campo;
+            this.ordenCups.direccion = "asc";
+        },
+        indicadorOrdenCups(campo) {
+            if (this.ordenCups.campo !== campo) return "";
+            return this.ordenCups.direccion === "asc" ? "▲" : "▼";
+        },
+        getCupsOrdenados(paciente) {
+            if (!paciente?.cups || typeof paciente.cups !== "object") return [];
+
+            const lista = Object.entries(paciente.cups);
+            const campo = this.ordenCups.campo || "profesional";
+            const direccion = this.ordenCups.direccion === "desc" ? -1 : 1;
+
+            return lista.sort(([, cupA], [, cupB]) => {
+                const valorA = this.obtenerValorColumnaCup(cupA, campo);
+                const valorB = this.obtenerValorColumnaCup(cupB, campo);
+                return valorA.localeCompare(valorB, "es", { numeric: true, sensitivity: "base" }) * direccion;
+            });
         },
         desactivarInput(cupId) {
             this.facturaDisabled[cupId] = true;
