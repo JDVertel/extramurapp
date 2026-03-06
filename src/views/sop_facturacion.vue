@@ -27,29 +27,102 @@
                 <div v-show="activeTab === 'pendientes'" class="tab-pane fade show active" id="nav-home" role="tabpanel"
                     tabindex="0">
 
+                    <div class="d-flex justify-content-end mb-2 mt-2">
+                        <button type="button" class="btn btn-outline-secondary btn-sm"
+                            @click="limpiarFiltrosPendientes">
+                            Limpiar filtros
+                        </button>
+                    </div>
                     <div class="table-responsive tabla-scroll" ref="tablaHtml">
                         <table class="table table-bordered table-striped table-sm align-middle">
                             <thead class="table-light">
                                 <tr>
-                                    <th>id</th>
-                                    <th>Grupo</th>
-                                    <th>Paciente</th>
-                                    <th>Sexo</th>
-                                    <th>Documento</th>
-                                    <th>Fecha Nac.</th>
-                                    <th>Edad</th>
-                                    <th>EPS</th>
-                                    <th>Régimen</th>
-                                    <th>Dirección</th>
-                                    <th>Barrio</th>
-                                    <th>Comuna</th>
-                                    <th>Fecha Demanda</th>
-                                    <th>Fecha cierre</th>
+                                    <th @click="ordenarPendientes('id')" role="button">id {{
+                                        indicadorOrdenPendientes('id') }}</th>
+                                    <th @click="ordenarPendientes('grupo')" role="button">Grupo {{
+                                        indicadorOrdenPendientes('grupo') }}</th>
+                                    <th @click="ordenarPendientes('paciente')" role="button">Paciente {{
+                                        indicadorOrdenPendientes('paciente') }}</th>
+                                    <th @click="ordenarPendientes('sexo')" role="button">Sexo {{
+                                        indicadorOrdenPendientes('sexo') }}</th>
+                                    <th @click="ordenarPendientes('documento')" role="button">Documento {{
+                                        indicadorOrdenPendientes('documento') }}</th>
+                                    <th @click="ordenarPendientes('fechaNac')" role="button">Fecha Nac. {{
+                                        indicadorOrdenPendientes('fechaNac') }}</th>
+                                    <th @click="ordenarPendientes('edad')" role="button">Edad {{
+                                        indicadorOrdenPendientes('edad') }}</th>
+                                    <th @click="ordenarPendientes('eps')" role="button">EPS {{
+                                        indicadorOrdenPendientes('eps') }}</th>
+                                    <th @click="ordenarPendientes('regimen')" role="button">Régimen {{
+                                        indicadorOrdenPendientes('regimen') }}</th>
+                                    <th @click="ordenarPendientes('direccion')" role="button">Dirección {{
+                                        indicadorOrdenPendientes('direccion') }}</th>
+                                    <th @click="ordenarPendientes('barrio')" role="button">Barrio {{
+                                        indicadorOrdenPendientes('barrio') }}</th>
+                                    <th @click="ordenarPendientes('comuna')" role="button">Comuna {{
+                                        indicadorOrdenPendientes('comuna') }}</th>
+                                    <th @click="ordenarPendientes('fecha')" role="button">Fecha Demanda {{
+                                        indicadorOrdenPendientes('fecha') }}</th>
+                                    <th @click="ordenarPendientes('fechagestEnfermera')" role="button">Fecha cierre {{
+                                        indicadorOrdenPendientes('fechagestEnfermera') }}</th>
                                     <th>Facturar</th>
+                                </tr>
+                                <tr>
+                                    <th></th>
+                                    <th>
+                                        <select v-model="filtrosPendientes.grupo" class="form-select form-select-sm">
+                                            <option value="">Todos</option>
+                                            <option v-for="item in opcionesFiltroPendientes.grupo"
+                                                :key="`pend-grupo-${item}`" :value="item">{{ item }}</option>
+                                        </select>
+                                    </th>
+                                    <th></th>
+                                    <th>
+                                        <select v-model="filtrosPendientes.sexo" class="form-select form-select-sm">
+                                            <option value="">Todos</option>
+                                            <option v-for="item in opcionesFiltroPendientes.sexo"
+                                                :key="`pend-sexo-${item}`" :value="item">{{ item }}</option>
+                                        </select>
+                                    </th>
+                                    <th></th>
+                                    <th></th>
+                                    <th></th>
+                                    <th>
+                                        <select v-model="filtrosPendientes.eps" class="form-select form-select-sm">
+                                            <option value="">Todos</option>
+                                            <option v-for="item in opcionesFiltroPendientes.eps"
+                                                :key="`pend-eps-${item}`" :value="item">{{ item }}</option>
+                                        </select>
+                                    </th>
+                                    <th>
+                                        <select v-model="filtrosPendientes.regimen" class="form-select form-select-sm">
+                                            <option value="">Todos</option>
+                                            <option v-for="item in opcionesFiltroPendientes.regimen"
+                                                :key="`pend-regimen-${item}`" :value="item">{{ item }}</option>
+                                        </select>
+                                    </th>
+                                    <th></th>
+                                    <th>
+                                        <select v-model="filtrosPendientes.barrio" class="form-select form-select-sm">
+                                            <option value="">Todos</option>
+                                            <option v-for="item in opcionesFiltroPendientes.barrio"
+                                                :key="`pend-barrio-${item}`" :value="item">{{ item }}</option>
+                                        </select>
+                                    </th>
+                                    <th>
+                                        <select v-model="filtrosPendientes.comuna" class="form-select form-select-sm">
+                                            <option value="">Todos</option>
+                                            <option v-for="item in opcionesFiltroPendientes.comuna"
+                                                :key="`pend-comuna-${item}`" :value="item">{{ item }}</option>
+                                        </select>
+                                    </th>
+                                    <th></th>
+                                    <th></th>
+                                    <th></th>
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr v-for="paciente in EncuestasFactAprov" :key="paciente.id">
+                                <tr v-for="paciente in encuestasPendientesProcesadas" :key="paciente.id">
                                     <td>{{ paciente.id }}</td>
                                     <td>{{ paciente.grupo }}</td>
                                     <td>
@@ -102,7 +175,8 @@
                                     <div class="col-4">
                                         <div class="input-group">
                                             <span class="input-group-text">Convenio</span>
-                                            <select v-model="convenioFiltro" class="form-select" required>
+                                            <select v-model="convenioFiltro" class="form-select"
+                                                :disabled="convenioBloqueado" required>
                                                 <option value="">Seleccione</option>
                                                 <option v-for="opcion in convenioOpciones" :key="opcion"
                                                     :value="opcion">{{ opcion }}</option>
@@ -161,29 +235,105 @@
                     </div>
                     <br />
                     <p>Registro</p>
+                    <div class="d-flex justify-content-end mb-2">
+                        <button type="button" class="btn btn-outline-secondary btn-sm" @click="limpiarFiltrosRegistro">
+                            Limpiar filtros
+                        </button>
+                    </div>
                     <div class="table-responsive tabla-scroll" ref="tablaHtml">
                         <table class="table table-bordered table-striped table-sm align-middle table-success">
                             <thead class="table-light">
                                 <tr>
                                     <!--  <th>id</th> -->
-                                    <th>Grupo</th>
-                                    <th>Paciente</th>
-                                    <th>Sexo</th>
-                                    <th>Documento</th>
-                                    <th>Fecha Nac.</th>
-                                    <th>EPS</th>
-                                    <th>Régimen</th>
-                                    <th>Dirección</th>
-                                    <th>Barrio</th>
-                                    <th>Comuna</th>
-                                    <th>Fecha Demanda</th>
-                                    <th>Fecha cierre Enf</th>
-                                    <th>Remisión</th>
+                                    <th @click="ordenarRegistro('grupo')" role="button">Grupo {{ indicadorOrden('grupo')
+                                    }}</th>
+                                    <th @click="ordenarRegistro('paciente')" role="button">Paciente {{
+                                        indicadorOrden('paciente') }}</th>
+                                    <th @click="ordenarRegistro('sexo')" role="button">Sexo {{ indicadorOrden('sexo') }}
+                                    </th>
+                                    <th @click="ordenarRegistro('documento')" role="button">Documento {{
+                                        indicadorOrden('documento') }}</th>
+                                    <th @click="ordenarRegistro('fechaNac')" role="button">Fecha Nac. {{
+                                        indicadorOrden('fechaNac') }}</th>
+                                    <th @click="ordenarRegistro('eps')" role="button">EPS {{ indicadorOrden('eps') }}
+                                    </th>
+                                    <th @click="ordenarRegistro('regimen')" role="button">Régimen {{
+                                        indicadorOrden('regimen') }}</th>
+                                    <th @click="ordenarRegistro('direccion')" role="button">Dirección {{
+                                        indicadorOrden('direccion') }}</th>
+                                    <th @click="ordenarRegistro('barrio')" role="button">Barrio {{
+                                        indicadorOrden('barrio') }}</th>
+                                    <th @click="ordenarRegistro('comuna')" role="button">Comuna {{
+                                        indicadorOrden('comuna') }}</th>
+                                    <th @click="ordenarRegistro('fecha')" role="button">Fecha Demanda {{
+                                        indicadorOrden('fecha') }}</th>
+                                    <th @click="ordenarRegistro('fechagestEnfermera')" role="button">Fecha cierre Enf {{
+                                        indicadorOrden('fechagestEnfermera') }}</th>
+                                    <th @click="ordenarRegistro('remision')" role="button">Remisión {{
+                                        indicadorOrden('remision') }}</th>
                                     <th>Opciones</th>
+                                </tr>
+                                <tr>
+                                    <th>
+                                        <select v-model="filtrosRegistro.grupo" class="form-select form-select-sm">
+                                            <option value="">Todos</option>
+                                            <option v-for="item in opcionesFiltroRegistro.grupo" :key="`grupo-${item}`"
+                                                :value="item">{{ item }}</option>
+                                        </select>
+                                    </th>
+                                    <th></th>
+                                    <th>
+                                        <select v-model="filtrosRegistro.sexo" class="form-select form-select-sm">
+                                            <option value="">Todos</option>
+                                            <option v-for="item in opcionesFiltroRegistro.sexo" :key="`sexo-${item}`"
+                                                :value="item">{{ item }}</option>
+                                        </select>
+                                    </th>
+                                    <th></th>
+                                    <th></th>
+                                    <th>
+                                        <select v-model="filtrosRegistro.eps" class="form-select form-select-sm">
+                                            <option value="">Todos</option>
+                                            <option v-for="item in opcionesFiltroRegistro.eps" :key="`eps-${item}`"
+                                                :value="item">{{ item }}</option>
+                                        </select>
+                                    </th>
+                                    <th>
+                                        <select v-model="filtrosRegistro.regimen" class="form-select form-select-sm">
+                                            <option value="">Todos</option>
+                                            <option v-for="item in opcionesFiltroRegistro.regimen"
+                                                :key="`regimen-${item}`" :value="item">{{ item }}</option>
+                                        </select>
+                                    </th>
+                                    <th></th>
+                                    <th>
+                                        <select v-model="filtrosRegistro.barrio" class="form-select form-select-sm">
+                                            <option value="">Todos</option>
+                                            <option v-for="item in opcionesFiltroRegistro.barrio"
+                                                :key="`barrio-${item}`" :value="item">{{ item }}</option>
+                                        </select>
+                                    </th>
+                                    <th>
+                                        <select v-model="filtrosRegistro.comuna" class="form-select form-select-sm">
+                                            <option value="">Todos</option>
+                                            <option v-for="item in opcionesFiltroRegistro.comuna"
+                                                :key="`comuna-${item}`" :value="item">{{ item }}</option>
+                                        </select>
+                                    </th>
+                                    <th></th>
+                                    <th></th>
+                                    <th>
+                                        <select v-model="filtrosRegistro.remision" class="form-select form-select-sm">
+                                            <option value="">Todos</option>
+                                            <option v-for="item in opcionesFiltroRegistro.remision"
+                                                :key="`remision-${item}`" :value="item">{{ item }}</option>
+                                        </select>
+                                    </th>
+                                    <th></th>
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr v-for="paciente in EncuestasFact" :key="paciente.id">
+                                <tr v-for="paciente in encuestasFactProcesadas" :key="paciente.id">
                                     <!-- <td>{{paciente.id }}</td> -->
                                     <td>{{ paciente.grupo }}</td>
                                     <td>
@@ -458,6 +608,31 @@ export default {
             numdoc: "",
             modoEdicion: false, // Control para modo edición de códigos
             facturaEditables: {}, // Almacena valores editables de facturas
+            filtrosRegistro: {
+                grupo: "",
+                sexo: "",
+                eps: "",
+                regimen: "",
+                barrio: "",
+                comuna: "",
+                remision: "",
+            },
+            ordenRegistro: {
+                campo: "",
+                direccion: "asc",
+            },
+            filtrosPendientes: {
+                grupo: "",
+                sexo: "",
+                eps: "",
+                regimen: "",
+                barrio: "",
+                comuna: "",
+            },
+            ordenPendientes: {
+                campo: "",
+                direccion: "asc",
+            },
         }
     },
     computed: {
@@ -524,11 +699,104 @@ export default {
 
             return !anyCup;
         },
+        convenioUsuario() {
+            return String(this.userData?.convenio || "").trim();
+        },
+        convenioBloqueado() {
+            return !!this.convenioUsuario;
+        },
         convenioOpciones() {
             const opciones = new Set(["Extramural", "E Basicos"]);
-            const convenioUsuario = String(this.userData?.convenio || "").trim();
-            if (convenioUsuario) opciones.add(convenioUsuario);
+            if (this.convenioUsuario) opciones.add(this.convenioUsuario);
             return Array.from(opciones);
+        },
+        opcionesFiltroRegistro() {
+            const filas = Array.isArray(this.EncuestasFact) ? this.EncuestasFact : [];
+            const generarOpciones = extractor => {
+                const unicos = new Set();
+                filas.forEach(p => {
+                    const valor = String(extractor(p) || "").trim();
+                    if (valor) unicos.add(valor);
+                });
+                return Array.from(unicos).sort((a, b) => a.localeCompare(b, "es", { sensitivity: "base" }));
+            };
+
+            return {
+                grupo: generarOpciones(p => p.grupo),
+                sexo: generarOpciones(p => p.sexo),
+                eps: generarOpciones(p => p.eps),
+                regimen: generarOpciones(p => p.regimen),
+                barrio: generarOpciones(p => p.barrioVeredacomuna?.barrio),
+                comuna: generarOpciones(p => p.barrioVeredacomuna?.comuna),
+                remision: generarOpciones(p => p.requiereRemision),
+            };
+        },
+        encuestasFactProcesadas() {
+            const filas = Array.isArray(this.EncuestasFact) ? [...this.EncuestasFact] : [];
+
+            const filtradas = filas.filter(paciente => {
+                const cumpleGrupo = !this.filtrosRegistro.grupo || String(paciente.grupo || "").trim() === this.filtrosRegistro.grupo;
+                const cumpleSexo = !this.filtrosRegistro.sexo || String(paciente.sexo || "").trim() === this.filtrosRegistro.sexo;
+                const cumpleEps = !this.filtrosRegistro.eps || String(paciente.eps || "").trim() === this.filtrosRegistro.eps;
+                const cumpleRegimen = !this.filtrosRegistro.regimen || String(paciente.regimen || "").trim() === this.filtrosRegistro.regimen;
+                const cumpleBarrio = !this.filtrosRegistro.barrio || String(paciente.barrioVeredacomuna?.barrio || "").trim() === this.filtrosRegistro.barrio;
+                const cumpleComuna = !this.filtrosRegistro.comuna || String(paciente.barrioVeredacomuna?.comuna || "").trim() === this.filtrosRegistro.comuna;
+                const cumpleRemision = !this.filtrosRegistro.remision || String(paciente.requiereRemision || "").trim() === this.filtrosRegistro.remision;
+
+                return cumpleGrupo && cumpleSexo && cumpleEps && cumpleRegimen && cumpleBarrio && cumpleComuna && cumpleRemision;
+            });
+
+            if (!this.ordenRegistro.campo) return filtradas;
+
+            const direccion = this.ordenRegistro.direccion === "desc" ? -1 : 1;
+            return filtradas.sort((a, b) => {
+                const valorA = this.obtenerValorColumnaRegistro(a, this.ordenRegistro.campo);
+                const valorB = this.obtenerValorColumnaRegistro(b, this.ordenRegistro.campo);
+                return valorA.localeCompare(valorB, "es", { numeric: true, sensitivity: "base" }) * direccion;
+            });
+        },
+        opcionesFiltroPendientes() {
+            const filas = Array.isArray(this.EncuestasFactAprov) ? this.EncuestasFactAprov : [];
+            const generarOpciones = extractor => {
+                const unicos = new Set();
+                filas.forEach(p => {
+                    const valor = String(extractor(p) || "").trim();
+                    if (valor) unicos.add(valor);
+                });
+                return Array.from(unicos).sort((a, b) => a.localeCompare(b, "es", { sensitivity: "base" }));
+            };
+
+            return {
+                grupo: generarOpciones(p => p.grupo),
+                sexo: generarOpciones(p => p.sexo),
+                eps: generarOpciones(p => p.eps),
+                regimen: generarOpciones(p => p.regimen),
+                barrio: generarOpciones(p => p.barrioVeredacomuna?.barrio),
+                comuna: generarOpciones(p => p.barrioVeredacomuna?.comuna),
+            };
+        },
+        encuestasPendientesProcesadas() {
+            const filas = Array.isArray(this.EncuestasFactAprov) ? [...this.EncuestasFactAprov] : [];
+
+            const filtradas = filas.filter(paciente => {
+                const cumpleGrupo = !this.filtrosPendientes.grupo || String(paciente.grupo || "").trim() === this.filtrosPendientes.grupo;
+                const cumpleSexo = !this.filtrosPendientes.sexo || String(paciente.sexo || "").trim() === this.filtrosPendientes.sexo;
+                const cumpleEps = !this.filtrosPendientes.eps || String(paciente.eps || "").trim() === this.filtrosPendientes.eps;
+                const cumpleRegimen = !this.filtrosPendientes.regimen || String(paciente.regimen || "").trim() === this.filtrosPendientes.regimen;
+                const cumpleBarrio = !this.filtrosPendientes.barrio || String(paciente.barrioVeredacomuna?.barrio || "").trim() === this.filtrosPendientes.barrio;
+                const cumpleComuna = !this.filtrosPendientes.comuna || String(paciente.barrioVeredacomuna?.comuna || "").trim() === this.filtrosPendientes.comuna;
+
+                return cumpleGrupo && cumpleSexo && cumpleEps && cumpleRegimen && cumpleBarrio && cumpleComuna;
+            });
+
+            if (!this.ordenPendientes.campo) return filtradas;
+
+            const direccion = this.ordenPendientes.direccion === "desc" ? -1 : 1;
+            return filtradas.sort((a, b) => {
+                const valorA = this.obtenerValorColumnaPendientes(a, this.ordenPendientes.campo);
+                const valorB = this.obtenerValorColumnaPendientes(b, this.ordenPendientes.campo);
+                return valorA.localeCompare(valorB, "es", { numeric: true, sensitivity: "base" }) * direccion;
+            });
         }
 
     },
@@ -536,8 +804,16 @@ export default {
         "userData.convenio": {
             immediate: true,
             handler(nuevoConvenio) {
+                const convenioNormalizado = String(nuevoConvenio || "").trim();
+
+                // Si el usuario tiene convenio asignado, siempre se fija y se bloquea el campo.
+                if (convenioNormalizado) {
+                    this.convenioFiltro = convenioNormalizado;
+                    return;
+                }
+
                 if (!this.convenioFiltro) {
-                    this.convenioFiltro = String(nuevoConvenio || "").trim();
+                    this.convenioFiltro = "";
                 }
             },
         },
@@ -605,6 +881,100 @@ export default {
                 idProf: this.userData.numDocumento,
             };
             this.aprovicionarP(data);
+        },
+        obtenerValorColumnaRegistro(paciente, campo) {
+            const mapaValores = {
+                grupo: paciente.grupo,
+                paciente: `${paciente.nombre1 || ""} ${paciente.nombre2 || ""} ${paciente.apellido1 || ""} ${paciente.apellido2 || ""}`,
+                sexo: paciente.sexo,
+                documento: `${paciente.tipodoc || ""}-${paciente.numdoc || ""}`,
+                fechaNac: paciente.fechaNac,
+                eps: paciente.eps,
+                regimen: paciente.regimen,
+                direccion: paciente.direccion,
+                barrio: paciente.barrioVeredacomuna?.barrio,
+                comuna: paciente.barrioVeredacomuna?.comuna,
+                fecha: paciente.fecha,
+                fechagestEnfermera: paciente.fechagestEnfermera,
+                remision: paciente.requiereRemision,
+            };
+
+            return String(mapaValores[campo] || "").trim();
+        },
+        ordenarRegistro(campo) {
+            if (this.ordenRegistro.campo === campo) {
+                this.ordenRegistro.direccion = this.ordenRegistro.direccion === "asc" ? "desc" : "asc";
+                return;
+            }
+
+            this.ordenRegistro.campo = campo;
+            this.ordenRegistro.direccion = "asc";
+        },
+        indicadorOrden(campo) {
+            if (this.ordenRegistro.campo !== campo) return "";
+            return this.ordenRegistro.direccion === "asc" ? "▲" : "▼";
+        },
+        limpiarFiltrosRegistro() {
+            this.filtrosRegistro = {
+                grupo: "",
+                sexo: "",
+                eps: "",
+                regimen: "",
+                barrio: "",
+                comuna: "",
+                remision: "",
+            };
+            this.ordenRegistro = {
+                campo: "",
+                direccion: "asc",
+            };
+        },
+        obtenerValorColumnaPendientes(paciente, campo) {
+            const mapaValores = {
+                id: paciente.id,
+                grupo: paciente.grupo,
+                paciente: `${paciente.nombre1 || ""} ${paciente.apellido1 || ""} ${paciente.apellido2 || ""}`,
+                sexo: paciente.sexo,
+                documento: `${paciente.tipodoc || ""}-${paciente.numdoc || ""}`,
+                fechaNac: paciente.fechaNac,
+                edad: this.calcularEdad(paciente.fechaNac),
+                eps: paciente.eps,
+                regimen: paciente.regimen,
+                direccion: paciente.direccion,
+                barrio: paciente.barrioVeredacomuna?.barrio,
+                comuna: paciente.barrioVeredacomuna?.comuna,
+                fecha: paciente.fecha,
+                fechagestEnfermera: paciente.fechagestEnfermera,
+            };
+
+            return String(mapaValores[campo] || "").trim();
+        },
+        ordenarPendientes(campo) {
+            if (this.ordenPendientes.campo === campo) {
+                this.ordenPendientes.direccion = this.ordenPendientes.direccion === "asc" ? "desc" : "asc";
+                return;
+            }
+
+            this.ordenPendientes.campo = campo;
+            this.ordenPendientes.direccion = "asc";
+        },
+        indicadorOrdenPendientes(campo) {
+            if (this.ordenPendientes.campo !== campo) return "";
+            return this.ordenPendientes.direccion === "asc" ? "▲" : "▼";
+        },
+        limpiarFiltrosPendientes() {
+            this.filtrosPendientes = {
+                grupo: "",
+                sexo: "",
+                eps: "",
+                regimen: "",
+                barrio: "",
+                comuna: "",
+            };
+            this.ordenPendientes = {
+                campo: "",
+                direccion: "asc",
+            };
         },
         desactivarInput(cupId) {
             this.facturaDisabled[cupId] = true;
