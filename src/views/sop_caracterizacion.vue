@@ -159,7 +159,10 @@
             <hr />
             <div class="row p-1">
                 <div class="col-6 p-1">
-                    <h4>Grupo Familiar</h4>
+                    <h4>
+                        Grupo Familiar
+                        <span class="badge bg-info text-dark ms-1">{{ grupoFamiliar.length }}</span>
+                    </h4>
                     <button class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#staticBackdrop">
                         <i class="bi bi-person-plus"></i> Agregar
                     </button>
@@ -290,7 +293,7 @@
                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" @click="clearform">
                                 Close
                             </button>
-                            <button type="button" class="btn btn-primary" @click="addmiembro" data-bs-dismiss="modal">
+                            <button type="button" class="btn btn-primary" @click="addmiembro">
                                 Guardar
                             </button>
                         </div>
@@ -838,6 +841,12 @@ export default {
                     ...this.nuevoMiembro,
                 });
                 this.clearform();
+                // Cerrar modal solo si la validación pasó
+                const modalEl = document.getElementById('staticBackdrop');
+                if (modalEl) {
+                    const modal = window.bootstrap?.Modal?.getInstance(modalEl);
+                    if (modal) modal.hide();
+                }
             } else {
                 alert("Por favor, complete todos los campos requeridos.");
             }
@@ -1123,5 +1132,119 @@ export default {
 .btn.rounded-circle:hover {
     transform: scale(1.05);
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* ===== COMPACTACIÓN DEL FORMULARIO ===== */
+
+/* Título principal */
+.container h1.text-center {
+    font-size: 1.3rem;
+    margin-bottom: 0.4rem;
+    margin-top: 0.5rem;
+}
+
+/* Separadores de sección */
+.container hr,
+.container > .row > hr {
+    margin-top: 0.4rem;
+    margin-bottom: 0.3rem;
+}
+
+/* Títulos de sección */
+.container h4 {
+    font-size: 0.95rem;
+    font-weight: 600;
+    margin-bottom: 0.3rem;
+    color: #0f766e;
+}
+
+/* Párrafos de subsección */
+.container p {
+    font-size: 0.82rem;
+    margin-bottom: 0.25rem;
+    font-weight: 500;
+}
+
+/* Espaciado entre bloques — reemplaza los <br /> */
+.container + br + .container,
+.container {
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+}
+
+/* Form-floating compacto */
+.form-floating {
+    margin-bottom: 0.3rem !important;
+}
+
+.form-floating > .form-control,
+.form-floating > .form-select {
+    height: 46px !important;
+    min-height: 46px !important;
+    padding-top: 1rem !important;
+    padding-bottom: 0.25rem !important;
+    font-size: 0.82rem !important;
+}
+
+.form-floating > label {
+    font-size: 0.75rem !important;
+    padding-top: 0.55rem !important;
+    padding-bottom: 0 !important;
+}
+
+/* mb-3 reducido en el formulario */
+.container .mb-3 {
+    margin-bottom: 0.3rem !important;
+}
+
+/* Selects normales */
+.container .form-select:not(.form-floating .form-select) {
+    font-size: 0.82rem;
+    padding: 0.28rem 0.6rem;
+    height: auto;
+}
+
+/* Checkboxes en grilla 2 columnas responsive */
+.container .form-check {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    width: 48%;
+    margin-bottom: 0.15rem;
+    font-size: 0.8rem;
+    padding-left: 1.4rem;
+}
+
+@media (max-width: 480px) {
+    .container .form-check {
+        width: 100%;
+    }
+}
+
+.form-check-input {
+    margin-top: 0 !important;
+    flex-shrink: 0;
+}
+
+/* Tabla grupo familiar compacta */
+.container .table {
+    font-size: 0.8rem;
+    margin-bottom: 0.4rem;
+}
+
+.container .table th,
+.container .table td {
+    padding: 0.25rem 0.4rem;
+}
+
+/* Row reducida */
+.container .row {
+    row-gap: 0.1rem;
+}
+
+/* Botón guardar */
+.container .btn-primary {
+    margin-top: 0.5rem;
+    margin-bottom: 0.5rem;
 }
 </style>
