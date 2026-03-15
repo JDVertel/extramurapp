@@ -118,6 +118,7 @@ export default {
         return {
             fechaInicio: "",
             fechaFin: "",
+            idips: 1,
             activacion: false,
             actividadesPorEncuesta: {},
             columnasTipoActividad: [
@@ -144,6 +145,8 @@ export default {
         };
     },
     methods: {
+        ...mapActions(["GetAllRegistersbyRangeEnf", "getAllActividadesExtra", "getdataips"]),
+
         copiarTabla() {
             // Selecciona la tabla por referencia
             const tabla = this.$el.querySelector("table");
@@ -171,7 +174,14 @@ export default {
                 alert('Tabla copiada al portapapeles');
             }
         },
-        ...mapActions(["GetAllRegistersbyRangeEnf", "getAllActividadesExtra"]),
+
+        async cargarDatosIps() {
+            try {
+                await this.getdataips(this.idips);
+            } catch (error) {
+                console.error("Error cargando datos IPS en informe enfermero:", error);
+            }
+        },
 
         /* metodo para cargar los datos del profesional, y los datos de la ips */
         async generarInforme() {
@@ -181,6 +191,7 @@ export default {
                 idempleado: this.userData.numDocumento,
                 cargo: this.userData.cargo,
             };
+            await this.cargarDatosIps();
             await this.GetAllRegistersbyRangeEnf(rango);
             await this.getAllActividadesExtra();
             await this.cargarActividadesPorEncuesta();
@@ -243,6 +254,10 @@ export default {
     computed: {
         ...mapState(["encuestasFiltradas", "dataips", "userData", "actividadesExtra"]),
 
+    },
+
+    async mounted() {
+        await this.cargarDatosIps();
     },
 
 };

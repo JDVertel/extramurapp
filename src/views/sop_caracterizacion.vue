@@ -2,10 +2,16 @@
     <div>
         <!-- ...contenido existente... -->
         <div v-if="guardando" class="overlay-guardando">
-            <div class="spinner-border text-primary" role="status">
-                <span class="visually-hidden">Guardando...</span>
+            <div class="progress-card shadow">
+                <div class="h5 mb-3">Guardando caracterización</div>
+                <div class="progress mb-2" role="progressbar" aria-label="Guardando caracterización"
+                    aria-valuemin="0" aria-valuemax="100" style="height: 22px;">
+                    <div class="progress-bar progress-bar-striped progress-bar-animated progreso-indeterminado">
+                        Guardando...
+                    </div>
+                </div>
+                <div class="text-muted small">Guardando datos, por favor espere...</div>
             </div>
-            <div class="texto-guardando">Guardando datos, por favor espere...</div>
         </div>
         <div class="container" :aria-busy="guardando">
             <h1 class="text-center">Caracterización de la visita</h1>
@@ -1091,10 +1097,16 @@ export default {
     justify-content: center;
 }
 
-.texto-guardando {
-    margin-top: 1rem;
-    font-size: 1.2rem;
-    color: #333;
+.progress-card {
+    width: min(560px, calc(100vw - 32px));
+    background: #fff;
+    border-radius: 16px;
+    padding: 24px;
+    border: 1px solid #dee2e6;
+}
+
+.progreso-indeterminado {
+    width: 100%;
 }
 
 /* Estilos para botones redondeados */

@@ -1,10 +1,16 @@
 <template>
     <div>
         <div v-if="cargando" class="spinner-overlay">
-            <div class="spinner-border text-primary" role="status">
-                <span class="visually-hidden">Cargando...</span>
+            <div class="progress-card shadow">
+                <div class="h5 mb-3">Cargando información</div>
+                <div class="progress mb-2" role="progressbar" aria-label="Cargando información" aria-valuemin="0"
+                    aria-valuemax="100" style="height: 22px;">
+                    <div class="progress-bar progress-bar-striped progress-bar-animated progreso-indeterminado">
+                        Cargando...
+                    </div>
+                </div>
+                <div class="text-muted small">Por favor espere, cargando información...</div>
             </div>
-            <div class="spinner-message">Por favor espere, cargando información...</div>
         </div>
         <div v-else-if="errorCarga" class="alert alert-danger m-3">
             <h4>Error cargando información</h4>
@@ -207,10 +213,16 @@ export default {
     justify-content: center;
 }
 
-.spinner-message {
-    margin-top: 20px;
-    font-size: 1.2rem;
-    color: #333;
+.progress-card {
+    width: min(560px, calc(100vw - 32px));
+    background: #fff;
+    border-radius: 16px;
+    padding: 24px;
+    border: 1px solid #dee2e6;
+}
+
+.progreso-indeterminado {
+    width: 100%;
 }
 
 .acciones-col {

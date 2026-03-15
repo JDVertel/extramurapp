@@ -261,7 +261,9 @@
                                         :class="{ 'is-valid': documentoValido === true, 'is-invalid': documentoValido === false }"
                                         required />
                                     <span class="input-group-text" v-if="verificandoDocumento">
-                                        <span class="spinner-border spinner-border-sm" role="status"></span>
+                                        <span class="mini-progress" role="progressbar" aria-label="Verificando documento">
+                                            <span class="mini-progress-bar"></span>
+                                        </span>
                                     </span>
                                     <span class="input-group-text" v-else-if="documentoValido === true">
                                         <i class="bi bi-check-circle-fill text-success"></i>
@@ -285,7 +287,9 @@
                                         :class="{ 'is-valid': emailValido === true, 'is-invalid': emailValido === false }"
                                         required />
                                     <span class="input-group-text" v-if="verificandoEmail">
-                                        <span class="spinner-border spinner-border-sm" role="status"></span>
+                                        <span class="mini-progress" role="progressbar" aria-label="Verificando correo">
+                                            <span class="mini-progress-bar"></span>
+                                        </span>
                                     </span>
                                     <span class="input-group-text" v-else-if="emailValido === true">
                                         <i class="bi bi-check-circle-fill text-success"></i>
@@ -973,6 +977,32 @@ Esta acción eliminará el usuario de la base de datos.`)) {
 /* Contenedor de usuarios */
 .usuarios-container {
     padding: 10px 0;
+}
+
+.mini-progress {
+    display: inline-flex;
+    width: 44px;
+    height: 10px;
+    border-radius: 999px;
+    overflow: hidden;
+    background: #dbe8ff;
+}
+
+.mini-progress-bar {
+    width: 100%;
+    background: linear-gradient(90deg, #0d6efd 0%, #5aa3ff 50%, #0d6efd 100%);
+    background-size: 200% 100%;
+    animation: miniProgressShift 1.2s linear infinite;
+}
+
+@keyframes miniProgressShift {
+    0% {
+        background-position: 200% 0;
+    }
+
+    100% {
+        background-position: -200% 0;
+    }
 }
 
 /* Sección de Grupo */

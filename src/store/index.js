@@ -1221,7 +1221,8 @@ export default createStore({
               id: key,
               ...value,
             }))
-            .filter((agenda) => agenda.fecha === fecha)
+            .filter((agenda) => agenda.fecha >= fecha)
+            .sort((a, b) => String(a.fecha || "").localeCompare(String(b.fecha || "")))
           : [];
 
         commit("setAgendas", agendas);

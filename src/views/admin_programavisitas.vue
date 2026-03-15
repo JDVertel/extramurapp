@@ -41,7 +41,7 @@
                     </div>
                 </div>
 
-                <h4>Detalle de Agenda</h4>
+                <h4>Detalle de Agenda <small class="text-muted fs-6">(desde hoy en adelante)</small></h4>
                 <hr />
                 <div class="agenda-table-scroll">
                     <table class="table table-bordered table-sm">
@@ -176,7 +176,7 @@ export default {
 
 <style>
 .agenda-table-scroll {
-  max-height: 400px;
+  max-height: calc(100vh - 280px);
   overflow-y: auto;
 }
 .sticky-header th {

@@ -34,11 +34,15 @@
 
     <!-- Spinner de consulta -->
     <div class="mt-2">
-      <div v-if="cargandoPacientes" class="d-flex align-items-center">
-        <div class="spinner-border text-primary me-2" role="status">
-          <span class="visually-hidden">Consultando...</span>
+      <div v-if="cargandoPacientes" class="progress-card progress-card-sm shadow-sm">
+        <div class="small fw-semibold mb-2">Consultando pacientes</div>
+        <div class="progress mb-2" role="progressbar" aria-label="Consultando pacientes" aria-valuemin="0"
+          aria-valuemax="100" style="height: 14px;">
+          <div class="progress-bar progress-bar-striped progress-bar-animated progreso-indeterminado">
+            Consultando...
+          </div>
         </div>
-        <div>Consultando...</div>
+        <div class="text-muted small">Buscando información del paciente solicitado.</div>
       </div>
     </div>
 
@@ -554,5 +558,21 @@ code {
   padding: 0.25rem 0.5rem;
   border-radius: 0.25rem;
   font-size: 0.85rem;
+}
+
+.progress-card {
+  width: min(520px, 100%);
+  background: #fff;
+  border-radius: 16px;
+  padding: 16px 18px;
+  border: 1px solid #dee2e6;
+}
+
+.progress-card-sm {
+  max-width: 420px;
+}
+
+.progreso-indeterminado {
+  width: 100%;
 }
 </style>

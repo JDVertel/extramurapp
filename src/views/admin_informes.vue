@@ -2,12 +2,20 @@
 
     <div class="mt-2 datos">
         <div v-if="cargandoInforme" class="overlay-spinner">
-            <div class="spinner-border text-primary" role="status" style="width: 4rem; height: 4rem;">
-                <span class="visually-hidden">Cargando...</span>
+            <div class="progress-card shadow">
+                <div class="h5 mb-3">Generando informe</div>
+                <div class="progress mb-2" role="progressbar" aria-label="Progreso de generación"
+                    :aria-valuenow="progresoInforme" aria-valuemin="0" aria-valuemax="100"
+                    style="height: 22px;">
+                    <div class="progress-bar progress-bar-striped progress-bar-animated"
+                        :style="{ width: `${progresoInforme}%` }">
+                        {{ progresoInforme }}%
+                    </div>
+                </div>
+                <div class="text-muted small">{{ mensajeProgreso }}</div>
             </div>
-            <div class="mt-3 h4">Generando informe, por favor espere...</div>
         </div>
-        <div class="container">
+        <div class="container-fluid px-3 px-xl-4">
 
 
             <h1><i class="bi bi-clipboard2-data h1"></i>Informes Administrativos</h1>
@@ -25,20 +33,28 @@
                         v-model="tipoinforme" @change="clearFormInformes()">
                         <option selected value="">Seleccione</option>
                         <option value="1">Seguimiento</option>
+                        <option value="2">Actividades</option>
                     </select>
                     <br>
 
                 </div>
 
-                <div class="col-6 col-md-2" v-if="tipoinforme == '1'">
+                <div class="col-6 col-md-2" v-if="tipoinforme == '1' || tipoinforme == '2'">
                     <label for="fechaInicio" class="form-label">Fecha de Inicio</label>
                     <input type="date" id="fechaInicio" class="form-control" v-model="fechaInicio" required />
                 </div>
-                <div class="col-6 col-md-2" v-if="tipoinforme == '1'">
+                <div class="col-6 col-md-2" v-if="tipoinforme == '1' || tipoinforme == '2'">
                     <label for="fechaFin" class="form-label">Fecha de Fin</label>
                     <input type="date" id="fechaFin" class="form-control" v-model="fechaFin" required />
                 </div>
-                <div class="col-12 col-md-2 mt-3" v-if="tipoinforme == '1'">
+                <div class="col-12 col-md-3" v-if="tipoinforme == '1' || tipoinforme == '2'">
+                    <label for="convenioInforme" class="form-label">Convenio</label>
+                    <select id="convenioInforme" class="form-select" v-model="convenioInforme">
+                        <option value="">Todos</option>
+                        <option v-for="conv in conveniosDisponibles" :key="conv" :value="conv">{{ conv }}</option>
+                    </select>
+                </div>
+                <div class="col-12 col-md-2 mt-3" v-if="tipoinforme == '1' || tipoinforme == '2'">
                     <button type="button" class="btn btn-warning  mt-3" @click="generarInforme()">
                         <i class="bi bi-clipboard2-data h6"></i> Generar Informe
                     </button>
@@ -47,12 +63,13 @@
             <p v-if="mostrarFormulario && !tieneDatosTabla && tipoinforme == '1'">*Todas las encuestas cerradas por la
                 enfermera entre las
                 fechas seleccionadas</p>
+            <p v-if="mostrarFormulario && !tieneDatosTabla && tipoinforme == '2'">*Todas las encuestas registradas entre las fechas seleccionadas, con sus actividades y datos del paciente</p>
 
         </div>
         <br>
-        <div class="container-fluid">
+        <div class="container-fluid px-2 px-xl-3 informe-panel">
             <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
-                <h5 class="mb-0">Listado de Pacientes finalizados</h5>
+                <h5 class="mb-0">{{ tituloListado }}</h5>
                 <span v-for="(parametro, idx) in parametrosConsultaEtiquetas" :key="`parametro-consulta-${idx}`"
                     class="badge bg-secondary">
                     {{ parametro }}
@@ -111,7 +128,7 @@
     width: 100%;
     max-width: 100vw;
     margin-left: 0;
-    padding: 0;
+    padding: 0 6px;
     overflow-x: hidden;
 }
 
@@ -124,8 +141,8 @@
 }
 
 .tabla-wrapper {
-    height: calc(100vh - 280px);
-    max-height: calc(100vh - 280px);
+    height: calc(100vh - 230px);
+    max-height: calc(100vh - 230px);
     overflow: scroll;
     width: 100%;
     max-width: 100%;
@@ -195,6 +212,19 @@
     align-items: center;
     justify-content: center;
 }
+
+.progress-card {
+    width: min(560px, calc(100vw - 32px));
+    background: #fff;
+    border-radius: 16px;
+    padding: 24px;
+    border: 1px solid #dee2e6;
+}
+
+.informe-panel {
+    width: 100%;
+    max-width: 100%;
+}
 </style>
 
 <script>
@@ -238,7 +268,31 @@ const COLUMNAS_INFORME = [
     { key: "facturado", label: "Facturado" },
 ];
 
-const FILTROS_INICIALES = COLUMNAS_INFORME.reduce((acc, col) => {
+const COLUMNAS_ACTIVIDADES = [
+    { key: "convenio", label: "Convenio" },
+    { key: "grupo", label: "Grupo" },
+    { key: "fecha", label: "Fecha" },
+    { key: "paciente", label: "Paciente" },
+    { key: "sexo", label: "Sexo" },
+    { key: "documento", label: "Documento" },
+    { key: "eps", label: "EPS" },
+    { key: "regimen", label: "Régimen" },
+    { key: "direccion", label: "Dirección" },
+    { key: "barrio", label: "Barrio" },
+    { key: "comuna", label: "Comuna" },
+    { key: "riesgo", label: "Población Riesgo" },
+    { key: "remision", label: "Remisión" },
+    { key: "actividad", label: "Actividad" },
+    { key: "profesional", label: "Profesional" },
+    { key: "rol", label: "Rol" },
+    { key: "cupsNombre", label: "CUPS Nombre" },
+    { key: "codigo", label: "Código" },
+    { key: "descripcionCUP", label: "Descripción CUP" },
+    { key: "cantidad", label: "Cantidad" },
+    { key: "detalle", label: "Detalle" },
+];
+
+const crearFiltrosIniciales = (columnas) => columnas.reduce((acc, col) => {
     acc[col.key] = "";
     return acc;
 }, {});
@@ -249,6 +303,10 @@ export default {
             fechaInicio: "",
             fechaFin: "",
             tipoinforme: "",
+            convenioInforme: "",
+            conveniosDisponibles: ["Extramural", "E Basicos"],
+            progresoInforme: 0,
+            mensajeProgreso: "Preparando consulta...",
             detallesVisibles: [], // Para controlar la visibilidad de detalles por fila
             mostrarFormulario: true,
             cargandoInforme: false,
@@ -256,7 +314,7 @@ export default {
             actividadesExtraMap: {},
             cupsMap: {},
             columnasTabla: COLUMNAS_INFORME,
-            filtros: { ...FILTROS_INICIALES },
+            filtros: { ...crearFiltrosIniciales(COLUMNAS_INFORME) },
             sortKey: "",
             sortDirection: "asc",
             anchoTabla: 0,
@@ -266,10 +324,26 @@ export default {
                 finicial: "",
                 ffinal: "",
                 profesional: "",
+                convenio: "",
             },
         };
     },
     methods: {
+        actualizarProgreso(valor, mensaje) {
+            this.progresoInforme = Math.max(0, Math.min(100, Math.round(valor)));
+            if (mensaje) {
+                this.mensajeProgreso = mensaje;
+            }
+        },
+
+        esperarRender() {
+            return new Promise((resolve) => {
+                requestAnimationFrame(() => {
+                    requestAnimationFrame(() => resolve());
+                });
+            });
+        },
+
         onTopScroll() {
             if (this.sincronizandoScroll) return;
             const top = this.$refs.topScrollbar;
@@ -321,6 +395,21 @@ export default {
                 .replace(/>/g, "&gt;")
                 .replace(/\"/g, "&quot;")
                 .replace(/'/g, "&#039;");
+        },
+
+        obtenerColumnasPorTipo(tipo) {
+            return tipo === "2" ? COLUMNAS_ACTIVIDADES : COLUMNAS_INFORME;
+        },
+
+        normalizarConvenio(valor) {
+            return String(valor || "").trim().toLowerCase();
+        },
+
+        filtrarEncuestasPorConvenio(encuestas = []) {
+            const convenioSeleccionado = this.normalizarConvenio(this.convenioInforme);
+            if (!convenioSeleccionado) return encuestas;
+
+            return encuestas.filter((encuesta) => this.normalizarConvenio(encuesta?.convenio) === convenioSeleccionado);
         },
 
         construirFilasExportacion() {
@@ -421,6 +510,88 @@ export default {
                             convenio: base.convenio,
                             fechaFactCUP: asig?.fechaFacturacion || "",
                             facturado: asig?.facturado === true ? "Sí" : (asig?.facturado === false ? "No" : ""),
+                        });
+                    }
+                }
+            }
+
+            return filas;
+        },
+
+        construirFilasActividades() {
+            const filas = [];
+            const encuestas = Array.isArray(this.encuestasInforme) ? this.encuestasInforme : [];
+
+            for (const paciente of encuestas) {
+                const base = {
+                    convenio: paciente.convenio || "",
+                    grupo: paciente.grupo || "",
+                    fecha: paciente.fecha || "",
+                    paciente: `${paciente.nombre1 || ""} ${paciente.apellido1 || ""} ${paciente.apellido2 || ""}`.trim(),
+                    sexo: paciente.sexo || "",
+                    documento: `${paciente.tipodoc || ""}-${paciente.numdoc || ""}`,
+                    eps: paciente.eps || "",
+                    regimen: paciente.regimen || "",
+                    direccion: paciente.direccion || "",
+                    barrio: paciente.barrioVeredacomuna?.barrio || "",
+                    comuna: paciente.barrioVeredacomuna?.comuna || "",
+                    riesgo: paciente.poblacionRiesgo || "",
+                    remision: paciente.requiereRemision || "",
+                };
+
+                const actividades = Array.isArray(paciente.seguimientoActividades) ? paciente.seguimientoActividades : [];
+
+                if (!actividades.length) {
+                    filas.push({
+                        ...base,
+                        rowKey: `${paciente.id}-sin-actividad`,
+                        actividad: "Sin actividades",
+                        profesional: "",
+                        rol: "",
+                        cupsNombre: "",
+                        codigo: "",
+                        descripcionCUP: "",
+                        cantidad: "",
+                        detalle: "",
+                    });
+                    continue;
+                }
+
+                for (const actividad of actividades) {
+                    const asignaciones = Array.isArray(actividad.asignaciones) ? actividad.asignaciones : [];
+
+                    if (!asignaciones.length) {
+                        filas.push({
+                            ...base,
+                            rowKey: `${paciente.id}-${actividad.key}-sin-asignacion`,
+                            actividad: actividad.nombre || "Actividad",
+                            profesional: "",
+                            rol: "",
+                            cupsNombre: "",
+                            codigo: "",
+                            descripcionCUP: "",
+                            cantidad: "",
+                            detalle: "",
+                        });
+                        continue;
+                    }
+
+                    for (let i = 0; i < asignaciones.length; i++) {
+                        const asig = asignaciones[i];
+                        const cupId = asig?.cupsId || asig?.id || "";
+                        const nombreCup = this.obtenerNombreCupDesdeId(cupId, asig?.cupsNombre || asig?.DescripcionCUP || asig?.codigo || "");
+
+                        filas.push({
+                            ...base,
+                            rowKey: `${paciente.id}-${actividad.key}-${i}`,
+                            actividad: actividad.nombre || "Actividad",
+                            profesional: asig?.nombreProf || "",
+                            rol: asig?.key || "",
+                            cupsNombre: nombreCup,
+                            codigo: asig?.codigo || "",
+                            descripcionCUP: asig?.DescripcionCUP || "",
+                            cantidad: asig?.cantidad ?? "",
+                            detalle: asig?.detalle || "",
                         });
                     }
                 }
@@ -643,7 +814,8 @@ export default {
         },
 
         async actualizarDatosSeguimientoInforme() {
-            const encuestas = Array.isArray(this.EncuestasAdmin) ? this.EncuestasAdmin : [];
+            const encuestasBase = Array.isArray(this.EncuestasAdmin) ? this.EncuestasAdmin : [];
+            const encuestas = this.filtrarEncuestasPorConvenio(encuestasBase);
 
             if (!encuestas.length) {
                 this.encuestasInforme = [];
@@ -710,13 +882,18 @@ export default {
             }
         },
         /*  */
-        ...mapActions(["GetRegistersbyRangeCerrados"]),
+        ...mapActions(["GetRegistersbyRangeCerrados", "GetRegistersbyRangeGeneral"]),
 
         async generarInforme() {
             this.cargandoInforme = true;
+            this.actualizarProgreso(5, "Preparando parámetros del informe...");
             this.$store.commit('setEncuestasAdmin', []);
             let consultaUsada = null;
             try {
+                this.columnasTabla = this.obtenerColumnasPorTipo(this.tipoinforme);
+                this.filtros = { ...crearFiltrosIniciales(this.columnasTabla) };
+                this.actualizarProgreso(15, "Consultando registros...");
+
                 if (this.fechaInicio && this.fechaFin && this.tipoinforme == "1") {
                     let parametros = {
                         finicial: this.fechaInicio,
@@ -728,17 +905,41 @@ export default {
                         finicial: parametros.finicial,
                         ffinal: parametros.ffinal,
                         profesional: "",
+                        convenio: this.convenioInforme || "Todos",
+                    };
+                } else if (this.fechaInicio && this.fechaFin && this.tipoinforme == "2") {
+                    let parametros = {
+                        finicial: this.fechaInicio,
+                        ffinal: this.fechaFin
+                    };
+                    await this.GetRegistersbyRangeGeneral(parametros);
+                    consultaUsada = {
+                        tipo: "Actividades",
+                        finicial: parametros.finicial,
+                        ffinal: parametros.ffinal,
+                        profesional: "",
+                        convenio: this.convenioInforme || "Todos",
                     };
                 } else {
                     this.$toast.error("Debe seleccionar tipo de informe y rango de fechas");
+                    this.actualizarProgreso(0, "Preparando consulta...");
+                    this.cargandoInforme = false;
+                    return;
                 }
 
+                this.actualizarProgreso(55, "Procesando actividades y asignaciones...");
                 await this.actualizarDatosSeguimientoInforme();
                 if (consultaUsada) {
                     this.consultaActual = consultaUsada;
                 }
                 this.mostrarFormulario = this.filasInformeTabla.length === 0;
+                this.actualizarProgreso(80, "Renderizando tabla...");
+                await this.$nextTick();
                 this.actualizarAnchoTabla();
+                await this.$nextTick();
+                await this.esperarRender();
+                this.actualizarProgreso(100, "Informe generado correctamente");
+                await new Promise((resolve) => setTimeout(resolve, 250));
             } catch (error) {
                 console.error("Error al generar el informe:", error);
             } finally {
@@ -757,8 +958,12 @@ export default {
             this.mostrarFormulario = true;
             this.fechaInicio = "";
             this.fechaFin = "";
+            this.convenioInforme = "";
+            this.progresoInforme = 0;
+            this.mensajeProgreso = "Preparando consulta...";
             this.encuestasInforme = [];
-            this.filtros = { ...FILTROS_INICIALES };
+            this.columnasTabla = this.obtenerColumnasPorTipo(this.tipoinforme);
+            this.filtros = { ...crearFiltrosIniciales(this.columnasTabla) };
             this.sortKey = "";
             this.sortDirection = "asc";
             this.anchoTabla = 0;
@@ -767,6 +972,7 @@ export default {
                 finicial: "",
                 ffinal: "",
                 profesional: "",
+                convenio: "",
             };
         },
 
@@ -778,6 +984,9 @@ export default {
 
     computed: {
         ...mapState(["userData", "EncuestasAdmin"]),
+        tituloListado() {
+            return this.tipoinforme === "2" ? "Listado de actividades" : "Listado de Pacientes finalizados";
+        },
         filasFiltradasOrdenadas() {
             let filas = [...this.filasInformeTabla];
 
@@ -824,7 +1033,9 @@ export default {
             return opciones;
         },
         filasInformeTabla() {
-            return this.construirFilasExportacion();
+            return this.tipoinforme === "2"
+                ? this.construirFilasActividades()
+                : this.construirFilasExportacion();
         },
         tieneDatosTabla() {
             return this.filasInformeTabla.length > 0;
@@ -835,6 +1046,7 @@ export default {
             if (this.consultaActual.finicial && this.consultaActual.ffinal) {
                 etiquetas.push(`Rango: ${this.consultaActual.finicial} a ${this.consultaActual.ffinal}`);
             }
+            if (this.consultaActual.convenio) etiquetas.push(`Convenio: ${this.consultaActual.convenio}`);
             if (this.consultaActual.profesional) etiquetas.push(`Profesional: ${this.consultaActual.profesional}`);
             return etiquetas;
         },
@@ -862,10 +1074,6 @@ export default {
                 this.detallesVisibles = Array.isArray(nuevo) ? Array(nuevo.length).fill(false) : [];
                 this.actualizarDatosSeguimientoInforme();
                 this.actualizarAnchoTabla();
-                // Cierra el spinner cuando los datos realmente se actualizan
-                if (this.cargandoInforme && Array.isArray(nuevo) && nuevo.length > 0) {
-                    this.cargandoInforme = false;
-                }
             }, {
             immediate: true,
             deep: false
