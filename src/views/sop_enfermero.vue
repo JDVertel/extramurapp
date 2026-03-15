@@ -49,7 +49,7 @@
                             <div class="row paciente shadow-sm">
                                 <div class="col-6 col-md-6">
                                     <small><strong>{{ encuesta.nombre1 }} {{ encuesta.apellido1
-                                            }}</strong></small>
+                                            }}</strong> | </small>
                                     <small>EPS: {{ encuesta.eps }} | Riesgo: {{
                                         encuesta.poblacionRiesgo }}</small>
                                     <small>Nac: {{ encuesta.fechaNac }} | Enc: {{ encuesta.fecha
@@ -817,5 +817,50 @@ export default {
     background: var(--bs-body-bg);
     padding-top: 0.35rem;
     padding-bottom: 0.35rem;
+}
+
+/* ===== TEMA VERDE TURQUESA (estilo navbar) ===== */
+h1.display-6 {
+    color: #0f766e;
+}
+
+.row.paciente {
+    background: linear-gradient(
+        90deg,
+        #0f766e 0%,
+        #0d9488 30%,
+        #14b8a6 60%,
+        #0d9488 80%,
+        #0f766e 100%
+    );
+    border-radius: 10px;
+    padding: 8px 10px;
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+}
+
+.row.paciente small {
+    display: block;
+    color: #e6fffa;
+    line-height: 1.4;
+}
+
+.row.paciente strong {
+    color: #ffffff;
+    font-size: 0.9rem;
+}
+
+.tabla-proceso thead th {
+    background: #0f766e !important;
+    color: #ffffff !important;
+    font-size: 0.78rem;
+    white-space: nowrap;
+    vertical-align: middle;
+}
+
+.progreso-indeterminado {
+    background-color: #14b8a6 !important;
+    width: 100%;
 }
 </style>

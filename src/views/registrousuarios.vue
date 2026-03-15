@@ -229,12 +229,12 @@
 
                 <div class="tab-pane fade" id="nav-profile" role="tabpanel" aria-labelledby="nav-profile-tab"
                     tabindex="0">
-                    <h1 class="display-6">Crear Usuario </h1>
-                    <form @submit.prevent="createUserByAdmin">
+                    <form @submit.prevent="createUserByAdmin" :class="['form-convenio-wrapper', convenio === 'Extramural' ? 'convenio-extramural' : convenio === 'E Basicos' ? 'convenio-ebasicos' : '']">
+                    <h1 class="display-6 mb-3">Crear Usuario</h1>
                         <div class="row">
                             <div class="col col-12 col-md-4 mb-3">
                                 <label for="convenio">IPS / Programa</label>
-                                <select id="convenio" v-model="convenio" class="form-select" required>
+                                <select id="convenio" v-model="convenio" class="form-select" required @change="onConvenioChange">
                                     <option value="">Seleccione una opción</option>
                                     <option value="Extramural">Extramural</option>
                                     <option value="E Basicos">E Basicos</option>
@@ -248,9 +248,8 @@
                                     <option value="Medico">Medico</option>
                                     <option value="Fact">Facturador</option>
                                     <option value="admin">Administrador</option>
-                                    <option value="Psicologo">Psicologo</option>
-                                    <option value="Nutricionista">Nutricionista</option>
-                                    <option value="Tsocial">Trabajador social</option>
+                                    <option v-if="convenio === 'E Basicos'" value="Psicologo">Psicologo</option>
+                                    <option v-if="convenio === 'E Basicos'" value="Tsocial">Trabajador social</option>
                                 </select>
                             </div>
                             <div class="col col-12 col-md-4 mb-3">
@@ -315,7 +314,6 @@
                                 cargo === 'Enfermero' ||
                                 cargo === 'Medico' ||
                                 cargo === 'Psicologo' ||
-                                cargo === 'Nutricionista' ||
                                 cargo === 'Tsocial'
                             ">
                                 <label for="grupo"># Grupo</label>
@@ -911,6 +909,12 @@ Esta acción eliminará el usuario de la base de datos.`)) {
                 console.error("Error fetchUsers:", error);
             }
         },
+        onConvenioChange() {
+            const soloEBasicos = ['Psicologo', 'Tsocial'];
+            if (this.convenio !== 'E Basicos' && soloEBasicos.includes(this.cargo)) {
+                this.cargo = '';
+            }
+        },
     },
     mounted() {
         this.fetchUsers();
@@ -919,6 +923,35 @@ Esta acción eliminará el usuario de la base de datos.`)) {
 </script>
 
 <style scoped>
+/* Formulario de creación de usuario: coloración por convenio */
+.form-convenio-wrapper {
+    padding: 20px;
+    border-radius: 14px;
+    border: 2px solid #dee2e6;
+    margin-bottom: 24px;
+    transition: background 0.3s ease, border-color 0.3s ease;
+}
+
+.form-convenio-wrapper.convenio-extramural {
+    background: linear-gradient(135deg, #f3e8ff 0%, #e9d5ff 100%);
+    border-color: #a855f7;
+}
+
+.form-convenio-wrapper.convenio-extramural h1,
+.form-convenio-wrapper.convenio-extramural label {
+    color: #6b21a8;
+}
+
+.form-convenio-wrapper.convenio-ebasicos {
+    background: linear-gradient(135deg, #f0fdf4 0%, #bbf7d0 100%);
+    border-color: #16a34a;
+}
+
+.form-convenio-wrapper.convenio-ebasicos h1,
+.form-convenio-wrapper.convenio-ebasicos label {
+    color: #14532d;
+}
+
 /* Sección de Convenio */
 .convenio-section {
     background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);

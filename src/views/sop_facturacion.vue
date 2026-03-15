@@ -182,7 +182,7 @@
                         <div class="tab-content" id="myTabContent">
                             <div class="tab-pane fade show active" id="home-tab-pane" role="tabpanel"
                                 aria-labelledby="home-tab" tabindex="0">
-                                <div class="row mt-3">
+                                <form class="row mt-3" @submit.prevent="getdataEncuestas(fechaInicio, fechaFin, convenioFiltro)">
                                     <div class="col-4">
                                         <div class="input-group">
                                             <span class="input-group-text">Convenio</span>
@@ -204,16 +204,15 @@
                                         </div>
                                     </div>
                                     <div class="col-4">
-                                        <button type="button" class="btn btn-warning"
-                                            @click="getdataEncuestas(fechaInicio, fechaFin, convenioFiltro)">
+                                        <button type="submit" class="btn btn-warning">
                                             Buscar
                                         </button>
                                     </div>
-                                </div>
+                                </form>
                             </div>
                             <div class="tab-pane fade" id="profile-tab-pane" role="tabpanel"
                                 aria-labelledby="profile-tab" tabindex="0">
-                                <div class="row mt-3">
+                                <form class="row mt-3" @submit.prevent="getdataEncuestasById(tipodoc, numdoc)">
                                     <div class="col-4"> <label for="tipodoc" class="form-label">Tipo de
                                             Documento</label> <select id="tipodoc" v-model="tipodoc" class="form-select"
                                             required>
@@ -232,11 +231,10 @@
                                     <div class="col-4"> <label for="numdocFact" class="form-label">Número de
                                             Documento</label> <input type="text" id="numdocFact" name="numdocFact"
                                             aria-label="First name" class="form-control" v-model="numdoc" /></div>
-                                    <div class="col-4"><button type="button" class="btn btn-warning mt-5"
-                                            @click="getdataEncuestasById(tipodoc, numdoc)">
+                                    <div class="col-4"><button type="submit" class="btn btn-warning mt-5">
                                             Buscar
                                         </button></div>
-                                </div>
+                                </form>
                             </div>
 
                         </div>

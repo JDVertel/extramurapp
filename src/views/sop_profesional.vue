@@ -32,7 +32,7 @@
                     <div class="row paciente shadow-sm">
                         <div class="col-10 col-md-10">
                             <small><strong>{{ encuesta.nombre1 }} {{ encuesta.apellido1
-                                    }}</strong></small>
+                                    }}</strong></small> | 
                             <small>EPS: {{ encuesta.eps }} | Riesgo: {{
                                 encuesta.poblacionRiesgo }}</small>
                             <small c>Nac: {{ encuesta.fechaNac }} | Enc: {{ encuesta.fecha
@@ -271,5 +271,31 @@ export default {
 .agendar-label {
     font-size: 9px;
     font-weight: 600;
+}
+
+.row.paciente {
+    background: linear-gradient(
+        90deg,
+        #0f766e 0%,
+        #0d9488 30%,
+        #14b8a6 60%,
+        #0d9488 80%,
+        #0f766e 100%
+    );
+    border-radius: 10px;
+    padding: 8px 10px;
+    color: #ffffff;
+    align-items: center;
+}
+
+.row.paciente small {
+    display: block;
+    color: #e6fffa;
+    line-height: 1.4;
+}
+
+.row.paciente strong {
+    color: #ffffff;
+    font-size: 0.9rem;
 }
 </style>

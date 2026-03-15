@@ -32,7 +32,7 @@
 
         <!-- CONTENIDO VISIBLE SOLO CUANDO NO ESTÁ CARGANDO -->
         <template v-if="!cargandoDatos">
-            <div class="container-fluid rounded shadow-sm mt-2 mb-2 paciente p-1" v-if="userEncuesta">
+            <div class="container-fluid rounded shadow-sm mt-1 mb-1 paciente p-1" v-if="userEncuesta">
                 <div class="row">
                     <div class="col-12 col-md-1 align-self-center text-center">
                         <i class="bi bi-person-circle h1 texto-sombra"></i>
@@ -56,15 +56,16 @@
                     </div>
                 </div>
             </div>
-            <div v-if="InfoEncuestasById && InfoEncuestasById[0]" class="mb-4" :aria-busy="guardando">
+            <div v-if="InfoEncuestasById && InfoEncuestasById[0]" class="mb-1" :aria-busy="guardando">
                 <div>
-                    <div class="container-fluid bg-light rounded shadow-sm p-3">
-                        <h5 class="fw-bold text-success mb-3">
+                    <div class="cups-main-scroll">
+                    <div class="container-fluid bg-light rounded shadow-sm p-2" style="min-width: 700px;">
+                        <h5 class="fw-bold text-success mb-1">
                             <i class="bi bi-person-check-fill"></i> Actividades del Paciente
                         </h5>
                         
                         <!-- Convenciones -->
-                        <div class="convenciones-cups mb-3">
+                        <div class="convenciones-cups mb-2">
                             <small class="text-muted me-3"><strong>Convenciones:</strong></small>
                             <span class="convencion-item">
                                 <span class="cantidad-cups-circulo-small">1</span>
@@ -80,7 +81,7 @@
                             </span>
                         </div>
 
-                        <table class="table">
+                        <table class="table" style="min-width: 680px;">
                             <thead>
                                 <tr>
                                     <th scope="col">Opc</th>
@@ -138,8 +139,12 @@
                         </table>
 
                     </div>
+                    </div><!-- /cups-main-scroll -->
                 </div>
-                <div class="footer my-3 text-end">
+                <div class="footer footer-cerrar-visita">
+                    <button class="btn btn-secondary rounded-pill" @click="redirigirPostCierre(userData && userData.cargo)">
+                        <i class="bi bi-arrow-left-circle"></i> Volver al listado
+                    </button>
                     <button class="btn btn-success rounded-pill" @click="cerrarVisita()"
                         v-if="InfoEncuestasById !== ''">
                         <i class="bi bi-clipboard2-check"></i> Cerrar Visita
@@ -1295,18 +1300,77 @@ export default {
 
 <style>
 .sop-cups-auxiliar-view {
-    font-size: 0.9rem;
+    font-size: 0.8rem;
+    padding-bottom: 10px;
 }
 
 .sop-cups-auxiliar-view h5 {
     font-size: 1rem;
 }
 
+/* Botón Cerrar Visita fijo al fondo de la pantalla */
+.footer-cerrar-visita {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    background: rgba(255, 255, 255, 0.92);
+    backdrop-filter: blur(4px);
+    border-top: 1px solid #dee2e6;
+    padding: 10px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 -2px 8px rgba(0,0,0,0.08);
+}
+
+/* Scroll forzado del contenido principal de actividades */
+.cups-main-scroll {
+    width: 100%;
+    overflow-x: scroll;
+    overflow-y: visible;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-gutter: stable;
+    padding-bottom: 70px;
+}
+
+/* Forzar que las barras de scroll siempre sean visibles (Webkit) */
+.cups-main-scroll::-webkit-scrollbar,
+.cups-listado-scroll::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
+
+.cups-main-scroll::-webkit-scrollbar-track,
+.cups-listado-scroll::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+.cups-main-scroll::-webkit-scrollbar-thumb,
+.cups-listado-scroll::-webkit-scrollbar-thumb {
+    background: #adb5bd;
+    border-radius: 4px;
+}
+
+.cups-main-scroll::-webkit-scrollbar-thumb:hover,
+.cups-listado-scroll::-webkit-scrollbar-thumb:hover {
+    background: #6c757d;
+}
+
+.cups-main-scroll::-webkit-scrollbar-corner,
+.cups-listado-scroll::-webkit-scrollbar-corner {
+    background: #f1f1f1;
+}
+
+/* Lista de CUPS en modal */
 .cups-listado-scroll {
     max-height: 260px;
+    overflow-x: scroll;
     overflow-y: scroll;
     -webkit-overflow-scrolling: touch;
-    overflow-x: auto;
+    scrollbar-gutter: stable;
 }
 
 .table-responsive-wrapper {

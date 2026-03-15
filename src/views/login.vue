@@ -18,7 +18,10 @@
                     </div>
                     <button type="submit" class="buttonLogin mb-3 w-100">Entrar</button>
                 </form>
-                <p v-if="errorMessage" class="text-danger mt-3">{{ errorMessage }}</p>
+                <div v-if="errorMessage" class="alert alert-danger d-flex align-items-center mt-3 py-2" role="alert">
+                    <i class="bi bi-exclamation-triangle-fill me-2 fs-5"></i>
+                    <span>{{ errorMessage }}</span>
+                </div>
             </div>
         </div>
     </div>
@@ -79,17 +82,25 @@ export default {
             } catch (error) {
                 if (error.code) {
                     switch (error.code) {
+                        case "auth/invalid-credential":
                         case "auth/user-not-found":
-                            this.errorMessage = "Usuario no encontrado.";
-                            break;
                         case "auth/wrong-password":
-                            this.errorMessage = "Contraseña incorrecta.";
+                            this.errorMessage = "Credenciales incorrectas. Verifica tu correo y contraseña.";
                             break;
                         case "auth/invalid-email":
-                            this.errorMessage = "Email inválido.";
+                            this.errorMessage = "El formato del correo electrónico no es válido.";
+                            break;
+                        case "auth/user-disabled":
+                            this.errorMessage = "Esta cuenta ha sido deshabilitada. Contacta al administrador.";
+                            break;
+                        case "auth/too-many-requests":
+                            this.errorMessage = "Demasiados intentos fallidos. Espera unos minutos antes de intentarlo de nuevo.";
+                            break;
+                        case "auth/network-request-failed":
+                            this.errorMessage = "Error de red. Verifica tu conexión a internet.";
                             break;
                         default:
-                            this.errorMessage = error.message;
+                            this.errorMessage = "Error al iniciar sesión. Intenta de nuevo.";
                     }
                 } else {
                     this.errorMessage = "Error al iniciar sesión. Intenta de nuevo.";

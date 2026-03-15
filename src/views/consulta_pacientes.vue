@@ -1,10 +1,10 @@
 <template>
   <div class="container-fluid mt-5 pt-3">
     <h3 class="mb-4"><i class="bi bi-search"></i> Consulta de Pacientes</h3>
-    <hr />
+  
 
     <!-- FORMULARIO DE BÚSQUEDA -->
-    <div class="row">
+    <form class="row mb-3" @submit.prevent="consultarP">
       <div class="col-6 col-md-3 mb-3">
         <label for="tipodoc" class="form-label">Tipo de Documento</label>
         <select id="tipodoc" v-model="tipodoc" class="form-select" required>
@@ -26,11 +26,11 @@
         <input type="text" id="numdoc" v-model="numdoc" class="form-control" required />
       </div>
       <div class="col-6 col-md-2">
-        <button class="btn btn-sm btn-primary mt-4" :disabled="cargandoPacientes" @click="consultarP">
+        <button class="btn btn-sm btn-primary mt-4" type="submit" :disabled="cargandoPacientes">
           <i class="bi bi-search"></i> Consultar
         </button>
       </div>
-    </div>
+    </form>
 
     <!-- Spinner de consulta -->
     <div class="mt-2">

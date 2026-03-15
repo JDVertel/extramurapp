@@ -115,7 +115,7 @@
                         <div class="col-6 col-md-3 mb-3">
                             <label for="sexo" class="form-label">Sexo</label>
                             <select id="sexo" v-model="sexo" class="form-select" required>
-                                <option value="">Seleccione</option>
+                                <option value="">---Seleccione---</option>
                                 <option value="M">Masculino</option>
                                 <option value="F">Femenino</option>
                             </select>
@@ -133,7 +133,7 @@
                         <div class="col-6 col-md-3 mb-3">
                             <label for="barrioVeredacomuna" class="form-label">Barrio-vereda/comuna</label>
                             <select id="barrioVeredacomuna" v-model="barrioVeredacomuna" class="form-select" required>
-                                <option value="">Seleccione</option>
+                                <option value="">---Seleccione---</option>
                                 <option :value="option" v-for="(option, index) in comunasBarrios" :key="index">
                                     {{ option.barrio }} ({{ option.comuna }})
                                 </option>
@@ -144,7 +144,7 @@
                             <div class="row g-2">
                                 <div class="col-9">
                                     <select id="poblacionRiesgo" v-model="poblacionRiesgo" class="form-select">
-                                        <option value="">Seleccione</option>
+                                        <option value="">---Seleccione---</option>
                                         <option :value="option2.nombre"
                                             v-for="(option2, index) in poblacionRiesgoDisponibles" :key="index">
                                             {{ option2.nombre }}
@@ -212,7 +212,7 @@
                         <div class="col-6 ">
                             <label for="desplazamiento" class="form-label">¿Desplazamiento efectivo?</label>
                             <select id="desplazamiento" v-model="desplazamiento" class="form-select" required>
-                                <option value="" disabled>Seleccione</option>
+                                <option value="" disabled>---Seleccione---</option>
                                 <option value="si">Sí</option>
                                 <option value="no">No</option>
                             </select>
@@ -220,7 +220,7 @@
                         <div class="col-6 ">
                             <label for="requiereRemision" class="form-label">¿Requiere remisión a procedimiento?</label>
                             <select id="requiereRemision" v-model="requiereRemision" class="form-select" required>
-                                <option value="" disabled>Seleccione</option>
+                                <option value="" disabled>---Seleccione---</option>
                                 <option value="si">Sí</option>
                                 <option value="no">No</option>
                             </select>

@@ -33,7 +33,7 @@
 
             <div v-for="(encuesta, index) in encuestasFiltradasPorConvenio" :key="index"
                 class="container rounded-lg p-2 mb-2">
-                <div class="row paciente shadow-sm" style="border-radius: 5px;">
+                <div class="row paciente shadow-sm">
                     <div class="col-7 col-md-6">
                         <small class="d-block"><strong>{{ encuesta.nombre1 }} {{ encuesta.nombre2 }} {{
                             encuesta.apellido1 }} {{
@@ -263,5 +263,31 @@ export default {
 .agendar-btn:hover {
     transform: scale(1.05);
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.row.paciente {
+    background: linear-gradient(
+        90deg,
+        #0f766e 0%,
+        #0d9488 30%,
+        #14b8a6 60%,
+        #0d9488 80%,
+        #0f766e 100%
+    );
+    border-radius: 10px;
+    padding: 8px 10px;
+    color: #ffffff;
+    align-items: center;
+}
+
+.row.paciente small {
+    display: block;
+    color: #e6fffa;
+    line-height: 1.4;
+}
+
+.row.paciente strong {
+    color: #ffffff;
+    font-size: 0.9rem;
 }
 </style>
