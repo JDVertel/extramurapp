@@ -1136,7 +1136,13 @@ export default {
 
         resolverRutaDestino(cargo) {
             const rutaAnterior = sessionStorage.getItem("rutaAnterior");
-            const rutasValidas = ["/sop_aux", "/sop_enfermero", "/sop_profesional"];
+            const rutasValidas = [
+                "/sop_aux",
+                "/sop_enfermero",
+                "/sop_profesional",
+                "/sop_psicologo",
+                "/sop_tsocial",
+            ];
 
             if (rutaAnterior && rutasValidas.includes(rutaAnterior)) {
                 return rutaAnterior;
@@ -1151,6 +1157,8 @@ export default {
 
             if (cargo === "Medico") return "/sop_profesional";
             if (cargo === "Enfermero") return "/sop_enfermero";
+            if (cargo === "Psicologo") return "/sop_psicologo";
+            if (cargo === "Tsocial") return "/sop_tsocial";
             return "/sop_aux";
         },
 

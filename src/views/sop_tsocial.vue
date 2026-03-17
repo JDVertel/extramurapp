@@ -49,7 +49,7 @@
 
 
                                 <!-- CUPS -->
-                                <div v-if="encuesta.status_caracterizacion === true && (userData.cargo === 'Tsocial')">
+                                <div v-if="mostrarBotonCups(encuesta)">
                                     <button type="button" class="btn btn-primary  agendar-btn"
                                         @click="cupsGestion(encuesta.id)">
                                         <i class="bi bi-calendar2-heart-fill"></i>
@@ -127,6 +127,14 @@ export default {
                 name: "sop_cups",
                 params: { idEncuesta: id },
             });
+        },
+
+        mostrarBotonCups(encuesta) {
+            const cargo = (this.userData?.cargo || "").toString().trim().toLowerCase();
+            const esTsocial = cargo === "tsocial" || cargo === "trabajador social";
+
+            // En la bandeja de trabajo social el botón CUPS debe estar disponible para cada registro.
+            return esTsocial;
         },
 
         async cargarEncuestas() {
