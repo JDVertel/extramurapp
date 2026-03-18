@@ -50,20 +50,22 @@
               <div class="btn-row">
                 <!-- Auxiliar: Visita -->
                 <template v-if="userData.cargo === 'Auxiliar de enfermeria'">
-                  <div
-                    v-if="encuesta.Agenda_Visitamedica?.cita_visitamedica === false || encuesta.Agenda_Visitamedica?.cita_visitamedica === undefined">
-                    <button type="button" class="btn btn-info  agendar-btn"
-                      @click="Agendar(encuesta.id, 'visitamedica')">
-                      <i class="bi bi-houses"></i>
-                      <span class="agendar-label">Visita</span>
-                    </button>
-                  </div>
-                  <div v-else>
-                    <button type="button" class="btn btn-secondary  agendar-btn" disabled>
-                      <i class="bi bi-check2-circle"></i>
-                      <span class="agendar-label">Visita</span>
-                    </button>
-                  </div>
+                  <template v-if="esConvenioExtramural(encuesta.convenio)">
+                    <div
+                      v-if="encuesta.Agenda_Visitamedica?.cita_visitamedica === false || encuesta.Agenda_Visitamedica?.cita_visitamedica === undefined">
+                      <button type="button" class="btn btn-info  agendar-btn"
+                        @click="Agendar(encuesta.id, 'visitamedica')">
+                        <i class="bi bi-houses"></i>
+                        <span class="agendar-label">Visita</span>
+                      </button>
+                    </div>
+                    <div v-else>
+                      <button type="button" class="btn btn-secondary  agendar-btn" disabled>
+                        <i class="bi bi-check2-circle"></i>
+                        <span class="agendar-label">Visita</span>
+                      </button>
+                    </div>
+                  </template>
                 </template>
 
                 <!-- Auxiliar: Caracterización -->
@@ -175,6 +177,10 @@ export default {
         name: "sop_caracterizacion",
         params: { idEncuesta: id },
       });
+    },
+
+    esConvenioExtramural(convenio) {
+      return String(convenio || "").trim().toLowerCase() === "extramural";
     },
 
     cupsGestion(id) {

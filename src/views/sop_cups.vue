@@ -29,7 +29,9 @@
                 <div class="text-muted small">Guardando listado, por favor espere...</div>
             </div>
         </div>
-
+    <h5 class="fw-bold text-success mb-1">
+                            <i class="bi bi-person-fill"></i> Informacion del Paciente
+                        </h5>
         <!-- CONTENIDO VISIBLE SOLO CUANDO NO ESTÁ CARGANDO -->
         <template v-if="!cargandoDatos">
             <div class="container-fluid rounded shadow-sm mt-1 mb-1 paciente p-1" v-if="userEncuesta">
@@ -37,21 +39,87 @@
                     <div class="col-12 col-md-1 align-self-center text-center">
                         <i class="bi bi-person-circle h1 texto-sombra"></i>
                     </div>
+                    
                     <div class="col-12 col-md-11 align-self-center">
-                        <div class="row">
-                            <div class="col-12 col-md-3 texto-sombra">
+                        <div class="row g-1">
+                            <div class="col-12 col-md-4 texto-sombra">
                                 <strong>Paciente:</strong>
                                 {{ userEncuesta.nombre1 }} {{ userEncuesta.nombre2 }}
                                 {{ userEncuesta.apellido1 }} {{ userEncuesta.apellido2 }}
+                                <br>
+                                <strong>Documento:</strong>
+                                {{ userEncuesta.tipodoc || "N/A" }} - {{ userEncuesta.numdoc || "N/A" }}
+                                <br>
+                                <strong>Teléfono:</strong> {{ userEncuesta.telefono || "N/A" }}
                             </div>
-                            <div class="col-12 col-md-6 texto-sombra">
-                                <strong>EPS:</strong> {{ userEncuesta.eps }} <br>
-                                <strong>Régimen:</strong> {{ userEncuesta.regimen }}
+                            <div class="col-12 col-md-4 texto-sombra">
+                                <strong>EPS:</strong> {{ userEncuesta.eps || "N/A" }} <br>
+                                <strong>Régimen:</strong> {{ userEncuesta.regimen || "N/A" }} <br>
+                                <strong>Convenio:</strong> {{ userEncuesta.convenio || "N/A" }}
                             </div>
-                            <div class="col-12 col-md-3 texto-sombra">
-                                <strong>Sexo:</strong> {{ userEncuesta.sexo }}<br />
-                                <strong>Edad:</strong> {{ edadActual(userEncuesta.fechaNac) }}
+                            <div class="col-12 col-md-4 texto-sombra">
+                                <strong>Sexo:</strong> {{ userEncuesta.sexo || "N/A" }}<br />
+                                <strong>Edad:</strong> {{ edadActual(userEncuesta.fechaNac) ?? "N/A" }}<br />
+                                <strong>Fecha Nac.:</strong> {{ userEncuesta.fechaNac || "N/A" }}
                             </div>
+                            <div class="col-12 col-md-4 texto-sombra">
+                                <strong>Dirección:</strong> {{ userEncuesta.direccion || "N/A" }}
+                            </div>
+                            <div class="col-12 col-md-4 texto-sombra">
+                                <strong>Comuna:</strong> {{ userEncuesta?.barrioVeredacomuna?.comuna || "N/A" }}<br>
+                                <strong>Barrio:</strong> {{ userEncuesta?.barrioVeredacomuna?.barrio || "N/A" }}
+                            </div>
+                            <div class="col-12 col-md-4 texto-sombra">
+                                <strong>Pob. riesgo:</strong> {{ userEncuesta.poblacionRiesgo || "N/A" }}
+                            </div>
+                            <div class="col-12 mt-1">
+                                <button class="btn btn-outline-light btn-sm rounded-pill" type="button"
+                                    @click="toggleCaracterizacionInfo">
+                                    <i class="bi" :class="mostrarCaracterizacion ? 'bi-chevron-up' : 'bi-chevron-down'"></i>
+                                    {{ mostrarCaracterizacion ? 'Ocultar información de caracterización' : 'Ver informacion de caracterizacion' }}
+                                </button>
+                            </div>
+                            <template v-if="mostrarCaracterizacion">
+                                <div v-if="cargandoCaracterizacion" class="col-12 texto-sombra small mt-1">
+                                    Cargando información de caracterización...
+                                </div>
+                                <template v-else>
+                                    <hr />
+                                    <div class="col-12 col-md-4 texto-sombra">
+                                        <strong>Peso:</strong> {{ formatearDatoCaracterizacion(caracterizacionEncuesta.peso, "kg") }}<br>
+                                        <strong>Talla:</strong> {{ formatearDatoCaracterizacion(caracterizacionEncuesta.talla, "m") }}<br>
+                                        <strong>IMC:</strong> {{ formatearDatoCaracterizacion(caracterizacionEncuesta.imc) }}
+                                    </div>
+                                    <div class="col-12 col-md-4 texto-sombra">
+                                        <strong>Clasif. IMC:</strong> {{ formatearDatoCaracterizacion(caracterizacionEncuesta.clasificacionImc) }}<br>
+                                        <strong>Tensión sistólica:</strong> {{ formatearDatoCaracterizacion(caracterizacionEncuesta.tensionSistolica, "mmHg") }}<br>
+                                        <strong>Tensión diastólica:</strong> {{ formatearDatoCaracterizacion(caracterizacionEncuesta.tensionDiastolica, "mmHg") }}
+                                    </div>
+                                    <div class="col-12 col-md-4 texto-sombra">
+                                        <strong>Per. abdominal:</strong> {{ formatearDatoCaracterizacion(caracterizacionEncuesta.perimetroAbdominal, "cm") }}<br>
+                                        <strong>Per. braquial:</strong> {{ formatearDatoCaracterizacion(caracterizacionEncuesta.perimetroBranquial, "cm") }}<br>
+                                        <strong>Oximetría/Temp:</strong>
+                                        {{ formatearDatoCaracterizacion(caracterizacionEncuesta.oximetria, "%") }} /
+                                        {{ formatearDatoCaracterizacion(caracterizacionEncuesta.temperatura, "°C") }}
+                                    </div>
+                                    <div class="col-12 col-md-4 texto-sombra">
+                                        <strong>Antecedentes:</strong>
+                                        {{ formatearListaCaracterizacion(caracterizacionEncuesta.seleccionadosAntecedentes) }}
+                                    </div>
+                                    <div class="col-12 col-md-4 texto-sombra">
+                                        <strong>Factores de riesgo:</strong>
+                                        {{ formatearListaCaracterizacion(caracterizacionEncuesta.seleccionadosFactoresRiesgo) }}
+                                    </div>
+                                    <div class="col-12 col-md-4 texto-sombra">
+                                        <strong>Presencia de animales:</strong>
+                                        {{ formatearListaCaracterizacion(caracterizacionEncuesta.seleccionadosPresenciaAnimales) }}
+                                    </div>
+                                    <div class="col-12 col-md-4 texto-sombra">
+                                        <strong>Servicios públicos:</strong>
+                                        {{ formatearListaCaracterizacion(caracterizacionEncuesta.seleccionadosServPublic) }}
+                                    </div>
+                                </template>
+                            </template>
                         </div>
                     </div>
                 </div>
@@ -63,26 +131,9 @@
                         <h5 class="fw-bold text-success mb-1">
                             <i class="bi bi-person-check-fill"></i> Actividades del Paciente
                         </h5>
-                        
-                        <!-- Convenciones -->
-                        <div class="convenciones-cups mb-2">
-                            <small class="text-muted me-3"><strong>Convenciones:</strong></small>
-                            <span class="convencion-item">
-                                <span class="cantidad-cups-circulo-small">1</span>
-                                <small>Cantidad</small>
-                            </span>
-                            <span class="convencion-item">
-                                <span class="nombre-cups">●</span>
-                                <small>Nombre CUPS</small>
-                            </span>
-                            <span class="convencion-item">
-                                <span class="detalle-cups">●</span>
-                                <small>Detalle</small>
-                            </span>
-                        </div>
 
-                        <table class="table" style="min-width: 680px;">
-                            <thead>
+                        <table class="table table-striped table-bordered" style="min-width: 680px;">
+                            <thead class="thead-dark">
                                 <tr>
                                     <th scope="col">Opc</th>
                                     <th scope="col">Actividad</th>
@@ -164,7 +215,7 @@
                             </div>
                             <div class="modal-body">
                                 <div class="mb-3">
-                                    Seleccione el CUP que desea asignar a
+                                    Seleccione los CUPS que desea asignar a
                                     <strong>{{ actividadSeleccionadaNombre }}</strong>
                                     <div class="row">
                                         <div class="mb-3">
@@ -208,8 +259,8 @@
                                 <hr />
                                 <div class="cups-listado-scroll" v-if="cupsArray.length > 0">
                                     <div class="table-responsive-wrapper">
-                                        <table class="table table-sm table-hover mb-0">
-                                            <thead class="table-light">
+                                        <table class="table table-sm table-hover table-striped table-bordered mb-0">
+                                            <thead class="thead-dark">
                                                 <tr>
                                                     <th scope="col" class="col-cups col-cups-wide">CUPS</th>
                                                     <th scope="col" class="col-detalle">Detalle Ingresado</th>
@@ -289,6 +340,11 @@ export default {
             modalEl: null,
             modalShownHandler: null,
             modalHiddenHandler: null,
+            modalScrollRescueTimeout: null,
+            caracterizacionEncuesta: {},
+            mostrarCaracterizacion: false,
+            cargandoCaracterizacion: false,
+            caracterizacionCargada: false,
             isComponentActive: true, // Bandera para cancelar operaciones al desmontar
 
             /*  */
@@ -583,12 +639,145 @@ export default {
             return `${valor.slice(0, max)}...`;
         },
 
+        formatearDatoCaracterizacion(valor, unidad = "") {
+            if (valor === 0 || valor === "0") {
+                return unidad ? `0 ${unidad}` : "0";
+            }
+
+            if (valor === null || valor === undefined || String(valor).trim() === "") {
+                return "N/A";
+            }
+
+            const valorTexto = String(valor).trim();
+            return unidad ? `${valorTexto} ${unidad}` : valorTexto;
+        },
+
+        formatearListaCaracterizacion(valor) {
+            if (!Array.isArray(valor) || valor.length === 0) {
+                return "N/A";
+            }
+
+            return valor
+                .map((item) => String(item || "").trim())
+                .filter(Boolean)
+                .join(", ");
+        },
+
+        async cargarCaracterizacionEncuesta() {
+            if (!this.idEncuesta) {
+                this.caracterizacionEncuesta = {};
+                this.caracterizacionCargada = false;
+                return;
+            }
+
+            if (this.caracterizacionCargada) {
+                return;
+            }
+
+            this.cargandoCaracterizacion = true;
+            try {
+                const {
+                    default: firebase_api
+                } = await import('../api/ApiFirebase.js');
+
+                const { data } = await firebase_api.get('/caracterizacion.json');
+
+                if (!data) {
+                    this.caracterizacionEncuesta = {};
+                    this.caracterizacionCargada = true;
+                    return;
+                }
+
+                const registros = Object.entries(data)
+                    .map(([id, value]) => ({ id, ...(value || {}) }))
+                    .filter((item) => String(item.idEncuesta) === String(this.idEncuesta));
+
+                if (registros.length === 0) {
+                    this.caracterizacionEncuesta = {};
+                    this.caracterizacionCargada = true;
+                    return;
+                }
+
+                const ordenados = registros.sort((a, b) => {
+                    const fechaA = new Date(a.fechaCaracterizacion || a.fecha || 0).getTime() || 0;
+                    const fechaB = new Date(b.fechaCaracterizacion || b.fecha || 0).getTime() || 0;
+
+                    if (fechaA !== fechaB) {
+                        return fechaB - fechaA;
+                    }
+
+                    return String(b.id).localeCompare(String(a.id));
+                });
+
+                this.caracterizacionEncuesta = ordenados[0] || {};
+                this.caracterizacionCargada = true;
+            } catch (error) {
+                console.error('Error al cargar caracterización por encuesta:', error);
+                this.caracterizacionEncuesta = {};
+                this.caracterizacionCargada = false;
+            } finally {
+                this.cargandoCaracterizacion = false;
+            }
+        },
+
+        async toggleCaracterizacionInfo() {
+            this.mostrarCaracterizacion = !this.mostrarCaracterizacion;
+
+            if (this.mostrarCaracterizacion && !this.caracterizacionCargada && !this.cargandoCaracterizacion) {
+                await this.cargarCaracterizacionEncuesta();
+            }
+        },
+
         onModalShown() {
             // Remover aria-hidden cuando el modal se muestra para solucionar problemas de accesibilidad
             const modal = document.getElementById('staticBackdrop');
             if (modal) {
                 modal.removeAttribute('aria-hidden');
             }
+
+            // Si había un rescate pendiente de scroll, cancelarlo al abrir de nuevo
+            if (this.modalScrollRescueTimeout) {
+                clearTimeout(this.modalScrollRescueTimeout);
+                this.modalScrollRescueTimeout = null;
+            }
+        },
+
+        restablecerEstadoModalScroll(forceHideModal = false) {
+            // Limpieza defensiva para evitar que la página quede sin scroll por estados huérfanos del modal
+            document.body.classList.remove('modal-open');
+            document.body.style.overflow = '';
+            document.body.style.paddingRight = '';
+            document.body.style.position = '';
+            document.body.style.top = '';
+            document.body.style.width = '';
+
+            const backdrops = document.querySelectorAll('.modal-backdrop');
+            backdrops.forEach((backdrop) => backdrop.remove());
+
+            const modal = document.getElementById('staticBackdrop');
+            if (modal) {
+                modal.classList.remove('show');
+                modal.removeAttribute('aria-modal');
+                modal.setAttribute('aria-hidden', 'true');
+                if (forceHideModal) {
+                    modal.style.display = 'none';
+                }
+            }
+        },
+
+        programarRescateScroll() {
+            // Si por cualquier razón no dispara hidden.bs.modal, forzamos limpieza breve después
+            if (this.modalScrollRescueTimeout) {
+                clearTimeout(this.modalScrollRescueTimeout);
+            }
+
+            this.modalScrollRescueTimeout = setTimeout(() => {
+                const hayModalAbierto = !!document.querySelector('.modal.show');
+                if (!hayModalAbierto) {
+                    this.restablecerEstadoModalScroll(false);
+                }
+                this.modalScrollRescueTimeout = null;
+            }, 250);
         },
 
         onModalHidden() {
@@ -598,14 +787,7 @@ export default {
                 modal.setAttribute('aria-hidden', 'true');
             }
 
-            // Limpiar estado del body que Bootstrap pudo haber dejado
-            document.body.classList.remove('modal-open');
-            document.body.style.overflow = '';
-            document.body.style.paddingRight = '';
-
-            // Remover TODOS los backdrops de Bootstrap
-            const backdrops = document.querySelectorAll('.modal-backdrop');
-            backdrops.forEach((backdrop) => backdrop.remove());
+            this.restablecerEstadoModalScroll(false);
 
             this.$nextTick(() => {
                 if (document.activeElement && document.activeElement.classList.contains('btn-close')) {
@@ -634,11 +816,10 @@ export default {
         },
 
         quitarEventosModal() {
-            if (!this.modalEl) return;
-
             // Forzar a Bootstrap a cerrar el modal si está abierto
             try {
-                const bootstrapModal = window.bootstrap?.Modal?.getInstance(this.modalEl);
+                const modalRef = this.modalEl || document.getElementById('staticBackdrop');
+                const bootstrapModal = modalRef ? window.bootstrap?.Modal?.getInstance(modalRef) : null;
                 if (bootstrapModal) {
                     bootstrapModal.hide();
                 }
@@ -647,26 +828,18 @@ export default {
             }
 
             // Remover event listeners
-            if (this.modalShownHandler) {
+            if (this.modalEl && this.modalShownHandler) {
                 this.modalEl.removeEventListener('shown.bs.modal', this.modalShownHandler);
             }
-            if (this.modalHiddenHandler) {
+            if (this.modalEl && this.modalHiddenHandler) {
                 this.modalEl.removeEventListener('hidden.bs.modal', this.modalHiddenHandler);
             }
 
-            // Limpiar TODOS los estados de modal del DOM
-            document.body.classList.remove('modal-open');
-            document.body.style.overflow = '';
-            document.body.style.paddingRight = '';
+            this.restablecerEstadoModalScroll(true);
 
-            // Remover todos los backdrops
-            const backdrops = document.querySelectorAll('.modal-backdrop');
-            backdrops.forEach((backdrop) => backdrop.remove());
-
-            // Remover el atributo aria-modal si existe
-            const modal = document.getElementById('staticBackdrop');
-            if (modal) {
-                modal.setAttribute('aria-hidden', 'true');
+            if (this.modalScrollRescueTimeout) {
+                clearTimeout(this.modalScrollRescueTimeout);
+                this.modalScrollRescueTimeout = null;
             }
 
             this.modalEl = null;
@@ -839,6 +1012,8 @@ export default {
         },
         //gestiona los parametros de la ruta de almacenamiento
         async integrarCup(obj) {
+            if (!obj || !obj.key) return;
+
             // Establecer idItem PRIMERO
             this.idItem = obj.key;
             this.actividadSeleccionadaNombre = this.obtenerNombreActividad(obj.key);
@@ -849,11 +1024,8 @@ export default {
             if (this.userData && this.userData.cargo) {
                 this.keyActividad = this.userData.cargo;
             } else {
-                this.keyActividad = this.userData.cargo;
+                this.keyActividad = "";
             }
-
-            // Debug para diagnosticar filtrado de CUPS
-            this.debugEpsContratos();
 
             await this.cargarCupsGuardados(this.idItem);
         },
@@ -923,9 +1095,15 @@ export default {
                     default: firebase_api
                 } = await import('../api/ApiFirebase.js');
 
-                const cupsActuales = Array.isArray(this.asignaciones.cups) ?
-                    [...this.asignaciones.cups] :
-                    Object.values(this.asignaciones.cups);
+                const cupsOrigen = this.asignaciones?.cups;
+                const cupsActuales = Array.isArray(cupsOrigen)
+                    ? [...cupsOrigen]
+                    : (cupsOrigen && typeof cupsOrigen === 'object' ? Object.values(cupsOrigen) : []);
+
+                if (cupsActuales.length === 0) {
+                    alert('No hay CUPS para eliminar en esta actividad.');
+                    return;
+                }
 
                 const cupId = this.obtenerIdCup(cup);
 
@@ -983,6 +1161,7 @@ export default {
                 await this.recargar();
             } finally {
                 this.guardando = false;
+                this.programarRescateScroll();
             }
         },
 
@@ -1238,6 +1417,10 @@ export default {
     watch: {
         "$route.params.idEncuesta"(newId) {
             this.idEncuesta = newId;
+            this.caracterizacionEncuesta = {};
+            this.caracterizacionCargada = false;
+            this.cargandoCaracterizacion = false;
+            this.mostrarCaracterizacion = false;
             this.recargar();
         }
     },
@@ -1283,21 +1466,8 @@ export default {
         // Limpiar event listeners del modal
         this.quitarEventosModal();
 
-        // Forzar limpieza de estados Bootstrap
-        document.body.classList.remove('modal-open');
-        document.body.style.overflow = '';
-        document.body.style.paddingRight = '';
-
-        // Remover todos los backdrops pendientes
-        const backdrops = document.querySelectorAll('.modal-backdrop');
-        backdrops.forEach((backdrop) => backdrop.remove());
-
-        // Limpiar el modal del DOM completamente
-        const modal = document.getElementById('staticBackdrop');
-        if (modal) {
-            modal.setAttribute('aria-hidden', 'true');
-            modal.style.display = 'none';
-        }
+        // Limpieza defensiva final
+        this.restablecerEstadoModalScroll(true);
     },
     /* ----------------------------------------------------------------------------------------------- */
     created() {
@@ -1539,6 +1709,12 @@ export default {
     font-size: 0.8rem;
 }
 
+.sop-cups-auxiliar-view .thead-dark th {
+    background-color: #343a40;
+    color: #ffffff;
+    border-color: #454d55;
+}
+
 .sop-cups-auxiliar-view .modal-body {
     font-size: 0.85rem;
     max-height: 70vh;
@@ -1673,13 +1849,25 @@ select {
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
+.sop-cups-auxiliar-view .paciente {
+    background: #14B7A5;
+    border-radius: 10px;
+    padding: 8px 10px !important;
+    color: #ffffff;
+    align-items: center;
+}
+
+.sop-cups-auxiliar-view .paciente strong {
+    color: #ffffff;
+}
+
 .cup-texto-corto {
     display: inline-block;
     font-size: 0.75rem;
 }
 
 .cup-texto-completo {
-    font-size: 0.85rem;
+    font-size: 0.78rem;
     word-wrap: break-word;
     overflow-wrap: break-word;
     white-space: normal;
@@ -1691,18 +1879,19 @@ select {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 24px;
-    height: 24px;
+    width: 20px;
+    height: 20px;
     border-radius: 50%;
     background-color: #dc3545;
     color: white;
-    font-size: 0.75rem;
+    font-size: 0.68rem;
     margin-right: 6px;
     flex-shrink: 0;
 }
 
 .nombre-cups {
     color: #0d6efd;
+    font-size: 0.78rem;
 }
 
 .separador-cups {
@@ -1716,35 +1905,23 @@ select {
 .detalle-cups {
     color: #198754;
     font-style: italic;
+    font-size: 0.76rem;
 }
 
-/* Estilos para convenciones */
-.convenciones-cups {
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 15px;
-    padding: 10px 15px;
-    background-color: #f8f9fa;
-    border-radius: 6px;
-    border-left: 4px solid #198754;
+@media (max-width: 767.98px) {
+    .sop-cups-auxiliar-view .paciente .row.g-1 > .texto-sombra {
+        flex: 0 0 50% !important;
+        width: 50% !important;
+        max-width: 50% !important;
+    }
+
+    .sop-cups-auxiliar-view .paciente .row.g-1 > .small,
+    .sop-cups-auxiliar-view .paciente .row.g-1 > .mt-1,
+    .sop-cups-auxiliar-view .paciente .row.g-1 > hr {
+        flex: 0 0 100% !important;
+        width: 100% !important;
+        max-width: 100% !important;
+    }
 }
 
-.convencion-item {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-}
-
-.cantidad-cups-circulo-small {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 20px;
-    height: 20px;
-    border-radius: 50%;
-    background-color: #dc3545;
-    color: white;
-    font-size: 0.7rem;
-}
 </style>

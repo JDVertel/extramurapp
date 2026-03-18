@@ -130,7 +130,7 @@
                 </div>
                 <div class="col-6 col-md-3">
                   <label class="form-label">Convenio</label>
-                  <select v-model="encuestaEdit.convenio" class="form-select form-select-sm">
+                  <select v-model="encuestaEdit.convenio" class="form-select form-select-sm" disabled>
                     <option value="">Seleccione</option>
                     <option v-for="conv in convenioOptions" :key="conv" :value="conv">{{ conv }}</option>
                   </select>
