@@ -521,18 +521,32 @@ export default {
         },
 
         formularioValido() {
-            // Verificar campos obligatorios básicos
-            const camposBasicos = this.convenio &&
-                this.cargo &&
-                this.numDocumento &&
-                this.userEmail &&
-                this.nombre;
+            const convenio = (this.convenio || '').trim();
+            const cargo = (this.cargo || '').trim();
+            const documento = (this.numDocumento || '').trim();
+            const email = (this.userEmail || '').trim();
+            const nombre = (this.nombre || '').trim();
+            const grupo = (this.grupo || '').trim();
+
+            const requiereGrupo = this.cargoRequiereGrupo(cargo);
+
+            // Verificar campos obligatorios básicos sin espacios en blanco
+            const camposBasicos = convenio && cargo && documento && email && nombre;
+            const grupoValido = !requiereGrupo || !!grupo;
+
+            // Validación de unicidad contra listado local de usuarios
+            const documentoDisponibleLista = !this.users?.some((user) =>
+                String(user?.numDocumento ?? '').trim() === documento
+            );
+            const emailDisponibleLista = !this.users?.some((user) =>
+                String(user?.email ?? '').trim().toLowerCase() === email.toLowerCase()
+            );
 
             // Verificar validaciones de documento y email
             const validaciones = this.documentoValido === true &&
                 this.emailValido === true;
 
-            return camposBasicos && validaciones;
+            return !!(camposBasicos && grupoValido && documentoDisponibleLista && emailDisponibleLista && validaciones);
         }
     },
     watch: {
@@ -551,11 +565,28 @@ export default {
             } else if (newVal === 'Fact') {
                 this.editGrupo = 'F';
             }
+        },
+        numDocumento() {
+            this.documentoValido = null;
+        },
+        userEmail() {
+            this.emailValido = null;
         }
     },
     methods: {
+        cargoRequiereGrupo(cargo) {
+            return [
+                'Auxiliar de enfermeria',
+                'Enfermero',
+                'Medico',
+                'Psicologo',
+                'Tsocial'
+            ].includes(String(cargo || '').trim());
+        },
+
         async verificarDocumento() {
-            if (!this.numDocumento || this.numDocumento.trim() === '') {
+            const documento = String(this.numDocumento || '').trim();
+            if (!documento) {
                 this.documentoValido = null;
                 return;
             }
@@ -566,7 +597,7 @@ export default {
             try {
                 const querySnapshot = await getDocs(collection(db, "users"));
                 const existe = querySnapshot.docs.some(doc =>
-                    doc.data().numDocumento === this.numDocumento.trim()
+                    String(doc.data().numDocumento || '').trim() === documento
                 );
 
                 this.documentoValido = !existe;
@@ -579,7 +610,8 @@ export default {
         },
 
         async verificarEmail() {
-            if (!this.userEmail || this.userEmail.trim() === '') {
+            const email = String(this.userEmail || '').trim().toLowerCase();
+            if (!email) {
                 this.emailValido = null;
                 return;
             }
@@ -590,7 +622,7 @@ export default {
             try {
                 const querySnapshot = await getDocs(collection(db, "users"));
                 const existe = querySnapshot.docs.some(doc =>
-                    doc.data().email === this.userEmail.trim().toLowerCase()
+                    String(doc.data().email || '').trim().toLowerCase() === email
                 );
 
                 this.emailValido = !existe;
@@ -798,9 +830,48 @@ Esta acción eliminará el usuario de la base de datos.`)) {
         },
         //crear el usuario en la bd
         async createUserByAdmin() {
-            if (!this.userEmail || !this.nombre || !this.numDocumento || !this.cargo) {
+            // Normalizar entradas para evitar blancos o espacios residuales
+            this.userEmail = String(this.userEmail || '').trim().toLowerCase();
+            this.nombre = String(this.nombre || '').trim();
+            this.numDocumento = String(this.numDocumento || '').trim();
+            this.cargo = String(this.cargo || '').trim();
+            this.convenio = String(this.convenio || '').trim();
+            this.grupo = String(this.grupo || '').trim();
+
+            if (!this.convenio || !this.userEmail || !this.nombre || !this.numDocumento || !this.cargo) {
                 this.message = "Por favor, completa todos los campos obligatorios.";
                 this.messageType = "error";
+                return;
+            }
+
+            if (this.cargoRequiereGrupo(this.cargo) && !this.grupo) {
+                this.message = "El campo # Grupo es obligatorio para el cargo seleccionado.";
+                this.messageType = "error";
+                return;
+            }
+
+            // Validar nuevamente contra base de datos antes de crear
+            await Promise.all([this.verificarDocumento(), this.verificarEmail()]);
+            if (this.documentoValido !== true) {
+                this.message = "Este documento ya está registrado. Verifica la información.";
+                this.messageType = "error";
+                return;
+            }
+
+            if (this.emailValido !== true) {
+                this.message = "Este email ya está registrado. Verifica la información.";
+                this.messageType = "error";
+                return;
+            }
+
+            // Doble validación en memoria para evitar condiciones de carrera en UI
+            const documentoDuplicado = this.users?.some((u) =>
+                String(u?.numDocumento || '').trim() === this.numDocumento
+            );
+            if (documentoDuplicado) {
+                this.message = "Este documento ya existe en el listado de usuarios registrados.";
+                this.messageType = "error";
+                this.documentoValido = false;
                 return;
             }
 
@@ -849,6 +920,8 @@ Esta acción eliminará el usuario de la base de datos.`)) {
                 this.numDocumento = "";
                 this.cargo = "";
                 this.convenio = "";
+                this.documentoValido = null;
+                this.emailValido = null;
                 await this.fetchUsers();
             } catch (error) {
                 // Manejo mejorado de errores

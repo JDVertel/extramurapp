@@ -175,6 +175,12 @@ const routes = [
     component: () => import("../views/registrousuarios.vue"),
     meta: { requiresAuth: true },
   },
+  {
+    path: "/info",
+    name: "info",
+    component: () => import("../views/info.vue"),
+    meta: { requiresAuth: true },
+  },
 
   {
     path: "/logout",

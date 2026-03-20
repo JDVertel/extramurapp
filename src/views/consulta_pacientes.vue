@@ -9,16 +9,7 @@
         <label for="tipodoc" class="form-label">Tipo de Documento</label>
         <select id="tipodoc" v-model="tipodoc" class="form-select" required>
           <option value="">Seleccione</option>
-          <option value="RC">Registro Civil</option>
-          <option value="TI">Tarjeta de Identidad</option>
-          <option value="CC">Cédula de Ciudadanía</option>
-          <option value="CE">Cédula de Extranjería</option>
-          <option value="NV">Certificado nacido vivo</option>
-          <option value="PA">Pasaporte</option>
-          <option value="PE">Permiso Especial de Permanencia</option>
-          <option value="MS">Menos sin identificacion</option>
-          <option value="AS">Adulto sin identificacion</option>
-          <option value="PT">Permiso por proteccion temporal</option>
+          <option v-for="doc in tipoDocumentoOptions" :key="doc.value" :value="doc.value">{{ doc.label }}</option>
         </select>
       </div>
       <div class="col-6 col-md-3 mb-3">
@@ -81,6 +72,17 @@
             <div v-if="pacienteEditandoId === paciente.id" class="alert alert-light border mb-3">
               <h6 class="mb-3"><i class="bi bi-pencil"></i> Editar datos de la encuesta</h6>
               <div class="row g-2">
+                <div class="col-6 col-md-3">
+                  <label class="form-label">Tipo Documento</label>
+                  <select v-model="encuestaEdit.tipodoc" class="form-select form-select-sm">
+                    <option value="">Seleccione</option>
+                    <option v-for="doc in tipoDocumentoOptions" :key="`edit-${doc.value}`" :value="doc.value">{{ doc.label }}</option>
+                  </select>
+                </div>
+                <div class="col-6 col-md-3">
+                  <label class="form-label">Número Documento</label>
+                  <input v-model="encuestaEdit.numdoc" class="form-control form-control-sm" type="text" />
+                </div>
                 <div class="col-6 col-md-3">
                   <label class="form-label">Primer Nombre</label>
                   <input v-model="encuestaEdit.nombre1" class="form-control form-control-sm" type="text" />
@@ -312,7 +314,7 @@
 </template>
 
 <script>
-import { mapState, mapActions } from "vuex";
+import { mapState, mapActions, mapMutations } from "vuex";
 import firebase_api from "@/api/ApiFirebase";
 
 export default {
@@ -326,6 +328,8 @@ export default {
       numdoc: "",
       pacienteEditandoId: null,
       encuestaEdit: {
+        tipodoc: "",
+        numdoc: "",
         nombre1: "",
         nombre2: "",
         apellido1: "",
@@ -338,6 +342,18 @@ export default {
         regimen: "",
         convenio: "",
       },
+      tipoDocumentoOptions: [
+        { value: "RC", label: "Registro Civil" },
+        { value: "TI", label: "Tarjeta de Identidad" },
+        { value: "CC", label: "Cédula de Ciudadanía" },
+        { value: "CE", label: "Cédula de Extranjería" },
+        { value: "NV", label: "Certificado nacido vivo" },
+        { value: "PA", label: "Pasaporte" },
+        { value: "PE", label: "Permiso Especial de Permanencia" },
+        { value: "MS", label: "Menor sin identificación" },
+        { value: "AS", label: "Adulto sin identificación" },
+        { value: "PT", label: "Permiso por protección temporal" },
+      ],
       regimenOptions: ["Contributivo", "Subsidiado", "Especial", "PPNA"],
     };
   },
@@ -363,6 +379,7 @@ export default {
     }
   },
   methods: {
+    ...mapMutations(["setDatosPaciente"]),
     ...mapActions([
       "getAllByPacientesID",
       "deletePaciente",
@@ -370,6 +387,14 @@ export default {
       "deleteAsignacionesByPacienteId",
       "getAllActividadesExtra",
     ]),
+
+    limpiarConsultaPacientes() {
+      this.setDatosPaciente([]);
+      this.pacienteEditandoId = null;
+      this.tipodoc = "";
+      this.numdoc = "";
+      this.searchPerformed = false;
+    },
 
     async consultarP() {
       if (this.tipodoc === "" || this.numdoc === "") {
@@ -423,6 +448,8 @@ export default {
     iniciarEdicionEncuesta(paciente) {
       this.pacienteEditandoId = paciente.id;
       this.encuestaEdit = {
+        tipodoc: paciente.tipodoc || "",
+        numdoc: paciente.numdoc || "",
         nombre1: paciente.nombre1 || "",
         nombre2: paciente.nombre2 || "",
         apellido1: paciente.apellido1 || "",
@@ -451,8 +478,7 @@ export default {
         });
 
         alert("✅ Datos de encuesta actualizados correctamente.");
-        this.pacienteEditandoId = null;
-        await this.consultarP();
+        this.limpiarConsultaPacientes();
       } catch (error) {
         console.error("[guardarEdicionEncuesta] Error:", error);
         alert("❌ Error al guardar cambios: " + (error?.message || error));
@@ -521,11 +547,7 @@ Esta acción NO se puede deshacer.`;
         }
 
         alert("✅ Registro eliminado exitosamente\n\nSe ha eliminado la encuesta y todos sus datos asociados.");
-
-        // Limpiar los datos del paciente
-        this.tipodoc = "";
-        this.numdoc = "";
-        this.searchPerformed = false;
+        this.limpiarConsultaPacientes();
 
       } catch (error) {
         console.error(`[eliminarPaciente] Error general:`, error);

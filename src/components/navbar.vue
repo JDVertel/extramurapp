@@ -141,6 +141,12 @@
               </li>
 
               <li class="nav-item">
+                <router-link class="nav-link" to="/info" @click="onNavLinkClick">
+                  <i class="bi bi-info-circle"></i> Info
+                </router-link>
+              </li>
+
+              <li class="nav-item">
                 <button type="button" class="logout-btn" @click="logoutUser">
                   <i class="bi bi-x-circle"></i> Salir
                 </button>
@@ -156,7 +162,7 @@
                 color: #333;
                 opacity: 0.7;
               ">
-              <p style="margin: 0; padding: 0;">Version 2.3  26/02/2026</p>
+              <p style="margin: 0; padding: 0;">Version 2.5  20/03/2026</p>
             </div>
           </div>
         </div>
