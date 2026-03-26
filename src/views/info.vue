@@ -65,9 +65,8 @@
           agendas y seguimiento de usuarios por convenio y grupo.
         </p>
         <ul>
-          <li>Permite consulta y actualizacion de pacientes.</li>
-          <li>Incluye modulos de gestion por rol profesional.</li>
-          <li>Cuenta con flujo de recuperacion de contrasena para usuarios registrados.</li>
+          <li>Propiedad de BDM Systems.SAS </li>
+
         </ul>
         <div class="mt-3">
           <a
@@ -173,6 +172,11 @@
           <li class="list-group-item">
             <strong>20/03/2026:</strong> Validaciones reforzadas en registro de usuarios para campos en blanco y documento duplicado.
           </li>
+          <li class="list-group-item">
+           <strong>25/03/2026:</strong>
+  - Validación de convenio en consulta de pacientes: solo se marca como "encuestado" si el registro previo es del mismo convenio que el usuario logueado. Si fue encuestado en otro convenio, queda como "disponible" y se muestra una nota informativa.
+  - Mensaje informativo de convenio diferente: se muestra el convenio, fecha y encuestador, con icono de información grande y sombreado a la derecha.
+  - Todas las actividades proyectadas se agregan por defecto al formulario y ya no pueden eliminarse manualmente.</li>
         </ul>
       </div>
     </div>

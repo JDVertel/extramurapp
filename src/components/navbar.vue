@@ -162,7 +162,7 @@
                 color: #333;
                 opacity: 0.7;
               ">
-              <p style="margin: 0; padding: 0;">Version 2.5  20/03/2026</p>
+              <p style="margin: 0; padding: 0;">Version 2.6  25/03/2026</p>
             </div>
           </div>
         </div>

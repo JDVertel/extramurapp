@@ -65,6 +65,22 @@
                     </div>
                     <div v-if="estadoConsulta === 'disponible'" class="alert alert-success" role="alert">
                         <i class="bi bi-check-circle-fill"></i> Paciente disponible para encuestar
+                        <div class="mt-3" v-if="pacienteEncontrado && pacienteEncontrado.convenioDiferente">
+                            <div style="display: flex; align-items: stretch; justify-content: space-between;">
+                                <span style="display: flex; align-items: center;">
+                                    <strong>Nota:</strong> Este paciente fue encuestado previamente en el convenio <b>{{ pacienteEncontrado.convenio }}</b>.
+                                </span>
+                                <span style="display: flex; align-items: center; height: 100%;">
+                                    <span style="display: flex; align-items: center; justify-content: center; height: 60px; width: 60px; background: rgba(13,110,253,0.12); border-radius: 50%; box-shadow: 0 2px 8px rgba(0,0,0,0.15);">
+                                        <i class="bi bi-info-circle-fill" style="color: #0d6efd; font-size: 2.5em;"></i>
+                                    </span>
+                                </span>
+                            </div>
+                            <ul class="mt-2">
+                                <li><strong>Fecha de encuesta:</strong> {{ pacienteEncontrado.fecha }}</li>
+                                <li><strong>Encuestador:</strong> {{ nombreEncuestador || 'Cargando...' }}</li>
+                            </ul>
+                        </div>
                     </div>
                 </div>
 
@@ -200,10 +216,6 @@
                                     <li class="list-group-item d-flex justify-content-between align-items-center"
                                         v-for="(list, index) in ListtipoActividad" :key="index">
                                         <span>{{ list.nombre }}</span>
-                                        <button type="button" class="btn btn-danger btn-sm rounded-circle"
-                                            @click="removeActividad(index)">
-                                            <i class="bi bi-trash"></i>
-                                        </button>
                                     </li>
                                 </ul>
                             </div>
@@ -560,13 +572,26 @@ export default {
                         numdoc: numdocNormalizado,
                     });
 
-                // Si hay resultados, el paciente ya fue encuestado
+                // Si hay resultados, verificar convenio
                 if (resultado && Array.isArray(resultado) && resultado.length > 0) {
-                    this.estadoConsulta = "encuestado";
-                    this.pacienteEncontrado = resultado[0]; // Guardar el primer resultado
-
-                    // Obtener el nombre del encuestador
-                    await this.obtenerNombreEncuestador(this.pacienteEncontrado.idEncuestador);
+                    // Buscar si alguno de los registros tiene el mismo convenio que el usuario logueado
+                    const pacienteMismoConvenio = resultado.find(
+                        (r) => String(r.convenio || "").trim().toLowerCase() === convenioUsuario.toLowerCase()
+                    );
+                    if (pacienteMismoConvenio) {
+                        this.estadoConsulta = "encuestado";
+                        this.pacienteEncontrado = pacienteMismoConvenio;
+                        await this.obtenerNombreEncuestador(this.pacienteEncontrado.idEncuestador);
+                    } else {
+                        // Si no hay registro en el mismo convenio, mostrar info del otro convenio
+                        this.estadoConsulta = "disponible";
+                        const otroConvenio = resultado[0];
+                        this.pacienteEncontrado = {
+                            ...otroConvenio,
+                            convenioDiferente: true
+                        };
+                        await this.obtenerNombreEncuestador(otroConvenio.idEncuestador);
+                    }
                 } else {
                     this.estadoConsulta = "disponible";
                     this.pacienteEncontrado = null;
@@ -803,7 +828,10 @@ export default {
                 convenio: this.userData.convenio,
             });
         }
-
+        // Agregar todas las actividades extra por defecto
+        if (this.actividadesExtra && Array.isArray(this.actividadesExtra)) {
+            this.ListtipoActividad = [...this.actividadesExtra];
+        }
         // Asegurar que la página sea desplazable al montar el componente
         this.ensureScrollability();
     },
