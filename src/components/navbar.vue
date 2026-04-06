@@ -74,6 +74,11 @@
                   <i class="bi bi-bar-chart-fill"></i> Informes
                 </router-link>
               </li>
+              <li class="nav-item" v-if="userData && userData.cargo === 'Admin'">
+                <router-link class="nav-link" to="/admin_consumo" @click="onNavLinkClick">
+                  <i class="bi bi-speedometer2"></i> Consumo
+                </router-link>
+              </li>
               <li class="nav-item" v-if="userData && userData.cargo === 'Medico'">
                 <router-link class="nav-link" to="/medico_informes" @click="onNavLinkClick">
                   <i class="bi bi-bar-chart-fill"></i> Informes
@@ -118,6 +123,12 @@
                 <li class="nav-item">
                   <router-link class="nav-link" to="/admin_informes" @click="onNavLinkClick">
                     <i class="bi bi-file-earmark-medical"></i> Informes
+                  </router-link>
+                </li>
+
+                <li class="nav-item">
+                  <router-link class="nav-link" to="/admin_consumo" @click="onNavLinkClick">
+                    <i class="bi bi-speedometer2"></i> Consumo
                   </router-link>
                 </li>
 
