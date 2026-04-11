@@ -30,6 +30,10 @@
                         type="button" role="tab" aria-controls="nav-profile" aria-selected="false">
                         + Crear
                     </button>
+                    <button class="nav-link" id="nav-reporte-tab" data-bs-toggle="tab" data-bs-target="#nav-reporte"
+                        type="button" role="tab" aria-controls="nav-reporte" aria-selected="false">
+                        Reporte por convenio
+                    </button>
                     <!-- <button class="nav-link" id="nav-contact-tab" data-bs-toggle="tab" data-bs-target="#nav-contact" type="button" role="tab" aria-controls="nav-contact" aria-selected="false">Contact</button>
         <button class="nav-link" id="nav-disabled-tab" data-bs-toggle="tab" data-bs-target="#nav-disabled" type="button" role="tab" aria-controls="nav-disabled" aria-selected="false" disabled>Disabled</button> -->
                 </div>
@@ -329,6 +333,67 @@
                         </small>
                     </form>
                 </div>
+                <div class="tab-pane fade" id="nav-reporte" role="tabpanel" aria-labelledby="nav-reporte-tab"
+                    tabindex="0">
+                    <div class="reporte-convenio-wrapper">
+                        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+                            <h1 class="display-6 mb-0"><i class="bi bi-table me-2"></i>Reporte de usuarios por convenio</h1>
+                            <button class="btn btn-success" @click="exportarUsuariosConvenioExcel"
+                                :disabled="usuariosReporteFiltrados.length === 0">
+                                <i class="bi bi-file-earmark-excel me-1"></i>Exportar Excel
+                            </button>
+                        </div>
+
+                        <div class="row g-3 align-items-end mb-3">
+                            <div class="col-12 col-md-6 col-lg-4">
+                                <label for="convenioReporte" class="form-label"><strong>Convenio</strong></label>
+                                <select id="convenioReporte" v-model="convenioReporte" class="form-select">
+                                    <option value="">Seleccione un convenio</option>
+                                    <option v-for="conv in convenios" :key="`reporte-${conv}`" :value="conv">
+                                        {{ conv === 'sin-convenio' ? 'Usuarios Administrativos' : conv }}
+                                    </option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div v-if="!convenioReporte" class="alert alert-info mb-0">
+                            Selecciona un convenio para visualizar los usuarios.
+                        </div>
+
+                        <div v-else-if="usuariosReporteFiltrados.length === 0" class="alert alert-warning mb-0">
+                            No hay usuarios para el convenio seleccionado.
+                        </div>
+
+                        <div v-else class="table-responsive reporte-table-container">
+                            <table class="table table-striped table-hover align-middle mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Nombre</th>
+                                        <th>Email</th>
+                                        <th>Rol</th>
+                                        <th>Cargo</th>
+                                        <th>Grupo</th>
+                                        <th>Convenio</th>
+                                        <th>Documento</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr v-for="(user, index) in usuariosReporteFiltrados" :key="`fila-reporte-${user.uid || index}`">
+                                        <td>{{ index + 1 }}</td>
+                                        <td>{{ user.nombre || 'N/A' }}</td>
+                                        <td>{{ user.email || 'N/A' }}</td>
+                                        <td>{{ getCargoShortName(user.cargo || '') || 'N/A' }}</td>
+                                        <td>{{ user.cargo || 'N/A' }}</td>
+                                        <td>{{ user.grupo || 'N/A' }}</td>
+                                        <td>{{ (user.convenio || 'sin-convenio') === 'sin-convenio' ? 'Usuarios Administrativos' : user.convenio }}</td>
+                                        <td>{{ user.numDocumento || 'N/A' }}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
                 <div class="tab-pane fade" id="nav-contact" role="tabpanel" aria-labelledby="nav-contact-tab"
                     tabindex="0">
                     ...
@@ -362,6 +427,7 @@ import {
 import {
     mapActions
 } from "vuex";
+import * as XLSX from "xlsx";
 
 export default {
     data() {
@@ -392,6 +458,7 @@ export default {
             ips: 1,
             convenioSeleccionado: "",
             busquedaUsuario: "",
+            convenioReporte: "",
 
             /* Validación documento */
             verificandoDocumento: false,
@@ -547,6 +614,20 @@ export default {
                 this.emailValido === true;
 
             return !!(camposBasicos && grupoValido && documentoDisponibleLista && emailDisponibleLista && validaciones);
+        },
+
+        usuariosReporteFiltrados() {
+            if (!this.convenioReporte || !Array.isArray(this.users)) {
+                return [];
+            }
+
+            return this.users
+                .filter((user) => (user.convenio || 'sin-convenio') === this.convenioReporte)
+                .sort((a, b) => {
+                    const nombreA = String(a?.nombre || '').toLowerCase();
+                    const nombreB = String(b?.nombre || '').toLowerCase();
+                    return nombreA.localeCompare(nombreB);
+                });
         }
     },
     watch: {
@@ -988,6 +1069,35 @@ Esta acción eliminará el usuario de la base de datos.`)) {
                 this.cargo = '';
             }
         },
+
+        exportarUsuariosConvenioExcel() {
+            const filas = this.usuariosReporteFiltrados.map((user, index) => ({
+                '#': index + 1,
+                Nombre: user.nombre || '',
+                Email: user.email || '',
+                Rol: this.getCargoShortName(user.cargo || ''),
+                Cargo: user.cargo || '',
+                Grupo: user.grupo || '',
+                Convenio: (user.convenio || 'sin-convenio') === 'sin-convenio' ? 'Usuarios Administrativos' : (user.convenio || ''),
+                Documento: user.numDocumento || ''
+            }));
+
+            if (filas.length === 0) {
+                this.message = 'No hay usuarios para exportar en el convenio seleccionado.';
+                this.messageType = 'error';
+                return;
+            }
+
+            const hoja = XLSX.utils.json_to_sheet(filas);
+            const libro = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(libro, hoja, 'UsuariosConvenio');
+
+            const convenioNombre = this.convenioReporte === 'sin-convenio'
+                ? 'usuarios_administrativos'
+                : String(this.convenioReporte || 'convenio').replace(/[^a-zA-Z0-9]+/g, '_').toLowerCase();
+
+            XLSX.writeFile(libro, `usuarios_${convenioNombre}.xlsx`);
+        }
     },
     mounted() {
         this.fetchUsers();
@@ -1023,6 +1133,21 @@ Esta acción eliminará el usuario de la base de datos.`)) {
 .form-convenio-wrapper.convenio-ebasicos h1,
 .form-convenio-wrapper.convenio-ebasicos label {
     color: #14532d;
+}
+
+.reporte-convenio-wrapper {
+    padding: 20px;
+    border-radius: 14px;
+    border: 2px solid #dee2e6;
+    background: linear-gradient(135deg, #f9fafb 0%, #eef2ff 100%);
+    margin-bottom: 24px;
+}
+
+.reporte-table-container {
+    border: 1px solid #dbe1ea;
+    border-radius: 10px;
+    overflow: hidden;
+    background: #ffffff;
 }
 
 /* Sección de Convenio */

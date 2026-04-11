@@ -19,10 +19,15 @@
     </div>
     <div v-else>
       <h1 class="display-6 center">{{ userData.cargo }}</h1>
-      <div class="alert alert-warning shadow-sm d-flex justify-content-between align-items-center" role="alert">
+      <div v-if="plataformaActiva" class="alert alert-warning shadow-sm d-flex justify-content-between align-items-center" role="alert">
         Realizar nueva encuesta <RouterLink class="btn btn-warning" to="/sop_encuesta">
           <i class="bi bi-file-earmark-plus-fill"></i>
         </RouterLink>
+      </div>
+      <div v-else class="alert alert-danger shadow-sm text-center" role="alert">
+        <i class="bi bi-exclamation-triangle-fill" style="font-size: 1.5rem;"></i>
+        <p class="mb-0 mt-2"><strong>No disponible</strong></p>
+        <p class="mb-0 small">Este procedimiento no está disponible por cierre de plataforma.</p>
       </div>
 
       <h4>Detalle de Actividades ({{ cantEncuestasFiltradasPorConvenio }}) <small>Pendientes</small></h4>
@@ -229,6 +234,14 @@ export default {
 
   computed: {
     ...mapState(["encuestas", "userData", "cantEncuestas"]),
+    plataformaActiva() {
+      // Fecha límite: 10 de abril de 2026 a las 23:59:59
+      const fechaLimite = new Date(2026, 3, 10, 23, 59, 59); // Mes 3 = Abril (0-indexed)
+      const ahora = new Date();
+      
+      // Retorna true si es antes de la fecha límite, false si es después
+      return ahora < fechaLimite;
+    },
     encuestasFiltradasPorConvenio() {
       if (!this.encuestas || this.encuestas.length === 0) return [];
       if (!this.userData || !this.userData.convenio) return this.encuestas;

@@ -122,6 +122,12 @@ const routes = [
     meta: { requiresAuth: true },
   },
   {
+    path: "/admin_estado_profesional",
+    name: "admin_estado_profesional",
+    component: () => import("../views/admin_estado_profesional.vue"),
+    meta: { requiresAuth: true, requiresAdmin: true },
+  },
+  {
     path: "/medico_informes",
     name: "medico_informes",
     component: () => import("../views/medico_informes.vue"),
@@ -131,6 +137,18 @@ const routes = [
     path: "/enfermero_informes",
     name: "enfermero_informes",
     component: () => import("../views/enfermero_informes.vue"),
+    meta: { requiresAuth: true },
+  },
+  {
+    path: "/psicologo_informes",
+    name: "psicologo_informes",
+    component: () => import("../views/psicologo_informes.vue"),
+    meta: { requiresAuth: true },
+  },
+  {
+    path: "/tsocial_informes",
+    name: "tsocial_informes",
+    component: () => import("../views/tsocial_informes.vue"),
     meta: { requiresAuth: true },
   },
   {
@@ -211,6 +229,14 @@ const router = createRouter({
 router.beforeEach((to, from, next) => {
   const token = localStorage.getItem("token");
   const loggedIn = !!token;
+  let userData = {};
+  try {
+    userData = JSON.parse(localStorage.getItem("userData") || "{}");
+  } catch (error) {
+    userData = {};
+  }
+  const cargo = String(userData?.cargo || "").trim().toLowerCase();
+  const isAdmin = cargo === "admin";
 
   console.log(`[Router] Navegando de ${from.name} a ${to.name} - Token: ${loggedIn ? 'SÍ' : 'NO'}`);
 
@@ -219,6 +245,9 @@ router.beforeEach((to, from, next) => {
     if (!loggedIn) {
       console.warn(`[Router] NO autenticado en ruta protegida ${to.name}: redirigiendo a login`);
       next("/login");
+    } else if (to.matched.some((record) => record.meta.requiresAdmin) && !isAdmin) {
+      console.warn(`[Router] Acceso denegado a ${to.name}: requiere admin`);
+      next("/homeviews");
     } else {
       // Token existe, permitir navegación
       // App.vue se encargará de sincronizar userData desde localStorage

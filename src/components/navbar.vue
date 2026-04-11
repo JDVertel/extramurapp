@@ -89,6 +89,16 @@
                   <i class="bi bi-bar-chart-fill"></i> Informes
                 </router-link>
               </li>
+              <li class="nav-item" v-if="userData && userData.cargo === 'Psicologo'">
+                <router-link class="nav-link" to="/psicologo_informes" @click="onNavLinkClick">
+                  <i class="bi bi-bar-chart-fill"></i> Informes
+                </router-link>
+              </li>
+              <li class="nav-item" v-if="userData && userData.cargo === 'Tsocial'">
+                <router-link class="nav-link" to="/tsocial_informes" @click="onNavLinkClick">
+                  <i class="bi bi-bar-chart-fill"></i> Informes
+                </router-link>
+              </li>
 
               <li class="nav-item">
                 <router-link class="nav-link" to="/consulta_pacientes" @click="onNavLinkClick">
@@ -118,6 +128,12 @@
                 <li class="nav-item">
                   <router-link class="nav-link" to="/admin_informes" @click="onNavLinkClick">
                     <i class="bi bi-file-earmark-medical"></i> Informes
+                  </router-link>
+                </li>
+
+                <li class="nav-item">
+                  <router-link class="nav-link" to="/admin_estado_profesional" @click="onNavLinkClick">
+                    <i class="bi bi-person-vcard"></i> Estado Profesional
                   </router-link>
                 </li>
 

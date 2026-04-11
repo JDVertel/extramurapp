@@ -1,5 +1,33 @@
 <template>
     <div class="login-layout">
+        <div v-if="mostrarPopupMigracion" class="modal-overlay" @click="cerrarPopupMigracion">
+            <div class="modal-migracion" @click.stop>
+                <div class="modal-migracion-header">
+                    <i class="bi bi-megaphone-fill"></i>
+                    <h5>Aviso Importante</h5>
+                </div>
+                <div class="modal-migracion-body">
+                    <p>
+                        La plataforma se encuentra en proceso de migracion y se realizara corte el dia 17 de abril,
+                        dia en el cual deberan estar cerradas las actividades por parte de los profesionales.
+                    </p>
+                    <p>
+                        Ya no es posible cargar nuevos pacientes en esta plataforma. Solo queda habilitada para
+                        cerrar pacientes por parte de los profesionales.
+                    </p>
+                    <p class="mb-0">
+                        Se habilitara la nueva version, a la cual ingresaran con su usuario de correo electronico y
+                        como clave temporal su documento de identidad.
+                    </p>
+                </div>
+                <div class="modal-migracion-footer">
+                    <button type="button" class="btn btn-primary" @click="cerrarPopupMigracion">
+                        Entendido
+                    </button>
+                </div>
+            </div>
+        </div>
+
         <div class="login-container">
             <div class="card p-4 shadow login-card">
                 <img src="@/assets/images/logo_extramurapp.png" alt="Logo Extramuralapp" class="login-logo-bg" />
@@ -105,6 +133,7 @@ export default {
             captchaPregunta: "",
             captchaRespuesta: "",
             captchaInput: "",
+            mostrarPopupMigracion: false,
             logueado: false,
             userData: {
                 rol: null, // o un valor por defecto
@@ -259,8 +288,8 @@ export default {
                 localStorage.setItem("token", token);
                 localStorage.setItem("uid", uid);
 
-                // Redirigir al dashboard
-                this.$router.push("/homeviews");
+                // Mostrar aviso de migracion antes de ingresar
+                this.mostrarPopupMigracion = true;
             } catch (error) {
                 if (error.code) {
                     switch (error.code) {
@@ -289,6 +318,11 @@ export default {
                 }
                 console.error("Error en login:", error);
             }
+        },
+
+        cerrarPopupMigracion() {
+            this.mostrarPopupMigracion = false;
+            this.$router.push("/homeviews");
         },
     },
 
@@ -408,6 +442,56 @@ body {
 .login-card i.bi {
     margin-right: 8px;
     font-size: 1.3rem;
+}
+
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.65);
+    backdrop-filter: blur(3px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+}
+
+.modal-migracion {
+    width: min(680px, 92vw);
+    background: #ffffff;
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
+}
+
+.modal-migracion-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 18px;
+    background: linear-gradient(135deg, #fff3cd 0%, #ffe69c 100%);
+    color: #664d03;
+    border-bottom: 1px solid #f6d67a;
+}
+
+.modal-migracion-header h5 {
+    margin: 0;
+    font-weight: 700;
+}
+
+.modal-migracion-header i {
+    font-size: 1.25rem;
+}
+
+.modal-migracion-body {
+    padding: 18px;
+    color: #212529;
+    line-height: 1.5;
+}
+
+.modal-migracion-footer {
+    padding: 0 18px 18px;
+    display: flex;
+    justify-content: flex-end;
 }
 
 @media (max-width: 767px) {

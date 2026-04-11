@@ -1,8 +1,4 @@
 // ============================================================================
-// STORE VUEX - EXTRAMURAPP
-// ============================================================================
-
-// ============================================================================
 // IMPORTS
 // ============================================================================
 import firebase_api from "@/api/ApiFirebase.js";
@@ -759,6 +755,106 @@ export default createStore({
         return encuestasFiltradas;
       } catch (error) {
         console.error("Error en GetAllRegistersbyRangeEnf:", error);
+        throw error;
+      }
+    },
+
+    /**
+     * Obtiene registros por rango de fechas - Psicólogo
+     */
+    GetAllRegistersbyRangePsic: async ({ commit }, rango) => {
+      const { fechaInicio, fechaFin, idempleado, cargo } = rango;
+      try {
+        if (!fechaInicio || !fechaFin) {
+          throw new Error("Debes proporcionar ambas fechas para el filtro.");
+        }
+
+        const { data } = await firebase_api.get("/Encuesta.json");
+        if (!data) {
+          commit("setEncuestasfiltradas", []);
+          return [];
+        }
+
+        const encuestas = Object.entries(data).map(([key, value]) => ({
+          id: key,
+          ...value,
+        }));
+
+        const encuestasFiltradas = encuestas.filter((encuesta) => {
+          const fecha = encuesta.fecha;
+          if (!fecha) return false;
+
+          if (!(fecha >= fechaInicio && fecha <= fechaFin)) return false;
+
+          if (idempleado && encuesta.idPsicologoAtiende !== idempleado) return false;
+
+          if (encuesta.tipoActividad && typeof encuesta.tipoActividad === "object") {
+            encuesta.actividadesRealizadas = Object.values(encuesta.tipoActividad).filter(
+              (act) => {
+                return act.Profesional && act.Profesional.includes(cargo);
+              }
+            );
+          } else {
+            encuesta.actividadesRealizadas = [];
+          }
+
+          return true;
+        });
+
+        commit("setEncuestasfiltradas", encuestasFiltradas);
+        return encuestasFiltradas;
+      } catch (error) {
+        console.error("Error en GetAllRegistersbyRangePsic:", error);
+        throw error;
+      }
+    },
+
+    /**
+     * Obtiene registros por rango de fechas - Trabajador Social
+     */
+    GetAllRegistersbyRangeTsoc: async ({ commit }, rango) => {
+      const { fechaInicio, fechaFin, idempleado, cargo } = rango;
+      try {
+        if (!fechaInicio || !fechaFin) {
+          throw new Error("Debes proporcionar ambas fechas para el filtro.");
+        }
+
+        const { data } = await firebase_api.get("/Encuesta.json");
+        if (!data) {
+          commit("setEncuestasfiltradas", []);
+          return [];
+        }
+
+        const encuestas = Object.entries(data).map(([key, value]) => ({
+          id: key,
+          ...value,
+        }));
+
+        const encuestasFiltradas = encuestas.filter((encuesta) => {
+          const fecha = encuesta.fecha;
+          if (!fecha) return false;
+
+          if (!(fecha >= fechaInicio && fecha <= fechaFin)) return false;
+
+          if (idempleado && encuesta.idTsocialAtiende !== idempleado) return false;
+
+          if (encuesta.tipoActividad && typeof encuesta.tipoActividad === "object") {
+            encuesta.actividadesRealizadas = Object.values(encuesta.tipoActividad).filter(
+              (act) => {
+                return act.Profesional && act.Profesional.includes(cargo);
+              }
+            );
+          } else {
+            encuesta.actividadesRealizadas = [];
+          }
+
+          return true;
+        });
+
+        commit("setEncuestasfiltradas", encuestasFiltradas);
+        return encuestasFiltradas;
+      } catch (error) {
+        console.error("Error en GetAllRegistersbyRangeTsoc:", error);
         throw error;
       }
     },

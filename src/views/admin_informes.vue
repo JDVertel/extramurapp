@@ -54,8 +54,14 @@
                         <option v-for="conv in conveniosDisponibles" :key="conv" :value="conv">{{ conv }}</option>
                     </select>
                 </div>
+                <div class="col-12 mt-2" v-if="tipoinforme == '1' || tipoinforme == '2'">
+                    <div class="alert py-2 mb-0" :class="limiteDiarioAlcanzado ? 'alert-danger' : 'alert-info'" role="alert">
+                        <strong>Informes disponibles hoy:</strong> {{ informesRestantes }}/{{ maxInformesDiarios }}
+                        <div v-if="limiteDiarioAlcanzado" class="mt-1">Ya no puede sacar informes en el dia.</div>
+                    </div>
+                </div>
                 <div class="col-12 col-md-2 mt-3" v-if="tipoinforme == '1' || tipoinforme == '2'">
-                    <button type="button" class="btn btn-warning  mt-3" @click="generarInforme()">
+                    <button type="button" class="btn btn-warning  mt-3" @click="generarInforme()" :disabled="cargandoInforme || limiteDiarioAlcanzado">
                         <i class="bi bi-clipboard2-data h6"></i> Generar Informe
                     </button>
                 </div>
@@ -310,6 +316,8 @@ export default {
             detallesVisibles: [], // Para controlar la visibilidad de detalles por fila
             mostrarFormulario: true,
             cargandoInforme: false,
+            informesHoy: 0,
+            maxInformesDiarios: 1,
             encuestasInforme: [],
             actividadesExtraMap: {},
             cupsMap: {},
@@ -884,7 +892,61 @@ export default {
         /*  */
         ...mapActions(["GetRegistersbyRangeCerrados", "GetRegistersbyRangeGeneral"]),
 
+        obtenerClaveGenerador() {
+            return `informes_generados_${this.userData.numDocumento}`;
+        },
+
+        obtenerDiaActual() {
+            return new Date().toISOString().split('T')[0];
+        },
+
+        verificarLimiteInformes() {
+            const clave = this.obtenerClaveGenerador();
+            const diaActual = this.obtenerDiaActual();
+            const datos = localStorage.getItem(clave);
+            let genera = { fecha: diaActual, contador: 0 };
+
+            if (datos) {
+                genera = JSON.parse(datos);
+                if (genera.fecha !== diaActual) {
+                    genera = { fecha: diaActual, contador: 0 };
+                }
+            }
+
+            return { generaHoy: genera.contador, limiteAlcanzado: genera.contador >= this.maxInformesDiarios };
+        },
+
+        refrescarContadorInformes() {
+            const { generaHoy } = this.verificarLimiteInformes();
+            this.informesHoy = generaHoy;
+        },
+
+        guardarGeneracionInforme() {
+            const clave = this.obtenerClaveGenerador();
+            const diaActual = this.obtenerDiaActual();
+            const datos = localStorage.getItem(clave);
+            let genera = { fecha: diaActual, contador: 1 };
+
+            if (datos) {
+                genera = JSON.parse(datos);
+                if (genera.fecha === diaActual) {
+                    genera.contador += 1;
+                } else {
+                    genera = { fecha: diaActual, contador: 1 };
+                }
+            }
+
+            localStorage.setItem(clave, JSON.stringify(genera));
+        },
+
         async generarInforme() {
+            this.refrescarContadorInformes();
+            const { limiteAlcanzado } = this.verificarLimiteInformes();
+            if (limiteAlcanzado) {
+                alert(`⚠️ Límite de informes alcanzado\n\nSolo puede generar ${this.maxInformesDiarios} informe por día. Ya ha generado ${this.maxInformesDiarios} informe hoy.`);
+                return;
+            }
+
             this.cargandoInforme = true;
             this.actualizarProgreso(5, "Preparando parámetros del informe...");
             this.$store.commit('setEncuestasAdmin', []);
@@ -932,6 +994,11 @@ export default {
                 if (consultaUsada) {
                     this.consultaActual = consultaUsada;
                 }
+                // Guardar generación del informe
+                this.guardarGeneracionInforme();
+                this.refrescarContadorInformes();
+                const { generaHoy: nuevoContador } = this.verificarLimiteInformes();
+                this.$toast && this.$toast.success ? this.$toast.success(`✅ Informe generado exitosamente\n\nInformes generados hoy: ${nuevoContador}/${this.maxInformesDiarios}`) : alert(`✅ Informe generado exitosamente\n\nInformes generados hoy: ${nuevoContador}/${this.maxInformesDiarios}`);
                 this.mostrarFormulario = this.filasInformeTabla.length === 0;
                 this.actualizarProgreso(80, "Renderizando tabla...");
                 await this.$nextTick();
@@ -974,6 +1041,7 @@ export default {
                 profesional: "",
                 convenio: "",
             };
+            this.refrescarContadorInformes();
         },
 
         toggleDetalles(idx) {
@@ -984,6 +1052,12 @@ export default {
 
     computed: {
         ...mapState(["userData", "EncuestasAdmin"]),
+        informesRestantes() {
+            return Math.max(0, this.maxInformesDiarios - this.informesHoy);
+        },
+        limiteDiarioAlcanzado() {
+            return this.informesRestantes === 0;
+        },
         tituloListado() {
             return this.tipoinforme === "2" ? "Listado de actividades" : "Listado de Pacientes finalizados";
         },
@@ -1067,6 +1141,7 @@ export default {
 
     mounted() {
         window.addEventListener('resize', this.actualizarAnchoTabla);
+        this.refrescarContadorInformes();
         // Inicializar detallesVisibles según la cantidad de pacientes
         this.$watch(
             () => this.EncuestasAdmin,

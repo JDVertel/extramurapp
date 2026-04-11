@@ -12,7 +12,7 @@
             </div>
         </div>
 
-        <h1>Medico Informes</h1>
+        <h1>Psicologo Informes</h1>
 
         <hr>
 
@@ -228,7 +228,7 @@ export default {
                 alert('Tabla copiada al portapapeles');
             }
         },
-        ...mapActions(["GetAllRegistersbyRangeMed", "getAllActividadesExtra"]),
+        ...mapActions(["GetAllRegistersbyRangePsic", "getAllActividadesExtra"]),
 
         refrescarContadorInformes() {
             const { generaHoy } = this.verificarLimiteInformes();
@@ -296,7 +296,7 @@ export default {
                     idempleado: this.userData.numDocumento,
                     cargo: this.userData.cargo,
                 };
-                await this.GetAllRegistersbyRangeMed(rango);
+                await this.GetAllRegistersbyRangePsic(rango);
                 await this.getAllActividadesExtra();
                 await this.cargarActividadesPorEncuesta();
                 this.paginaActual = 1;

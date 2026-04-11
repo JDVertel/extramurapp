@@ -1,19 +1,35 @@
 <template>
     <div class="w-100 px-4 py-3">
+        <div v-if="generando" class="spinner-overlay">
+            <div class="progress-card shadow">
+                <div class="h5 mb-3">Generando informe</div>
+                <div class="progress mb-2" role="progressbar" aria-label="Generando informe" aria-valuemin="0" aria-valuemax="100" style="height: 22px;">
+                    <div class="progress-bar progress-bar-striped progress-bar-animated progreso-indeterminado">
+                        Por favor espere...
+                    </div>
+                </div>
+                <div class="text-muted small">Cargando datos y generando informe. No cierre la página.</div>
+            </div>
+        </div>
 
         <div class="w-100">
             <h2>Auxiliar Informes</h2>
 
             <div class="row">
-                <div class="col-2" v-if="!activacion">
+                <div class="col-2" v-if="!activacion && !generando">
                     <div class="container">
                         <h5>Seleccione el rango de fechas a mostrar</h5>
+                        <div class="alert mb-2 py-2" :class="limiteDiarioAlcanzado ? 'alert-danger' : 'alert-info'" role="alert">
+                            <strong>Informes disponibles hoy:</strong> {{ informesRestantes }}/{{ maxInformesDiarios }}
+                            <div v-if="limiteDiarioAlcanzado" class="mt-1">Ya no puede sacar informes en el dia.</div>
+                        </div>
                         <label for="fechaInicio" class="form-label">Fecha de Inicio</label>
                         <input type="date" id="fechaInicio" class="form-control" v-model="fechaInicio" required />
                         <label for="fechaFin" class="form-label">Fecha de Fin</label>
                         <input type="date" id="fechaFin" class="form-control" v-model="fechaFin" required />
-                        <button type="button" class="btn btn-warning mt-4" @click="generarInforme()">
-                            Generar Informe
+                        <button type="button" class="btn btn-warning mt-4" @click="generarInforme()" :disabled="generando || limiteDiarioAlcanzado">
+                            <span v-if="!generando">Generar Informe</span>
+                            <span v-else><i class="bi bi-hourglass-split"></i> Generando...</span>
                         </button>
                     </div>
 
@@ -168,6 +184,9 @@ export default {
             fechaFin: "",
             idips: 1,
             activacion: false,
+            generando: false,
+            informesHoy: 0,
+            maxInformesDiarios: 1,
             actividadesPorEncuesta: {},
             paginaActual: 1,
             itemsPorPagina: 25,
@@ -197,6 +216,56 @@ export default {
     methods: {
         ...mapActions(["GetAllRegistersbyRangeAux", "getAllActividadesExtra", "getdataips"]),
 
+        obtenerClaveGenerador() {
+            return `informes_generados_${this.userData.numDocumento}`;
+        },
+
+        refrescarContadorInformes() {
+            const { generaHoy } = this.verificarLimiteInformes();
+            this.informesHoy = generaHoy;
+        },
+
+        obtenerDiaActual() {
+            return new Date().toISOString().split('T')[0];
+        },
+
+        verificarLimiteInformes() {
+            const clave = this.obtenerClaveGenerador();
+            const diaActual = this.obtenerDiaActual();
+            
+            const datos = localStorage.getItem(clave);
+            let genera = { fecha: diaActual, contador: 0 };
+
+            if (datos) {
+                genera = JSON.parse(datos);
+                // Si es otro día, reiniciar contador
+                if (genera.fecha !== diaActual) {
+                    genera = { fecha: diaActual, contador: 0 };
+                }
+            }
+
+            return { generaHoy: genera.contador, limiteAlcanzado: genera.contador >= this.maxInformesDiarios };
+        },
+
+        guardarGeneracionInforme() {
+            const clave = this.obtenerClaveGenerador();
+            const diaActual = this.obtenerDiaActual();
+            
+            const datos = localStorage.getItem(clave);
+            let genera = { fecha: diaActual, contador: 1 };
+
+            if (datos) {
+                genera = JSON.parse(datos);
+                if (genera.fecha === diaActual) {
+                    genera.contador += 1;
+                } else {
+                    genera = { fecha: diaActual, contador: 1 };
+                }
+            }
+
+            localStorage.setItem(clave, JSON.stringify(genera));
+        },
+
         async cargarDatosIps() {
             try {
                 await this.getdataips(this.idips);
@@ -207,18 +276,38 @@ export default {
 
         /* metodo para cargar los datos del profesional, y los datos de la ips */
         async generarInforme() {
-            let rango = {
-                fechaInicio: this.fechaInicio,
-                fechaFin: this.fechaFin,
-                idempleado: this.userData.numDocumento,
-                cargo: this.userData.cargo,
-            };
-            await this.cargarDatosIps();
-            await this.GetAllRegistersbyRangeAux(rango);
-            await this.getAllActividadesExtra();
-            await this.cargarActividadesPorEncuesta();
-            this.paginaActual = 1;
-            this.activacion = true;
+            this.refrescarContadorInformes();
+            const { limiteAlcanzado } = this.verificarLimiteInformes();
+            if (limiteAlcanzado) {
+                alert(`⚠️ Límite de informes alcanzado\n\nSolo puede generar ${this.maxInformesDiarios} informe por día. Ya ha generado ${this.maxInformesDiarios} informe hoy.`);
+                return;
+            }
+
+            try {
+                this.generando = true;
+                let rango = {
+                    fechaInicio: this.fechaInicio,
+                    fechaFin: this.fechaFin,
+                    idempleado: this.userData.numDocumento,
+                    cargo: this.userData.cargo,
+                };
+                await this.cargarDatosIps();
+                await this.GetAllRegistersbyRangeAux(rango);
+                await this.getAllActividadesExtra();
+                await this.cargarActividadesPorEncuesta();
+                this.paginaActual = 1;
+                this.activacion = true;
+                // Guardar generación del informe
+                this.guardarGeneracionInforme();
+                this.refrescarContadorInformes();
+                const { generaHoy: nuevoContador } = this.verificarLimiteInformes();
+                alert(`✅ Informe generado exitosamente\n\nInformes generados hoy: ${nuevoContador}/${this.maxInformesDiarios}`);
+            } catch (error) {
+                console.error('Error generando informe:', error);
+                alert('Error al generar el informe: ' + (error.message || 'Error desconocido'));
+            } finally {
+                this.generando = false;
+            }
         },
         resetInforme() {
             this.fechaInicio = "";
@@ -322,6 +411,12 @@ export default {
     },
     computed: {
         ...mapState(["encuestasFiltradas", "dataips", "userData", "actividadesExtra"]),
+        informesRestantes() {
+            return Math.max(0, this.maxInformesDiarios - this.informesHoy);
+        },
+        limiteDiarioAlcanzado() {
+            return this.informesRestantes === 0;
+        },
 
         totalRegistros() {
             return this.encuestasFiltradas?.length || 0;
@@ -369,6 +464,7 @@ export default {
     },
     async mounted() {
         await this.cargarDatosIps();
+        this.refrescarContadorInformes();
     },
 
 };
