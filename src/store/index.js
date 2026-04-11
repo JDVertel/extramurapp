@@ -4,6 +4,7 @@
 import firebase_api from "@/api/ApiFirebase.js";
 import persistedState from "./persistedstate";
 import { createStore } from "vuex";
+import { cacheManager } from "@/utils/cacheManager";
 import {
   getFirestore,
   doc,
@@ -25,6 +26,34 @@ const auth = getAuth();
 // ============================================================================
 function generarId() {
   return Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
+}
+
+function mapFirebaseObjectToArray(data) {
+  if (!data || typeof data !== "object") return [];
+  return Object.entries(data).map(([key, value]) => ({
+    id: key,
+    ...value,
+  }));
+}
+
+async function getCachedMappedCollection(cacheKey, path) {
+  const cached = cacheManager.get(cacheKey);
+  if (cached) return cached;
+
+  const { data } = await firebase_api.get(path);
+  const mapped = mapFirebaseObjectToArray(data);
+  cacheManager.set(cacheKey, mapped);
+  return mapped;
+}
+
+async function getCachedRawCollection(cacheKey, path) {
+  const cached = cacheManager.get(cacheKey);
+  if (cached) return cached;
+
+  const { data } = await firebase_api.get(path);
+  const safeData = data && typeof data === "object" ? data : {};
+  cacheManager.set(cacheKey, safeData);
+  return safeData;
 }
 
 // ============================================================================
@@ -188,6 +217,11 @@ export default createStore({
           });
         }
 
+        cacheManager.remove("encuestas");
+        cacheManager.remove("encuestasRaw");
+        cacheManager.remove("actividadesPorEncuesta");
+        cacheManager.remove("actividadesRaw");
+
         return { mainId };
       } catch (error) {
         console.error("Error en Action_createNewRegister:", error);
@@ -202,6 +236,8 @@ export default createStore({
       try {
         if (!id) throw new Error("ID inválido para eliminar");
         const { data } = await firebase_api.delete(`/Encuesta/${id}.json`);
+        cacheManager.remove("encuestas");
+        cacheManager.remove("encuestasRaw");
         return data;
       } catch (error) {
         console.error("Error en Action deletePaciente:", error);
@@ -215,6 +251,8 @@ export default createStore({
     removeRegEnc: async ({ commit }, id) => {
       try {
         const { data } = await firebase_api.delete(`/Encuesta/${id}.json`);
+        cacheManager.remove("encuestas");
+        cacheManager.remove("encuestasRaw");
         return data;
       } catch (error) {
         console.error("Error en Action_removeRegEnc:", error);
@@ -259,6 +297,8 @@ export default createStore({
           [varStatus]: true,
           [dateStatus]: moment(fecha).format("YYYY-MM-DD HH:mm:ss"),
         });
+        cacheManager.remove("encuestas");
+        cacheManager.remove("encuestasRaw");
         return data;
       } catch (error) {
         console.error("Error al cerrar encuesta:", error);
@@ -275,11 +315,7 @@ export default createStore({
      */
     getAllRegisters: async ({ commit }, idUsuario) => {
       try {
-        const { data } = await firebase_api.get("/Encuesta.json");
-        const encuestas = Object.entries(data).map(([key, value]) => ({
-          id: key,
-          ...value,
-        }));
+        const encuestas = await getCachedMappedCollection("encuestas", "/Encuesta.json");
 
         const encuestasFiltradas = encuestas.filter(
           (encuesta) => encuesta.idUsuario === idUsuario
@@ -299,19 +335,14 @@ export default createStore({
     getAllRegistersByFechaStatus: async ({ commit }, { idUsuario }) => {
       console.log("parametro de consulta abiertas aux", idUsuario);
       try {
-        const { data } = await firebase_api.get("/Encuesta.json");
+        const encuestas = await getCachedMappedCollection("encuestas", "/Encuesta.json");
 
-        if (!data) {
+        if (!encuestas.length) {
           commit("setEncuestas", []);
           commit("setcantEncuestas", 0);
           alert("No hay datos para mostrar.");
           return [];
         }
-
-        const encuestas = Object.entries(data).map(([key, value]) => ({
-          id: key,
-          ...value,
-        }));
 
         const encuestasFiltradas = encuestas.filter(
           (encuesta) =>
@@ -341,18 +372,13 @@ export default createStore({
     getEncuestasPendientesPsicologo: async ({ commit }, { idUsuario }) => {
       console.log("Obteniendo encuestas pendientes para psicologo:", idUsuario);
       try {
-        const { data } = await firebase_api.get("/Encuesta.json");
+        const encuestas = await getCachedMappedCollection("encuestas", "/Encuesta.json");
 
-        if (!data) {
+        if (!encuestas.length) {
           commit("setEncuestas", []);
           commit("setcantEncuestas", 0);
           return [];
         }
-
-        const encuestas = Object.entries(data).map(([key, value]) => ({
-          id: key,
-          ...value,
-        }));
 
         const encuestasFiltradas = encuestas.filter(
           (encuesta) =>
@@ -376,18 +402,13 @@ export default createStore({
     getEncuestasPendientesTsocial: async ({ commit }, { idUsuario }) => {
       console.log("Obteniendo encuestas pendientes para trabajador social:", idUsuario);
       try {
-        const { data } = await firebase_api.get("/Encuesta.json");
+        const encuestas = await getCachedMappedCollection("encuestas", "/Encuesta.json");
 
-        if (!data) {
+        if (!encuestas.length) {
           commit("setEncuestas", []);
           commit("setcantEncuestas", 0);
           return [];
         }
-
-        const encuestas = Object.entries(data).map(([key, value]) => ({
-          id: key,
-          ...value,
-        }));
 
         const encuestasFiltradas = encuestas.filter(
           (encuesta) =>
@@ -411,45 +432,26 @@ export default createStore({
     getEncuestasConActividadesAux: async ({ commit }, { idUsuario }) => {
       console.log("Obteniendo encuestas con actividades para auxiliar:", idUsuario);
       try {
-        // Obtener todas las encuestas
-        const { data: encuestasData } = await firebase_api.get("/Encuesta.json");
-
-        if (!encuestasData) {
+        const encuestas = await getCachedMappedCollection("encuestas", "/Encuesta.json");
+        if (!encuestas.length) {
           return [];
         }
 
-        // Filtrar encuestas con status_gest_aux = true para este auxiliar
-        const encuestas = Object.entries(encuestasData)
-          .map(([key, value]) => ({
-            id: key,
-            ...value,
-          }))
+        const actividadesPorEncuesta = await getCachedRawCollection(
+          "actividadesPorEncuesta",
+          "/Actividades.json"
+        );
+
+        const encuestasConActividades = encuestas
           .filter(
             (encuesta) =>
               encuesta.idEncuestador === idUsuario &&
               encuesta.status_gest_aux === true
-          );
-
-        // Para cada encuesta, obtener sus actividades
-        const encuestasConActividades = await Promise.all(
-          encuestas.map(async (encuesta) => {
-            try {
-              const { data: actividadesData } = await firebase_api.get(
-                `/Actividades/${encuesta.id}.json`
-              );
-              return {
-                ...encuesta,
-                actividades: actividadesData || {},
-              };
-            } catch (error) {
-              console.warn(`No se encontraron actividades para encuesta ${encuesta.id}`);
-              return {
-                ...encuesta,
-                actividades: {},
-              };
-            }
-          })
-        );
+          )
+          .map((encuesta) => ({
+            ...encuesta,
+            actividades: actividadesPorEncuesta[encuesta.id] || {},
+          }));
 
         return encuestasConActividades;
       } catch (error) {
@@ -464,45 +466,26 @@ export default createStore({
     getEncuestasConActividadesMedico: async ({ commit }, { idUsuario }) => {
       console.log("Obteniendo encuestas con actividades para médico:", idUsuario);
       try {
-        // Obtener todas las encuestas
-        const { data: encuestasData } = await firebase_api.get("/Encuesta.json");
-
-        if (!encuestasData) {
+        const encuestas = await getCachedMappedCollection("encuestas", "/Encuesta.json");
+        if (!encuestas.length) {
           return [];
         }
 
-        // Filtrar encuestas con status_gest_medica = false para este medico
-        const encuestas = Object.entries(encuestasData)
-          .map(([key, value]) => ({
-            id: key,
-            ...value,
-          }))
+        const actividadesPorEncuesta = await getCachedRawCollection(
+          "actividadesPorEncuesta",
+          "/Actividades.json"
+        );
+
+        const encuestasConActividades = encuestas
           .filter(
             (encuesta) =>
               encuesta.idMedicoAtiende === idUsuario &&
               encuesta.status_gest_medica === false
-          );
-
-        // Para cada encuesta, obtener sus actividades
-        const encuestasConActividades = await Promise.all(
-          encuestas.map(async (encuesta) => {
-            try {
-              const { data: actividadesData } = await firebase_api.get(
-                `/Actividades/${encuesta.id}.json`
-              );
-              return {
-                ...encuesta,
-                actividades: actividadesData || {},
-              };
-            } catch (error) {
-              console.warn(`No se encontraron actividades para encuesta ${encuesta.id}`);
-              return {
-                ...encuesta,
-                actividades: {},
-              };
-            }
-          })
-        );
+          )
+          .map((encuesta) => ({
+            ...encuesta,
+            actividades: actividadesPorEncuesta[encuesta.id] || {},
+          }));
 
         return encuestasConActividades;
       } catch (error) {
@@ -517,11 +500,7 @@ export default createStore({
     getAllRegistersByFechaProf: async ({ commit }, { doc, fecha }) => {
       console.log("grupo consultado", doc, fecha);
       try {
-        const { data } = await firebase_api.get("/Encuesta.json");
-        const encuestas = Object.entries(data).map(([key, value]) => ({
-          id: key,
-          ...value,
-        }));
+        const encuestas = await getCachedMappedCollection("encuestas", "/Encuesta.json");
 
         const encuestasFiltradas = encuestas.filter(
           (encuesta) =>
@@ -544,21 +523,11 @@ export default createStore({
     getAllRegistersByIduserProf: async ({ commit }, { idUsuario }) => {
       console.log("datos que entran medico", idUsuario);
       try {
-        const { data } = await firebase_api.get("/Encuesta.json");
-        if (!data) {
+        const encuestas = await getCachedMappedCollection("encuestas", "/Encuesta.json");
+        if (!encuestas.length) {
           commit("setcantEncuestas", 0);
           return 0;
         }
-
-        const encuestas = Object.entries(data)
-          .filter(
-            ([_, value]) =>
-              value.idMedicoAtiende === idUsuario && value.status_gest_medica === false
-          )
-          .map(([key, value]) => ({
-            id: key,
-            ...value,
-          }));
 
         const encuestasFiltradas = encuestas.filter(
           (encuesta) =>
@@ -585,18 +554,13 @@ export default createStore({
     getAllRegistersByIduserEnfer: async ({ commit }, { idUsuario, convenio }) => {
       console.log("datos que entran enfermero", idUsuario, convenio);
       try {
-        const { data } = await firebase_api.get("/Encuesta.json");
-        if (!data) {
+        const encuestas = await getCachedMappedCollection("encuestas", "/Encuesta.json");
+        if (!encuestas.length) {
           commit("setcantEncuestas", 0);
           return 0;
         }
 
         const convenioNormalizado = String(convenio ?? "").trim();
-
-        const encuestas = Object.entries(data).map(([key, value]) => ({
-          id: key,
-          ...value,
-        }));
 
         const encuestasFiltradas = encuestas.filter((encuesta) => {
           if (encuesta.idEnfermeroAtiende !== idUsuario) return false;
@@ -632,16 +596,11 @@ export default createStore({
           throw new Error("Debes proporcionar ambas fechas para el filtro.");
         }
 
-        const { data } = await firebase_api.get("/Encuesta.json");
-        if (!data) {
+        const encuestas = await getCachedMappedCollection("encuestas", "/Encuesta.json");
+        if (!encuestas.length) {
           commit("setEncuestasfiltradas", []);
           return [];
         }
-
-        const encuestas = Object.entries(data).map(([key, value]) => ({
-          id: key,
-          ...value,
-        }));
 
         const encuestasFiltradas = encuestas.filter((encuesta) => {
           const fecha = encuesta.fecha;
@@ -672,16 +631,11 @@ export default createStore({
           throw new Error("Debes proporcionar ambas fechas para el filtro.");
         }
 
-        const { data } = await firebase_api.get("/Encuesta.json");
-        if (!data) {
+        const encuestas = await getCachedMappedCollection("encuestas", "/Encuesta.json");
+        if (!encuestas.length) {
           commit("setEncuestasfiltradas", []);
           return [];
         }
-
-        const encuestas = Object.entries(data).map(([key, value]) => ({
-          id: key,
-          ...value,
-        }));
 
         const encuestasFiltradas = encuestas.filter((encuesta) => {
           const fecha = encuesta.fecha;
@@ -725,16 +679,11 @@ export default createStore({
           throw new Error("Debes proporcionar ambas fechas para el filtro.");
         }
 
-        const { data } = await firebase_api.get("/Encuesta.json");
-        if (!data) {
+        const encuestas = await getCachedMappedCollection("encuestas", "/Encuesta.json");
+        if (!encuestas.length) {
           commit("setEncuestasfiltradas", []);
           return [];
         }
-
-        const encuestas = Object.entries(data).map(([key, value]) => ({
-          id: key,
-          ...value,
-        }));
 
         const encuestasFiltradas = encuestas.filter((encuesta) => {
           const fecha = encuesta.fechagestEnfermera;
@@ -923,10 +872,9 @@ export default createStore({
      */
     getAllByPacientesID: async ({ commit }, { tipodoc, numdoc }) => {
       try {
-        // Obtener todas las encuestas (contienen datos básicos del paciente)
-        const { data } = await firebase_api.get("/Encuesta.json");
+        const encuestasObj = await getCachedRawCollection("encuestasRaw", "/Encuesta.json");
 
-        if (!data || data === null) {
+        if (!Object.keys(encuestasObj).length) {
           commit("setDatosPaciente", []);
           return [];
         }
@@ -937,7 +885,7 @@ export default createStore({
         // Convertir a array con IDs y buscar por numdoc (y tipodoc cuando se envía)
         const pacientesEncontrados = [];
 
-        for (const [encuestaId, encuesta] of Object.entries(data)) {
+        for (const [encuestaId, encuesta] of Object.entries(encuestasObj)) {
           const tipodocEncuesta = String(encuesta?.tipodoc ?? "").trim();
           const numdocEncuesta = String(encuesta?.numdoc ?? "").trim();
           const coincideTipodoc = tipodocNormalizado
@@ -957,25 +905,27 @@ export default createStore({
           return [];
         }
 
-        // Para cada paciente encontrado, cargar datos relacionados
+        const caracterizacionesObj = await getCachedRawCollection(
+          "caracterizacionesRaw",
+          "/caracterizacion.json"
+        );
+        const caracterizaciones = Object.values(caracterizacionesObj || {});
+
+        const asignacionesObj = await getCachedRawCollection(
+          "asignacionesRaw",
+          "/Asignaciones.json"
+        );
+
         const pacientesConDatos = await Promise.all(
           pacientesEncontrados.map(async (paciente) => {
             const encuestaId = paciente.id; // ID de Firebase usado como parámetro
 
             try {
-              // Obtener caracterización buscando por idEncuesta
-              const caracResp = await firebase_api.get(`/caracterizacion.json`);
-              let caracterizacion = {};
-              if (caracResp.data) {
-                const caracterizacionEncontrada = Object.values(caracResp.data).find(
-                  (carac) => carac.idEncuesta === encuestaId
-                );
-                caracterizacion = caracterizacionEncontrada || {};
-              }
-
-              // Obtener asignaciones usando encuestaId
-              const asignResp = await firebase_api.get(`/Asignaciones/${encuestaId}.json`);
-              const asignaciones = asignResp.data || {};
+              const caracterizacionEncontrada = caracterizaciones.find(
+                (carac) => carac?.idEncuesta === encuestaId
+              );
+              const caracterizacion = caracterizacionEncontrada || {};
+              const asignaciones = asignacionesObj[encuestaId] || {};
 
               // Crear un nuevo objeto con todas las propiedades para garantizar reactividad
               const pacienteCompleto = {
@@ -1003,10 +953,9 @@ export default createStore({
     getAllByPacientesIDEB: async ({ commit }, { tipodoc, numdoc, convenio }) => {
       console.log("datos que entran EB - tipodoc, numdoc, convenio:", tipodoc, numdoc, convenio);
       try {
-        // Obtener todas las encuestas
-        const { data } = await firebase_api.get("/Encuesta.json");
+        const data = await getCachedRawCollection("encuestasRaw", "/Encuesta.json");
 
-        if (!data || data === null) {
+        if (!Object.keys(data).length) {
           console.log("No hay encuestas registradas");
           return [];
         }
@@ -1087,6 +1036,10 @@ export default createStore({
         await firebase_api.patch(`/Encuesta/${caracterizacion.idEncuesta}.json`, {
           status_caracterizacion: true,
         });
+
+        cacheManager.remove("caracterizacionesRaw");
+        cacheManager.remove("encuestas");
+        cacheManager.remove("encuestasRaw");
 
         return response.data;
       } catch (error) {
@@ -1648,6 +1601,7 @@ export default createStore({
 
         const Ruta = `/${bd}.json`;
         const { data } = await firebase_api.post(Ruta, DataToSaveC);
+        cacheManager.remove("comunasBarrios");
         return data;
       } catch (error) {
         console.error("Error en Action_crearComunaBarrio:", error);
@@ -1660,11 +1614,30 @@ export default createStore({
      */
     getAllComunaBarrios: async ({ commit }) => {
       try {
+        // 1. Intentar obtener del caché
+        const cached = cacheManager.get('comunasBarrios');
+        if (cached) {
+          commit("setComunasBarrios", cached);
+          return cached;
+        }
+
+        // 2. Si no está en caché, traer de Firebase
+        console.log('🔄 [CACHÉ MISS] Consultando Firebase comunasBarrios');
         const { data } = await firebase_api.get("/comunasybarrios.json");
+        
+        if (!data) {
+          commit("setComunasBarrios", []);
+          return [];
+        }
+
         const comunasBarrios = Object.entries(data).map(([key, value]) => ({
           id: key,
           ...value,
         }));
+
+        // 3. Guardar en caché para futuras consultas
+        cacheManager.set('comunasBarrios', comunasBarrios);
+        
         commit("setComunasBarrios", comunasBarrios);
         return comunasBarrios;
       } catch (error) {
@@ -1681,6 +1654,7 @@ export default createStore({
         if (!id) throw new Error("ID inválido para actualizar");
         const DataToSaveC = { comuna, barrio };
         const { data } = await firebase_api.put(`/comunasybarrios/${id}.json`, DataToSaveC);
+        cacheManager.remove("comunasBarrios");
         return data;
       } catch (error) {
         console.error("Error en Action_actualizarComunaBarrio:", error);
@@ -1695,6 +1669,7 @@ export default createStore({
       try {
         if (!id) throw new Error("ID inválido para eliminar");
         const { data } = await firebase_api.delete(`/comunasybarrios/${id}.json`);
+        cacheManager.remove("comunasBarrios");
         return data;
       } catch (error) {
         console.error("Error en Action deleteComunaBarrio:", error);
@@ -1713,6 +1688,7 @@ export default createStore({
 
         const Ruta = `/${bd}.json`;
         const { data } = await firebase_api.post(Ruta, DataToSaveC);
+        cacheManager.remove("eps");
         return data;
       } catch (error) {
         console.error("Error en Action_crearEps:", error);
@@ -1725,11 +1701,26 @@ export default createStore({
      */
     getAllEps: async ({ commit }) => {
       try {
+        const cached = cacheManager.get('eps');
+        if (cached) {
+          commit("setEps", cached);
+          return cached;
+        }
+
+        console.log('🔄 [CACHÉ MISS] Consultando Firebase eps');
         const { data } = await firebase_api.get("/eps.json");
+        
+        if (!data) {
+          commit("setEps", []);
+          return [];
+        }
+
         const eps = Object.entries(data).map(([key, value]) => ({
           id: key,
           ...value,
         }));
+
+        cacheManager.set('eps', eps);
         commit("setEps", eps);
         return eps;
       } catch (error) {
@@ -1741,19 +1732,8 @@ export default createStore({
     /**
      * Obtiene todas las EPS (método alternativo)
      */
-    getAllEpss: async ({ commit }) => {
-      try {
-        const { data } = await firebase_api.get("/eps.json");
-        const eps = Object.entries(data).map(([key, value]) => ({
-          id: key,
-          ...value,
-        }));
-        commit("setEps", eps);
-        return eps;
-      } catch (error) {
-        console.error("Error en Action_getAllEps:", error);
-        throw error;
-      }
+    getAllEpss: async ({ dispatch }) => {
+      return await dispatch("getAllEps");
     },
 
     /**
@@ -1764,6 +1744,7 @@ export default createStore({
         if (!id) throw new Error("ID inválido para actualizar");
         const DataToSave = { eps };
         const { data } = await firebase_api.put(`/eps/${id}.json`, DataToSave);
+        cacheManager.remove("eps");
         return data;
       } catch (error) {
         console.error("Error en Action_actualizarEps:", error);
@@ -1778,6 +1759,7 @@ export default createStore({
       try {
         if (!id) throw new Error("ID inválido para eliminar");
         const { data } = await firebase_api.delete(`/eps/${id}.json`);
+        cacheManager.remove("eps");
         return data;
       } catch (error) {
         console.error("Error en Action deleteEps:", error);
@@ -1804,6 +1786,7 @@ export default createStore({
         };
 
         const { data } = await firebase_api.post("/contratos.json", DataToSave);
+        cacheManager.remove("contratos");
         return data;
       } catch (error) {
         console.error("Error en Action_crearContrato:", error);
@@ -1816,15 +1799,26 @@ export default createStore({
      */
     getAllContratos: async ({ commit }) => {
       try {
+        const cached = cacheManager.get('contratos');
+        if (cached) {
+          commit("setContratos", cached);
+          return cached;
+        }
+
+        console.log('🔄 [CACHÉ MISS] Consultando Firebase contratos');
         const { data } = await firebase_api.get("/contratos.json");
+        
         if (!data) {
           commit("setContratos", []);
           return [];
         }
+
         const contratos = Object.entries(data).map(([key, value]) => ({
           id: key,
           ...value,
         }));
+
+        cacheManager.set('contratos', contratos);
         commit("setContratos", contratos);
         return contratos;
       } catch (error) {
@@ -1840,6 +1834,7 @@ export default createStore({
       try {
         if (!contratoId) throw new Error("ID inválido para eliminar");
         const { data } = await firebase_api.delete(`/contratos/${contratoId}.json`);
+        cacheManager.remove("contratos");
         return data;
       } catch (error) {
         console.error("Error en Action_eliminarContrato:", error);
@@ -1854,6 +1849,7 @@ export default createStore({
       try {
         if (!contratoId) throw new Error("ID inválido para actualizar");
         const { data } = await firebase_api.put(`/contratos/${contratoId}.json`, contratoData);
+        cacheManager.remove("contratos");
         return data;
       } catch (error) {
         console.error("Error en Action_actualizarContrato:", error);
@@ -1866,7 +1862,13 @@ export default createStore({
      */
     getdataips: async ({ commit }, id) => {
       try {
-        const { data } = await firebase_api.get(`/ips/${id}.json`);
+        const cacheKey = `ips_${id}`;
+        let data = cacheManager.get(cacheKey);
+        if (!data) {
+          const response = await firebase_api.get(`/ips/${id}.json`);
+          data = response.data;
+          cacheManager.set(cacheKey, data || {});
+        }
         if (data && Object.keys(data).length > 0) {
           commit("setdatosips", data);
         }
@@ -1893,6 +1895,7 @@ export default createStore({
 
         const Ruta = `/${bd}.json`;
         const { data } = await firebase_api.post(Ruta, DataToSaveC);
+        cacheManager.remove("cups");
         return data;
       } catch (error) {
         console.error("Error en Action_crearCups:", error);
@@ -1924,6 +1927,7 @@ export default createStore({
         const Ruta = `/${bd}/${id}.json`;
         const { data } = await firebase_api.put(Ruta, DataToSaveC);
         console.log("CUPS editado exitosamente, datos guardados:", DataToSaveC);
+        cacheManager.remove("cups");
         return data;
       } catch (error) {
         console.error("Error en Action_editarCups:", error);
@@ -1938,6 +1942,7 @@ export default createStore({
       try {
         if (!cupsId) throw new Error("ID inválido para eliminar");
         const { data } = await firebase_api.delete(`/cups/${cupsId}.json`);
+        cacheManager.remove("cups");
         return data;
       } catch (error) {
         console.error("Error en Action_eliminarCups:", error);
@@ -2020,6 +2025,13 @@ export default createStore({
      */
     getAllActividadesExtra: async ({ commit }) => {
       try {
+        const cached = cacheManager.get('actividadesExtra');
+        if (cached) {
+          commit("setActividadesExtra", cached);
+          return cached;
+        }
+
+        console.log('🔄 [CACHÉ MISS] Consultando Firebase actividadesExtra');
         const { data } = await firebase_api.get("/actividadesExtra.json");
 
         // Manejar caso cuando no hay registros (data es null)
@@ -2044,6 +2056,7 @@ export default createStore({
           }));
 
         console.log("Actividades Extra cargadas correctamente:", actividadesExtra);
+        cacheManager.set('actividadesExtra', actividadesExtra);
         commit("setActividadesExtra", actividadesExtra);
         return actividadesExtra;
       } catch (error) {
@@ -2059,6 +2072,13 @@ export default createStore({
      */
     getAllCups: async ({ commit }) => {
       try {
+        const cached = cacheManager.get('cups');
+        if (cached) {
+          commit("setCups", cached);
+          return cached;
+        }
+
+        console.log('🔄 [CACHÉ MISS] Consultando Firebase cups');
         const { data } = await firebase_api.get("/cups.json");
 
         // Manejar caso cuando no hay registros (data es null)
@@ -2086,6 +2106,7 @@ export default createStore({
           }));
 
         console.log("CUPS cargados correctamente:", cups);
+        cacheManager.set('cups', cups);
         commit("setCups", cups);
         return cups;
       } catch (error) {
@@ -2208,6 +2229,7 @@ export default createStore({
         const { data } = await firebase_api.delete(
           `/Asignaciones/${idEncuesta}/tipoActividad/${idActividad}/cups/${rol}/cups/${idCup}.json`
         );
+        cacheManager.remove("asignacionesRaw");
         return data;
       } catch (error) {
         console.error("Error en Action deleteCUPS:", error);
@@ -2333,10 +2355,9 @@ export default createStore({
         console.log("   ffinal:", fin, "| tipo:", typeof fin);
         console.log("   convenio:", convenioFiltro, "| tipo:", typeof convenioFiltro);
 
-        // Obtener actividades, encuestas y asignaciones (CUPS)
-        const { data: actividades } = await firebase_api.get("/Actividades.json");
-        const { data: encuestas } = await firebase_api.get("/Encuesta.json");
-        const { data: asignaciones } = await firebase_api.get("/Asignaciones.json");
+        const actividades = await getCachedRawCollection("actividadesRaw", "/Actividades.json");
+        const encuestas = await getCachedRawCollection("encuestasRaw", "/Encuesta.json");
+        const asignaciones = await getCachedRawCollection("asignacionesRaw", "/Asignaciones.json");
 
         if (!actividades || !encuestas) {
           console.warn("⚠️ No hay datos en /Actividades.json o /Encuesta.json");
@@ -2422,8 +2443,8 @@ export default createStore({
      */
     GetRegistersbyRangeGeneralFactByID: async ({ commit }, parametros) => {
       try {
-        const { data: actividades } = await firebase_api.get("/Actividades.json");
-        const { data: encuestas } = await firebase_api.get("/Encuesta.json");
+        const actividades = await getCachedRawCollection("actividadesRaw", "/Actividades.json");
+        const encuestas = await getCachedRawCollection("encuestasRaw", "/Encuesta.json");
 
         if (!actividades || !encuestas) {
           commit("setEncuestasFact", []);
@@ -2466,9 +2487,9 @@ export default createStore({
      */
     GetRegistersbyRangeGeneralFactAprov: async ({ commit }, iduser) => {
       try {
-        const { data: actividades } = await firebase_api.get("/Actividades.json");
-        const { data: encuestas } = await firebase_api.get("/Encuesta.json");
-        const { data: asignaciones } = await firebase_api.get("/Asignaciones.json");
+        const actividades = await getCachedRawCollection("actividadesRaw", "/Actividades.json");
+        const encuestas = await getCachedRawCollection("encuestasRaw", "/Encuesta.json");
+        const asignaciones = await getCachedRawCollection("asignacionesRaw", "/Asignaciones.json");
 
         if (!actividades || !encuestas) {
           commit("setEncuestasFactAprov", []);
@@ -2522,11 +2543,7 @@ export default createStore({
      */
     GetRegistersbyRangeGeneral: async ({ commit }, parametros) => {
       try {
-        const { data } = await firebase_api.get("/Encuesta.json");
-        const encuestas = Object.entries(data).map(([key, value]) => ({
-          id: key,
-          ...value,
-        }));
+        const encuestas = await getCachedMappedCollection("encuestas", "/Encuesta.json");
 
         const encuestasFiltradas = encuestas.filter(
           (encuesta) =>
@@ -2546,11 +2563,7 @@ export default createStore({
      */
     GetRegistersbyRangeCerrados: async ({ commit }, parametros) => {
       try {
-        const { data } = await firebase_api.get("/Encuesta.json");
-        const encuestas = Object.entries(data).map(([key, value]) => ({
-          id: key,
-          ...value,
-        }));
+        const encuestas = await getCachedMappedCollection("encuestas", "/Encuesta.json");
 
         const encuestasFiltradas = encuestas.filter(
           (encuesta) =>
@@ -2572,11 +2585,7 @@ export default createStore({
      */
     GetAllRegistersbyRangeAndProf: async ({ commit }, parametros) => {
       try {
-        const { data } = await firebase_api.get("/Encuesta.json");
-        const encuestas = Object.entries(data).map(([key, value]) => ({
-          id: key,
-          ...value,
-        }));
+        const encuestas = await getCachedMappedCollection("encuestas", "/Encuesta.json");
 
         const encuestasFiltradas = encuestas.filter(
           (encuesta) =>
@@ -2613,6 +2622,9 @@ export default createStore({
      * Logout de usuario
      */
     async userLogout({ commit }) {
+      // Limpiar caché antes de logout
+      cacheManager.clearAll();
+      
       return auth
         .signOut()
         .then(() => {

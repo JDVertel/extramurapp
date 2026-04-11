@@ -74,6 +74,11 @@
                   <i class="bi bi-bar-chart-fill"></i> Informes
                 </router-link>
               </li>
+              <li class="nav-item" v-if="userData && userData.cargo === 'Admin'">
+                <router-link class="nav-link" to="/admin_consumo" @click="onNavLinkClick">
+                  <i class="bi bi-speedometer2"></i> Consumo
+                </router-link>
+              </li>
               <li class="nav-item" v-if="userData && userData.cargo === 'Medico'">
                 <router-link class="nav-link" to="/medico_informes" @click="onNavLinkClick">
                   <i class="bi bi-bar-chart-fill"></i> Informes
@@ -132,8 +137,13 @@
                 </li>
 
                 <li class="nav-item">
+<<<<<<< HEAD
                   <router-link class="nav-link" to="/admin_estado_profesional" @click="onNavLinkClick">
                     <i class="bi bi-person-vcard"></i> Estado Profesional
+=======
+                  <router-link class="nav-link" to="/admin_consumo" @click="onNavLinkClick">
+                    <i class="bi bi-speedometer2"></i> Consumo
+>>>>>>> a462aa6a6f97e30c07dfe05c15e153cdaf8dc278
                   </router-link>
                 </li>
 

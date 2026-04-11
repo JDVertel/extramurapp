@@ -1,6 +1,6 @@
 <script>
 import Navbar from "./components/navbar.vue";
-import { mapState } from "vuex";
+import { mapState, mapActions } from "vuex";
 
 export default {
     components: {
@@ -12,9 +12,11 @@ export default {
         };
     },
     computed: {
-        ...mapState(["userData"])
+        ...mapState(["userData", "uid"])
     },
     methods: {
+        ...mapActions(['getAllComunaBarrios', 'getAllEps', 'getAllCups', 'getAllActividadesExtra', 'getAllContratos']),
+        
         logout() {
             localStorage.removeItem("token");
             this.isLoggedIn = false;
@@ -39,6 +41,26 @@ export default {
                     }
                 }
             }
+        },
+        
+        async initializeDataCache() {
+            try {
+                console.log('🚀 Inicializando caché de datos estáticos...');
+                
+                // Cargar todos en paralelo
+                await Promise.all([
+                    this.getAllComunaBarrios(),
+                    this.getAllEps(),
+                    this.getAllCups(),
+                    this.getAllActividadesExtra(),
+                    this.getAllContratos(),
+                ]);
+                
+                console.log('✅ Caché inicializado exitosamente');
+            } catch (error) {
+                console.error('Error inicializando caché:', error);
+                // No fallar si hay error en caché, es no-crítico
+            }
         }
     },
     watch: {
@@ -52,6 +74,11 @@ export default {
     mounted() {
         console.log('App.vue mounted');
         this.syncUserDataFromStorage();
+        
+        // Si el usuario está autenticado, cargar caché
+        if (this.uid) {
+            this.initializeDataCache();
+        }
     },
     created() {
         // Sincronizar también en created para que sea más rápido

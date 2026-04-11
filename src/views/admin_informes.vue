@@ -235,6 +235,7 @@
 
 <script>
 import firebase_api from "@/api/ApiFirebase.js";
+import { cacheManager } from "@/utils/cacheManager";
 import {
     mapState,
     mapActions
@@ -821,6 +822,53 @@ export default {
             return `${descripcion}${cantidad}${factura}`;
         },
 
+        async cargarDatasetsSeguimiento() {
+            const keys = {
+                actividades: "admin_report_actividades_raw",
+                asignaciones: "admin_report_asignaciones_raw",
+                actividadesExtra: "admin_report_actividades_extra_raw",
+                cups: "admin_report_cups_raw",
+            };
+
+            const cachedActividades = cacheManager.get(keys.actividades);
+            const cachedAsignaciones = cacheManager.get(keys.asignaciones);
+            const cachedActividadesExtra = cacheManager.get(keys.actividadesExtra);
+            const cachedCups = cacheManager.get(keys.cups);
+
+            if (cachedActividades && cachedAsignaciones && cachedActividadesExtra && cachedCups) {
+                return {
+                    actividadesGlobal: cachedActividades,
+                    asignacionesGlobal: cachedAsignaciones,
+                    actividadesExtraGlobal: cachedActividadesExtra,
+                    cupsGlobal: cachedCups,
+                };
+            }
+
+            const [respActividades, respAsignaciones, respActividadesExtra, respCups] = await Promise.all([
+                firebase_api.get("/Actividades.json"),
+                firebase_api.get("/Asignaciones.json"),
+                firebase_api.get("/actividadesExtra.json"),
+                firebase_api.get("/cups.json"),
+            ]);
+
+            const actividadesGlobal = respActividades.data || {};
+            const asignacionesGlobal = respAsignaciones.data || {};
+            const actividadesExtraGlobal = respActividadesExtra.data || {};
+            const cupsGlobal = respCups.data || {};
+
+            cacheManager.set(keys.actividades, actividadesGlobal);
+            cacheManager.set(keys.asignaciones, asignacionesGlobal);
+            cacheManager.set(keys.actividadesExtra, actividadesExtraGlobal);
+            cacheManager.set(keys.cups, cupsGlobal);
+
+            return {
+                actividadesGlobal,
+                asignacionesGlobal,
+                actividadesExtraGlobal,
+                cupsGlobal,
+            };
+        },
+
         async actualizarDatosSeguimientoInforme() {
             const encuestasBase = Array.isArray(this.EncuestasAdmin) ? this.EncuestasAdmin : [];
             const encuestas = this.filtrarEncuestasPorConvenio(encuestasBase);
@@ -831,17 +879,12 @@ export default {
             }
 
             try {
-                const [respActividades, respAsignaciones, respActividadesExtra, respCups] = await Promise.all([
-                    firebase_api.get("/Actividades.json"),
-                    firebase_api.get("/Asignaciones.json"),
-                    firebase_api.get("/actividadesExtra.json"),
-                    firebase_api.get("/cups.json"),
-                ]);
-
-                const actividadesGlobal = respActividades.data || {};
-                const asignacionesGlobal = respAsignaciones.data || {};
-                const actividadesExtraGlobal = respActividadesExtra.data || {};
-                const cupsGlobal = respCups.data || {};
+                const {
+                    actividadesGlobal,
+                    asignacionesGlobal,
+                    actividadesExtraGlobal,
+                    cupsGlobal,
+                } = await this.cargarDatasetsSeguimiento();
 
                 this.actividadesExtraMap = Object.values(actividadesExtraGlobal).reduce((acc, item) => {
                     if (item && item.key !== undefined && item.key !== null) {

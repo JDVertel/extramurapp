@@ -176,6 +176,12 @@ const routes = [
     component: () => import("../views/admin_caracterizacion.vue"),
     meta: { requiresAuth: true },
   },
+  {
+    path: "/admin_consumo",
+    name: "admin_consumo",
+    component: () => import("../views/admin_consumo.vue"),
+    meta: { requiresAuth: true },
+  },
 
 
 
