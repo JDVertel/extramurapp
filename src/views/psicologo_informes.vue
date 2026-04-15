@@ -169,6 +169,7 @@ import {
     mapActions
 } from "vuex";
 import firebase_api from "@/api/ApiFirebase";
+import { getAssignmentBranch, extractActividadIdsFromAssignmentBranch, fetchFacturadosActivityMap } from "@/utils/facturadosArchive";
 export default {
     data() {
         return {
@@ -333,29 +334,25 @@ export default {
         async cargarActividadesPorEncuesta() {
             const mapa = {};
             const encuestas = this.encuestasFiltradas || [];
+            const { data: asignacionesData } = await firebase_api.get('/Asignaciones.json');
+            const asignaciones = asignacionesData && typeof asignacionesData === 'object' ? asignacionesData : {};
+            const actividadesFacturados = await fetchFacturadosActivityMap();
 
-            await Promise.all(
-                encuestas.map(async (encuesta) => {
-                    try {
-                        const { data } = await firebase_api.get(`/Asignaciones/${encuesta.id}.json`);
-                        const cups = data?.cups && typeof data.cups === "object"
-                            ? Object.values(data.cups).filter(Boolean)
-                            : [];
+            encuestas.forEach((encuesta) => {
+                const branch = getAssignmentBranch(encuesta, asignaciones[encuesta.id]);
+                const actividadIds = extractActividadIdsFromAssignmentBranch(branch);
+                const nombresAsignaciones = Array.from(new Set(actividadIds))
+                    .map((idActividad) => this.obtenerNombreActividadExtra(idActividad))
+                    .filter(Boolean);
+                const nombresFacturados = Array.isArray(actividadesFacturados[encuesta.id])
+                    ? actividadesFacturados[encuesta.id]
+                    : [];
 
-                        const actividadIds = cups
-                            .map((cup) => cup?.actividadId ?? cup?.idActividad)
-                            .filter(Boolean);
-
-                        const nombresActividades = Array.from(new Set(actividadIds))
-                            .map((idActividad) => this.obtenerNombreActividadExtra(idActividad))
-                            .filter(Boolean);
-
-                        mapa[encuesta.id] = nombresActividades;
-                    } catch (error) {
-                        mapa[encuesta.id] = [];
-                    }
-                })
-            );
+                mapa[encuesta.id] = Array.from(new Set([
+                    ...nombresAsignaciones,
+                    ...nombresFacturados,
+                ]));
+            });
 
             this.actividadesPorEncuesta = mapa;
         },

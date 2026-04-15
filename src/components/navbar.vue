@@ -69,16 +69,6 @@
                   <i class="bi bi-person-circle"></i> Enfermer@
                 </router-link>
               </li>
-              <li class="nav-item" v-if="userData && userData.cargo === 'Admin'">
-                <router-link class="nav-link" to="/admin_informes" @click="onNavLinkClick">
-                  <i class="bi bi-bar-chart-fill"></i> Informes
-                </router-link>
-              </li>
-              <li class="nav-item" v-if="userData && userData.cargo === 'Admin'">
-                <router-link class="nav-link" to="/admin_consumo" @click="onNavLinkClick">
-                  <i class="bi bi-speedometer2"></i> Consumo
-                </router-link>
-              </li>
               <li class="nav-item" v-if="userData && userData.cargo === 'Medico'">
                 <router-link class="nav-link" to="/medico_informes" @click="onNavLinkClick">
                   <i class="bi bi-bar-chart-fill"></i> Informes
@@ -111,7 +101,7 @@
                 </router-link>
               </li>
 
-              <template v-if="userData && userData.cargo === 'admin'">
+              <template v-if="isAdmin">
                 <li class="nav-item">
                   <router-link class="nav-link" to="/admin_programavisitas" @click="onNavLinkClick">
                     <i class="bi bi-car-front"></i> Prog Visitas
@@ -137,13 +127,14 @@
                 </li>
 
                 <li class="nav-item">
-<<<<<<< HEAD
+                  <router-link class="nav-link" to="/admin_facturados" @click="onNavLinkClick">
+                    <i class="bi bi-database-fill-gear"></i> Archivo facturación
+                  </router-link>
+                </li>
+
+                <li class="nav-item">
                   <router-link class="nav-link" to="/admin_estado_profesional" @click="onNavLinkClick">
                     <i class="bi bi-person-vcard"></i> Estado Profesional
-=======
-                  <router-link class="nav-link" to="/admin_consumo" @click="onNavLinkClick">
-                    <i class="bi bi-speedometer2"></i> Consumo
->>>>>>> a462aa6a6f97e30c07dfe05c15e153cdaf8dc278
                   </router-link>
                 </li>
 
@@ -241,6 +232,9 @@ export default {
   },
   computed: {
     ...mapState(["uid", "userData"]),
+    isAdmin() {
+      return String(this.userData?.cargo || "").trim().toLowerCase() === "admin";
+    },
   },
 };
 </script>

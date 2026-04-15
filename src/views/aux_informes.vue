@@ -177,6 +177,7 @@ import {
     mapActions
 } from "vuex";
 import firebase_api from "@/api/ApiFirebase";
+import { getAssignmentBranch, extractActividadIdsFromAssignmentBranch } from "@/utils/facturadosArchive";
 export default {
     data() {
         return {
@@ -361,14 +362,8 @@ export default {
             const asignaciones = asignacionesData && typeof asignacionesData === 'object' ? asignacionesData : {};
 
             encuestas.forEach((encuesta) => {
-                const data = asignaciones[encuesta.id] || {};
-                const cups = data?.cups && typeof data.cups === "object"
-                    ? Object.values(data.cups).filter(Boolean)
-                    : [];
-
-                const actividadIds = cups
-                    .map((cup) => cup?.actividadId ?? cup?.idActividad)
-                    .filter(Boolean);
+                const data = getAssignmentBranch(encuesta, asignaciones[encuesta.id]);
+                const actividadIds = extractActividadIdsFromAssignmentBranch(data);
 
                 const nombresActividades = Array.from(new Set(actividadIds))
                     .map((idActividad) => this.obtenerNombreActividadExtra(idActividad))

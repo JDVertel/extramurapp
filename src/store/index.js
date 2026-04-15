@@ -5,6 +5,7 @@ import firebase_api from "@/api/ApiFirebase.js";
 import persistedState from "./persistedstate";
 import { createStore } from "vuex";
 import { cacheManager } from "@/utils/cacheManager";
+import { mergeEncuestasWithArchive } from "@/utils/facturadosArchive";
 import {
   getFirestore,
   doc,
@@ -36,6 +37,11 @@ function mapFirebaseObjectToArray(data) {
   }));
 }
 
+function isStatusClosed(value) {
+  if (value === true) return true;
+  return String(value ?? "").trim().toLowerCase() === "true";
+}
+
 async function getCachedMappedCollection(cacheKey, path) {
   const cached = cacheManager.get(cacheKey);
   if (cached) return cached;
@@ -54,6 +60,15 @@ async function getCachedRawCollection(cacheKey, path) {
   const safeData = data && typeof data === "object" ? data : {};
   cacheManager.set(cacheKey, safeData);
   return safeData;
+}
+
+async function getMergedEncuestasForReports() {
+  const [encuestas, facturados] = await Promise.all([
+    getCachedMappedCollection("encuestas", "/Encuesta.json"),
+    getCachedRawCollection("facturadosRaw", "/ArchivoPacientesRespaldo.json"),
+  ]);
+
+  return mergeEncuestasWithArchive(encuestas, facturados);
 }
 
 // ============================================================================
@@ -596,7 +611,7 @@ export default createStore({
           throw new Error("Debes proporcionar ambas fechas para el filtro.");
         }
 
-        const encuestas = await getCachedMappedCollection("encuestas", "/Encuesta.json");
+        const encuestas = await getMergedEncuestasForReports();
         if (!encuestas.length) {
           commit("setEncuestasfiltradas", []);
           return [];
@@ -631,7 +646,7 @@ export default createStore({
           throw new Error("Debes proporcionar ambas fechas para el filtro.");
         }
 
-        const encuestas = await getCachedMappedCollection("encuestas", "/Encuesta.json");
+        const encuestas = await getMergedEncuestasForReports();
         if (!encuestas.length) {
           commit("setEncuestasfiltradas", []);
           return [];
@@ -679,7 +694,7 @@ export default createStore({
           throw new Error("Debes proporcionar ambas fechas para el filtro.");
         }
 
-        const encuestas = await getCachedMappedCollection("encuestas", "/Encuesta.json");
+        const encuestas = await getMergedEncuestasForReports();
         if (!encuestas.length) {
           commit("setEncuestasfiltradas", []);
           return [];
@@ -718,16 +733,11 @@ export default createStore({
           throw new Error("Debes proporcionar ambas fechas para el filtro.");
         }
 
-        const { data } = await firebase_api.get("/Encuesta.json");
-        if (!data) {
+        const encuestas = await getMergedEncuestasForReports();
+        if (!encuestas.length) {
           commit("setEncuestasfiltradas", []);
           return [];
         }
-
-        const encuestas = Object.entries(data).map(([key, value]) => ({
-          id: key,
-          ...value,
-        }));
 
         const encuestasFiltradas = encuestas.filter((encuesta) => {
           const fecha = encuesta.fecha;
@@ -768,16 +778,11 @@ export default createStore({
           throw new Error("Debes proporcionar ambas fechas para el filtro.");
         }
 
-        const { data } = await firebase_api.get("/Encuesta.json");
-        if (!data) {
+        const encuestas = await getMergedEncuestasForReports();
+        if (!encuestas.length) {
           commit("setEncuestasfiltradas", []);
           return [];
         }
-
-        const encuestas = Object.entries(data).map(([key, value]) => ({
-          id: key,
-          ...value,
-        }));
 
         const encuestasFiltradas = encuestas.filter((encuesta) => {
           const fecha = encuesta.fecha;
@@ -2569,13 +2574,39 @@ export default createStore({
           (encuesta) =>
             encuesta.fechagestEnfermera >= parametros.finicial &&
             encuesta.fechagestEnfermera <= parametros.ffinal &&
-            encuesta.status_gest_enfermera === true
+            isStatusClosed(encuesta.status_gest_enfermera)
         );
 
         commit("setEncuestasAdmin", encuestasFiltradas);
         return encuestasFiltradas;
       } catch (error) {
         console.error("Error en Action_GetRegistersbyRangeCerrados:", error);
+        throw error;
+      }
+    },
+
+    /**
+     * Obtiene registros pendientes de cierre por enfermería (Admin)
+     */
+    GetRegistersbyRangePendientesEnfermeria: async ({ commit }, parametros) => {
+      try {
+        const encuestas = await getCachedMappedCollection("encuestas", "/Encuesta.json");
+
+        const encuestasFiltradas = encuestas.filter((encuesta) => {
+          const fechaEncuesta = encuesta.fecha;
+          if (!fechaEncuesta) return false;
+
+          return (
+            fechaEncuesta >= parametros.finicial &&
+            fechaEncuesta <= parametros.ffinal &&
+            !isStatusClosed(encuesta.status_gest_enfermera)
+          );
+        });
+
+        commit("setEncuestasAdmin", encuestasFiltradas);
+        return encuestasFiltradas;
+      } catch (error) {
+        console.error("Error en Action_GetRegistersbyRangePendientesEnfermeria:", error);
         throw error;
       }
     },

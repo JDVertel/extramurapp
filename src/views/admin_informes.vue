@@ -19,6 +19,11 @@
 
 
             <h1><i class="bi bi-clipboard2-data h1"></i>Informes Administrativos</h1>
+            <div class="mb-3 d-flex flex-wrap gap-2">
+                <button type="button" class="btn btn-outline-primary" @click="$router.push('/admin_facturados')">
+                    <i class="bi bi-database-fill-gear"></i> Ir a Archivo de facturación
+                </button>
+            </div>
             <div v-if="tieneDatosTabla" class="mb-3">
                 <button type="button" class="btn btn-primary" @click="parametrizarNuevoInforme">
                     <i class="bi bi-sliders"></i> Parametrizar nuevo informe
@@ -34,42 +39,54 @@
                         <option selected value="">Seleccione</option>
                         <option value="1">Seguimiento</option>
                         <option value="2">Actividades</option>
+                        <option value="3">Pendientes enfermería</option>
                     </select>
                     <br>
 
                 </div>
 
-                <div class="col-6 col-md-2" v-if="tipoinforme == '1' || tipoinforme == '2'">
+                <div class="col-6 col-md-2" v-if="tipoinforme == '1' || tipoinforme == '2' || tipoinforme == '3'">
                     <label for="fechaInicio" class="form-label">Fecha de Inicio</label>
                     <input type="date" id="fechaInicio" class="form-control" v-model="fechaInicio" required />
                 </div>
-                <div class="col-6 col-md-2" v-if="tipoinforme == '1' || tipoinforme == '2'">
+                <div class="col-6 col-md-2" v-if="tipoinforme == '1' || tipoinforme == '2' || tipoinforme == '3'">
                     <label for="fechaFin" class="form-label">Fecha de Fin</label>
                     <input type="date" id="fechaFin" class="form-control" v-model="fechaFin" required />
                 </div>
-                <div class="col-12 col-md-3" v-if="tipoinforme == '1' || tipoinforme == '2'">
+                <div class="col-12 col-md-3" v-if="tipoinforme == '1' || tipoinforme == '2' || tipoinforme == '3'">
                     <label for="convenioInforme" class="form-label">Convenio</label>
                     <select id="convenioInforme" class="form-select" v-model="convenioInforme">
                         <option value="">Todos</option>
                         <option v-for="conv in conveniosDisponibles" :key="conv" :value="conv">{{ conv }}</option>
                     </select>
                 </div>
-                <div class="col-12 mt-2" v-if="tipoinforme == '1' || tipoinforme == '2'">
-                    <div class="alert py-2 mb-0" :class="limiteDiarioAlcanzado ? 'alert-danger' : 'alert-info'" role="alert">
-                        <strong>Informes disponibles hoy:</strong> {{ informesRestantes }}/{{ maxInformesDiarios }}
-                        <div v-if="limiteDiarioAlcanzado" class="mt-1">Ya no puede sacar informes en el dia.</div>
-                    </div>
-                </div>
-                <div class="col-12 col-md-2 mt-3" v-if="tipoinforme == '1' || tipoinforme == '2'">
-                    <button type="button" class="btn btn-warning  mt-3" @click="generarInforme()" :disabled="cargandoInforme || limiteDiarioAlcanzado">
+                <div class="col-12 col-md-2 mt-3" v-if="tipoinforme == '1' || tipoinforme == '2' || tipoinforme == '3'">
+                    <button type="button" class="btn btn-warning  mt-3" @click="generarInforme()" :disabled="cargandoInforme">
                         <i class="bi bi-clipboard2-data h6"></i> Generar Informe
                     </button>
+                </div>
+                <div class="col-12" v-if="columnasTipoSeleccionado.length">
+                    <div class="alert alert-light border mt-2 mb-0">
+                        <div class="fw-semibold mb-2">
+                            Columnas del informe {{ nombreTipoInformeSeleccionado }}: {{ columnasTipoSeleccionado.length }}
+                        </div>
+                        <div class="d-flex flex-wrap gap-2">
+                            <span
+                                v-for="columna in columnasTipoSeleccionado"
+                                :key="`preview-col-${columna.key}`"
+                                class="badge rounded-pill text-bg-secondary"
+                            >
+                                {{ columna.label }}
+                            </span>
+                        </div>
+                    </div>
                 </div>
             </div>
             <p v-if="mostrarFormulario && !tieneDatosTabla && tipoinforme == '1'">*Todas las encuestas cerradas por la
                 enfermera entre las
                 fechas seleccionadas</p>
             <p v-if="mostrarFormulario && !tieneDatosTabla && tipoinforme == '2'">*Todas las encuestas registradas entre las fechas seleccionadas, con sus actividades y datos del paciente</p>
+            <p v-if="mostrarFormulario && !tieneDatosTabla && tipoinforme == '3'">*Pacientes registrados en el rango seleccionado que siguen pendientes de cierre por enfermería, con resumen por enfermero asignado</p>
 
         </div>
         <br>
@@ -80,6 +97,55 @@
                     class="badge bg-secondary">
                     {{ parametro }}
                 </span>
+                <span v-if="tieneDatosTabla" class="badge bg-info text-dark">
+                    Mostrando {{ filasMuestraTabla.length }} de {{ filasFiltradasOrdenadas.length }} filas
+                </span>
+            </div>
+
+            <div v-if="tipoinforme == '3' && tieneDatosTabla" class="mb-3">
+                <div class="row g-2 mb-3">
+                    <div class="col-12 col-md-4">
+                        <div class="alert alert-warning mb-0">
+                            <div class="fw-semibold">Pacientes pendientes</div>
+                            <div class="fs-4">{{ totalPacientesPendientesEnfermeria }}</div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-4">
+                        <div class="alert alert-info mb-0">
+                            <div class="fw-semibold">Enfermeros con pendientes</div>
+                            <div class="fs-4">{{ totalEnfermerosConPendientes }}</div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-4">
+                        <div class="alert alert-secondary mb-0">
+                            <div class="fw-semibold">Pacientes sin enfermero asignado</div>
+                            <div class="fs-4">{{ totalPacientesSinEnfermero }}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="table-responsive mb-3">
+                    <table class="table table-sm table-bordered table-striped align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Enfermero</th>
+                                <th>Documento</th>
+                                <th>Convenio</th>
+                                <th>Estado</th>
+                                <th>Pacientes sin cerrar</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="fila in resumenEnfermerosPendientes" :key="fila.rowKey">
+                                <td>{{ fila.enfermero }}</td>
+                                <td>{{ fila.documento }}</td>
+                                <td>{{ fila.convenio }}</td>
+                                <td>{{ fila.estado }}</td>
+                                <td>{{ fila.pendientes }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
 
             <button v-if="tieneDatosTabla" class="btn btn-outline-success mb-2" @click="exportarExcelFiltrado">
@@ -113,7 +179,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <tr v-for="(fila, idx) in filasFiltradasOrdenadas" :key="fila.rowKey || idx">
+                            <tr v-for="(fila, idx) in filasMuestraTabla" :key="fila.rowKey || idx">
                                 <td v-for="col in columnasTabla" :key="`${fila.rowKey || idx}-${col.key}`">{{
                                     fila[col.key] }}</td>
                             </tr>
@@ -236,6 +302,7 @@
 <script>
 import firebase_api from "@/api/ApiFirebase.js";
 import { cacheManager } from "@/utils/cacheManager";
+import { fetchArchiveRows } from "@/utils/facturadosArchive";
 import {
     mapState,
     mapActions
@@ -282,11 +349,17 @@ const COLUMNAS_ACTIVIDADES = [
     { key: "paciente", label: "Paciente" },
     { key: "sexo", label: "Sexo" },
     { key: "documento", label: "Documento" },
+    { key: "fechaNac", label: "Fecha Nac." },
     { key: "eps", label: "EPS" },
     { key: "regimen", label: "Régimen" },
     { key: "direccion", label: "Dirección" },
     { key: "barrio", label: "Barrio" },
     { key: "comuna", label: "Comuna" },
+    { key: "labVisit", label: "lab/visit" },
+    { key: "gestAux", label: "Gest. Aux" },
+    { key: "gestEnfermera", label: "Gest. Enfermera" },
+    { key: "gestMedica", label: "Gest. Médica" },
+    { key: "fechaFacturacion", label: "Fecha Facturación" },
     { key: "riesgo", label: "Población Riesgo" },
     { key: "remision", label: "Remisión" },
     { key: "actividad", label: "Actividad" },
@@ -297,6 +370,31 @@ const COLUMNAS_ACTIVIDADES = [
     { key: "descripcionCUP", label: "Descripción CUP" },
     { key: "cantidad", label: "Cantidad" },
     { key: "detalle", label: "Detalle" },
+    { key: "grupoCUP", label: "Grupo CUP" },
+    { key: "factura", label: "Factura" },
+    { key: "homolog", label: "Homolog" },
+    { key: "fechaFactCUP", label: "Fecha Fact. CUP" },
+    { key: "facturado", label: "Facturado" },
+];
+
+const COLUMNAS_PENDIENTES_ENFERMERIA = [
+    { key: "convenio", label: "Convenio" },
+    { key: "grupo", label: "Grupo" },
+    { key: "fecha", label: "Fecha" },
+    { key: "paciente", label: "Paciente" },
+    { key: "sexo", label: "Sexo" },
+    { key: "documento", label: "Documento" },
+    { key: "eps", label: "EPS" },
+    { key: "riesgo", label: "Población Riesgo" },
+    { key: "direccion", label: "Dirección" },
+    { key: "enfermero", label: "Enfermero asignado" },
+    { key: "documentoEnfermero", label: "Documento enfermero" },
+    { key: "estadoEnfermeria", label: "Estado enfermería" },
+    { key: "pendientesEnfermero", label: "Pendientes del enfermero" },
+    { key: "gestAux", label: "Gest. Aux" },
+    { key: "gestEnfermera", label: "Gest. Enfermera" },
+    { key: "gestMedica", label: "Gest. Médica" },
+    { key: "remision", label: "Remisión" },
 ];
 
 const crearFiltrosIniciales = (columnas) => columnas.reduce((acc, col) => {
@@ -317,9 +415,10 @@ export default {
             detallesVisibles: [], // Para controlar la visibilidad de detalles por fila
             mostrarFormulario: true,
             cargandoInforme: false,
-            informesHoy: 0,
-            maxInformesDiarios: 1,
             encuestasInforme: [],
+            filasArchivadasSeguimiento: [],
+            filasArchivadasActividades: [],
+            enfermerosMap: {},
             actividadesExtraMap: {},
             cupsMap: {},
             columnasTabla: COLUMNAS_INFORME,
@@ -407,7 +506,30 @@ export default {
         },
 
         obtenerColumnasPorTipo(tipo) {
-            return tipo === "2" ? COLUMNAS_ACTIVIDADES : COLUMNAS_INFORME;
+            if (tipo === "2") return COLUMNAS_ACTIVIDADES;
+            if (tipo === "3") return COLUMNAS_PENDIENTES_ENFERMERIA;
+            return COLUMNAS_INFORME;
+        },
+
+        esGestionEnfermeriaCerrada(valor) {
+            if (valor === true) return true;
+            return String(valor ?? "").trim().toLowerCase() === "true";
+        },
+
+        async cargarMapaEnfermeros() {
+            const usuarios = await this.consultarUsuariosFirestore();
+            this.enfermerosMap = (usuarios || []).reduce((acc, usuario) => {
+                const documento = String(usuario?.numDocumento || "").trim();
+                if (!documento) return acc;
+
+                acc[documento] = {
+                    nombre: usuario?.nombre || usuario?.userName || documento,
+                    documento,
+                    convenio: usuario?.convenio || "",
+                    cargo: usuario?.cargo || "",
+                };
+                return acc;
+            }, {});
         },
 
         normalizarConvenio(valor) {
@@ -419,6 +541,26 @@ export default {
             if (!convenioSeleccionado) return encuestas;
 
             return encuestas.filter((encuesta) => this.normalizarConvenio(encuesta?.convenio) === convenioSeleccionado);
+        },
+
+        obtenerInfoEnfermero(idEnfermero) {
+            const documento = String(idEnfermero || "").trim();
+            if (!documento) {
+                return {
+                    nombre: "Sin enfermero asignado",
+                    documento: "",
+                    convenio: "",
+                };
+            }
+
+            const encontrado = this.enfermerosMap[documento];
+            if (encontrado) return encontrado;
+
+            return {
+                nombre: `Enfermero ${documento}`,
+                documento,
+                convenio: "",
+            };
         },
 
         construirFilasExportacion() {
@@ -539,11 +681,17 @@ export default {
                     paciente: `${paciente.nombre1 || ""} ${paciente.apellido1 || ""} ${paciente.apellido2 || ""}`.trim(),
                     sexo: paciente.sexo || "",
                     documento: `${paciente.tipodoc || ""}-${paciente.numdoc || ""}`,
+                    fechaNac: paciente.fechaNac || "",
                     eps: paciente.eps || "",
                     regimen: paciente.regimen || "",
                     direccion: paciente.direccion || "",
                     barrio: paciente.barrioVeredacomuna?.barrio || "",
                     comuna: paciente.barrioVeredacomuna?.comuna || "",
+                    labVisit: `${paciente.Agenda_tomademuestras?.cita_tomamuestras ? 'Sí' : 'No'}/${paciente.Agenda_Visitamedica?.cita_visitamedica ? 'Sí' : 'No'}`,
+                    gestAux: paciente.status_gest_aux ? paciente.fechagestAuxiliar : "No",
+                    gestEnfermera: paciente.status_gest_enfermera ? paciente.fechagestEnfermera : "No",
+                    gestMedica: paciente.status_gest_medica ? paciente.fechagestMedica : "No",
+                    fechaFacturacion: this.formatearFechaLatina(paciente.FechaFacturacion) || "No",
                     riesgo: paciente.poblacionRiesgo || "",
                     remision: paciente.requiereRemision || "",
                 };
@@ -562,6 +710,11 @@ export default {
                         descripcionCUP: "",
                         cantidad: "",
                         detalle: "",
+                        grupoCUP: "",
+                        factura: "",
+                        homolog: "",
+                        fechaFactCUP: "",
+                        facturado: "",
                     });
                     continue;
                 }
@@ -581,6 +734,11 @@ export default {
                             descripcionCUP: "",
                             cantidad: "",
                             detalle: "",
+                            grupoCUP: "",
+                            factura: "",
+                            homolog: "",
+                            fechaFactCUP: "",
+                            facturado: "",
                         });
                         continue;
                     }
@@ -601,12 +759,52 @@ export default {
                             descripcionCUP: asig?.DescripcionCUP || "",
                             cantidad: asig?.cantidad ?? "",
                             detalle: asig?.detalle || "",
+                            grupoCUP: asig?.Grupo || "",
+                            factura: asig?.FactNum || "",
+                            homolog: asig?.Homolog || "",
+                            fechaFactCUP: asig?.fechaFacturacion || "",
+                            facturado: asig?.facturado === true ? "Sí" : (asig?.facturado === false ? "No" : ""),
                         });
                     }
                 }
             }
 
             return filas;
+        },
+
+        construirFilasPendientesEnfermeria() {
+            const resumenPorEnfermero = this.resumenPendientesPorDocumento;
+
+            return (Array.isArray(this.encuestasInforme) ? this.encuestasInforme : []).map((paciente) => {
+                const infoEnfermero = this.obtenerInfoEnfermero(paciente?.idEnfermeroAtiende);
+                const documentoEnfermero = String(infoEnfermero.documento || "").trim();
+                const pendientesEnfermero = documentoEnfermero
+                    ? (resumenPorEnfermero[documentoEnfermero]?.pendientes || 0)
+                    : 0;
+
+                return {
+                    rowKey: `${paciente.id || paciente.numdoc || "sin-id"}-pendiente-enfermeria`,
+                    convenio: paciente.convenio || "",
+                    grupo: paciente.grupo || "",
+                    fecha: paciente.fecha || "",
+                    paciente: `${paciente.nombre1 || ""} ${paciente.apellido1 || ""} ${paciente.apellido2 || ""}`.trim(),
+                    sexo: paciente.sexo || "",
+                    documento: `${paciente.tipodoc || ""}-${paciente.numdoc || ""}`,
+                    eps: paciente.eps || "",
+                    riesgo: paciente.poblacionRiesgo || "",
+                    direccion: paciente.direccion || "",
+                    enfermero: infoEnfermero.nombre,
+                    documentoEnfermero: infoEnfermero.documento,
+                    estadoEnfermeria: "Pendiente",
+                    pendientesEnfermero,
+                    gestAux: paciente.status_gest_aux ? paciente.fechagestAuxiliar : "No",
+                    gestEnfermera: this.esGestionEnfermeriaCerrada(paciente.status_gest_enfermera)
+                        ? paciente.fechagestEnfermera || "Sí"
+                        : "No",
+                    gestMedica: paciente.status_gest_medica ? paciente.fechagestMedica : "No",
+                    remision: paciente.requiereRemision || "",
+                };
+            });
         },
 
         obtenerNombreActividadDesdeKey(keyActividad) {
@@ -654,6 +852,15 @@ export default {
             this.sortDirection = "asc";
         },
 
+        construirNombreArchivoInforme() {
+            const tipo = this.tipoinforme === "2"
+                ? "actividades"
+                : (this.tipoinforme === "3" ? "pendientes_enfermeria" : "seguimiento");
+            const fechaInicio = this.fechaInicio || "sin_fecha_inicio";
+            const fechaFin = this.fechaFin || "sin_fecha_fin";
+            return `informe_${tipo}_${fechaInicio}_a_${fechaFin}.xls`;
+        },
+
         exportarExcelFiltrado() {
             const filas = this.filasFiltradasOrdenadas;
             const html = this.construirHtmlExportacion(filas);
@@ -663,9 +870,8 @@ export default {
 
             const url = URL.createObjectURL(blob);
             const link = document.createElement("a");
-            const fecha = new Date().toISOString().slice(0, 10);
             link.href = url;
-            link.download = `informe_filtrado_${fecha}.xls`;
+            link.download = this.construirNombreArchivoInforme();
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
@@ -878,6 +1084,11 @@ export default {
                 return;
             }
 
+            if (this.tipoinforme === "3") {
+                this.encuestasInforme = encuestas;
+                return;
+            }
+
             try {
                 const {
                     actividadesGlobal,
@@ -932,64 +1143,44 @@ export default {
                 }));
             }
         },
-        /*  */
-        ...mapActions(["GetRegistersbyRangeCerrados", "GetRegistersbyRangeGeneral"]),
-
-        obtenerClaveGenerador() {
-            return `informes_generados_${this.userData.numDocumento}`;
-        },
-
-        obtenerDiaActual() {
-            return new Date().toISOString().split('T')[0];
-        },
-
-        verificarLimiteInformes() {
-            const clave = this.obtenerClaveGenerador();
-            const diaActual = this.obtenerDiaActual();
-            const datos = localStorage.getItem(clave);
-            let genera = { fecha: diaActual, contador: 0 };
-
-            if (datos) {
-                genera = JSON.parse(datos);
-                if (genera.fecha !== diaActual) {
-                    genera = { fecha: diaActual, contador: 0 };
-                }
-            }
-
-            return { generaHoy: genera.contador, limiteAlcanzado: genera.contador >= this.maxInformesDiarios };
-        },
-
-        refrescarContadorInformes() {
-            const { generaHoy } = this.verificarLimiteInformes();
-            this.informesHoy = generaHoy;
-        },
-
-        guardarGeneracionInforme() {
-            const clave = this.obtenerClaveGenerador();
-            const diaActual = this.obtenerDiaActual();
-            const datos = localStorage.getItem(clave);
-            let genera = { fecha: diaActual, contador: 1 };
-
-            if (datos) {
-                genera = JSON.parse(datos);
-                if (genera.fecha === diaActual) {
-                    genera.contador += 1;
-                } else {
-                    genera = { fecha: diaActual, contador: 1 };
-                }
-            }
-
-            localStorage.setItem(clave, JSON.stringify(genera));
-        },
-
-        async generarInforme() {
-            this.refrescarContadorInformes();
-            const { limiteAlcanzado } = this.verificarLimiteInformes();
-            if (limiteAlcanzado) {
-                alert(`⚠️ Límite de informes alcanzado\n\nSolo puede generar ${this.maxInformesDiarios} informe por día. Ya ha generado ${this.maxInformesDiarios} informe hoy.`);
+        async cargarFilasArchivadas() {
+            if (!this.fechaInicio || !this.fechaFin) {
+                this.filasArchivadasSeguimiento = [];
+                this.filasArchivadasActividades = [];
                 return;
             }
 
+            if (this.tipoinforme === "3") {
+                this.filasArchivadasSeguimiento = [];
+                this.filasArchivadasActividades = [];
+                return;
+            }
+
+            try {
+                const filas = await fetchArchiveRows({
+                    tipo: this.tipoinforme === "2" ? "actividades" : "seguimiento",
+                    fechaInicio: this.fechaInicio,
+                    fechaFin: this.fechaFin,
+                    convenio: this.convenioInforme,
+                });
+
+                if (this.tipoinforme === "2") {
+                    this.filasArchivadasActividades = filas;
+                    this.filasArchivadasSeguimiento = [];
+                } else {
+                    this.filasArchivadasSeguimiento = filas;
+                    this.filasArchivadasActividades = [];
+                }
+            } catch (error) {
+                console.error("Error cargando filas archivadas:", error);
+                this.filasArchivadasSeguimiento = [];
+                this.filasArchivadasActividades = [];
+            }
+        },
+        /*  */
+        ...mapActions(["GetRegistersbyRangeCerrados", "GetRegistersbyRangeGeneral", "GetRegistersbyRangePendientesEnfermeria", "consultarUsuariosFirestore"]),
+
+        async generarInforme() {
             this.cargandoInforme = true;
             this.actualizarProgreso(5, "Preparando parámetros del informe...");
             this.$store.commit('setEncuestasAdmin', []);
@@ -1025,6 +1216,19 @@ export default {
                         profesional: "",
                         convenio: this.convenioInforme || "Todos",
                     };
+                } else if (this.fechaInicio && this.fechaFin && this.tipoinforme == "3") {
+                    let parametros = {
+                        finicial: this.fechaInicio,
+                        ffinal: this.fechaFin
+                    };
+                    await this.GetRegistersbyRangePendientesEnfermeria(parametros);
+                    consultaUsada = {
+                        tipo: "Pendientes enfermería",
+                        finicial: parametros.finicial,
+                        ffinal: parametros.ffinal,
+                        profesional: "",
+                        convenio: this.convenioInforme || "Todos",
+                    };
                 } else {
                     this.$toast.error("Debe seleccionar tipo de informe y rango de fechas");
                     this.actualizarProgreso(0, "Preparando consulta...");
@@ -1033,15 +1237,15 @@ export default {
                 }
 
                 this.actualizarProgreso(55, "Procesando actividades y asignaciones...");
+                if (this.tipoinforme === "3") {
+                    await this.cargarMapaEnfermeros();
+                }
                 await this.actualizarDatosSeguimientoInforme();
+                await this.cargarFilasArchivadas();
                 if (consultaUsada) {
                     this.consultaActual = consultaUsada;
                 }
-                // Guardar generación del informe
-                this.guardarGeneracionInforme();
-                this.refrescarContadorInformes();
-                const { generaHoy: nuevoContador } = this.verificarLimiteInformes();
-                this.$toast && this.$toast.success ? this.$toast.success(`✅ Informe generado exitosamente\n\nInformes generados hoy: ${nuevoContador}/${this.maxInformesDiarios}`) : alert(`✅ Informe generado exitosamente\n\nInformes generados hoy: ${nuevoContador}/${this.maxInformesDiarios}`);
+                this.$toast && this.$toast.success ? this.$toast.success('✅ Informe generado exitosamente') : alert('✅ Informe generado exitosamente');
                 this.mostrarFormulario = this.filasInformeTabla.length === 0;
                 this.actualizarProgreso(80, "Renderizando tabla...");
                 await this.$nextTick();
@@ -1072,6 +1276,8 @@ export default {
             this.progresoInforme = 0;
             this.mensajeProgreso = "Preparando consulta...";
             this.encuestasInforme = [];
+            this.filasArchivadasSeguimiento = [];
+            this.filasArchivadasActividades = [];
             this.columnasTabla = this.obtenerColumnasPorTipo(this.tipoinforme);
             this.filtros = { ...crearFiltrosIniciales(this.columnasTabla) };
             this.sortKey = "";
@@ -1084,7 +1290,6 @@ export default {
                 profesional: "",
                 convenio: "",
             };
-            this.refrescarContadorInformes();
         },
 
         toggleDetalles(idx) {
@@ -1095,14 +1300,22 @@ export default {
 
     computed: {
         ...mapState(["userData", "EncuestasAdmin"]),
-        informesRestantes() {
-            return Math.max(0, this.maxInformesDiarios - this.informesHoy);
+        columnasTipoSeleccionado() {
+            if (!["1", "2", "3"].includes(this.tipoinforme)) {
+                return [];
+            }
+            return this.obtenerColumnasPorTipo(this.tipoinforme);
         },
-        limiteDiarioAlcanzado() {
-            return this.informesRestantes === 0;
+        nombreTipoInformeSeleccionado() {
+            if (this.tipoinforme === "2") return "de Actividades";
+            if (this.tipoinforme === "3") return "de Pendientes de Enfermería";
+            if (this.tipoinforme === "1") return "de Seguimiento";
+            return "";
         },
         tituloListado() {
-            return this.tipoinforme === "2" ? "Listado de actividades" : "Listado de Pacientes finalizados";
+            if (this.tipoinforme === "2") return "Listado de actividades";
+            if (this.tipoinforme === "3") return "Listado de pacientes pendientes por enfermería";
+            return "Listado de Pacientes finalizados";
         },
         filasFiltradasOrdenadas() {
             let filas = [...this.filasInformeTabla];
@@ -1150,12 +1363,19 @@ export default {
             return opciones;
         },
         filasInformeTabla() {
-            return this.tipoinforme === "2"
+            const filasVivas = this.tipoinforme === "2"
                 ? this.construirFilasActividades()
-                : this.construirFilasExportacion();
+                : (this.tipoinforme === "3" ? this.construirFilasPendientesEnfermeria() : this.construirFilasExportacion());
+            const filasArchivadas = this.tipoinforme === "2"
+                ? this.filasArchivadasActividades
+                : this.filasArchivadasSeguimiento;
+            return [...filasVivas, ...(Array.isArray(filasArchivadas) ? filasArchivadas : [])];
         },
         tieneDatosTabla() {
             return this.filasInformeTabla.length > 0;
+        },
+        filasMuestraTabla() {
+            return this.filasFiltradasOrdenadas.slice(0, 10);
         },
         parametrosConsultaEtiquetas() {
             const etiquetas = [];
@@ -1166,6 +1386,45 @@ export default {
             if (this.consultaActual.convenio) etiquetas.push(`Convenio: ${this.consultaActual.convenio}`);
             if (this.consultaActual.profesional) etiquetas.push(`Profesional: ${this.consultaActual.profesional}`);
             return etiquetas;
+        },
+        resumenPendientesPorDocumento() {
+            return (Array.isArray(this.encuestasInforme) ? this.encuestasInforme : []).reduce((acc, encuesta) => {
+                const documento = String(encuesta?.idEnfermeroAtiende || "").trim();
+                if (!documento) return acc;
+
+                const infoEnfermero = this.obtenerInfoEnfermero(documento);
+                if (!acc[documento]) {
+                    acc[documento] = {
+                        rowKey: `resumen-enfermero-${documento}`,
+                        enfermero: infoEnfermero.nombre,
+                        documento: infoEnfermero.documento,
+                        convenio: infoEnfermero.convenio || encuesta?.convenio || "",
+                        estado: "Pendiente",
+                        pendientes: 0,
+                    };
+                }
+
+                acc[documento].pendientes += 1;
+                return acc;
+            }, {});
+        },
+        resumenEnfermerosPendientes() {
+            return Object.values(this.resumenPendientesPorDocumento)
+                .sort((a, b) => {
+                    if (b.pendientes !== a.pendientes) return b.pendientes - a.pendientes;
+                    return String(a.enfermero || "").localeCompare(String(b.enfermero || ""), 'es', { sensitivity: 'base' });
+                });
+        },
+        totalPacientesPendientesEnfermeria() {
+            return Array.isArray(this.encuestasInforme) ? this.encuestasInforme.length : 0;
+        },
+        totalEnfermerosConPendientes() {
+            return this.resumenEnfermerosPendientes.length;
+        },
+        totalPacientesSinEnfermero() {
+            return (Array.isArray(this.encuestasInforme) ? this.encuestasInforme : [])
+                .filter((encuesta) => !String(encuesta?.idEnfermeroAtiende || "").trim())
+                .length;
         },
 
     },
@@ -1184,7 +1443,6 @@ export default {
 
     mounted() {
         window.addEventListener('resize', this.actualizarAnchoTabla);
-        this.refrescarContadorInformes();
         // Inicializar detallesVisibles según la cantidad de pacientes
         this.$watch(
             () => this.EncuestasAdmin,

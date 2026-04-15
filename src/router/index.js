@@ -122,6 +122,12 @@ const routes = [
     meta: { requiresAuth: true },
   },
   {
+    path: "/admin_facturados",
+    name: "admin_facturados",
+    component: () => import("../views/admin_facturados.vue"),
+    meta: { requiresAuth: true },
+  },
+  {
     path: "/admin_estado_profesional",
     name: "admin_estado_profesional",
     component: () => import("../views/admin_estado_profesional.vue"),
