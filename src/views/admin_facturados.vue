@@ -7,7 +7,7 @@
           Traslada pacientes con facturación cerrada a Facturados y libera Encuesta, Actividades y Asignaciones.
         </p>
       </div>
-      <button type="button" class="btn btn-outline-secondary" @click="actualizarPanel" :disabled="iniciandoProceso">
+      <button type="button" class="btn btn-outline-secondary" @click="actualizarPanel" :disabled="iniciandoProceso || reparandoRespaldos">
         <i class="bi bi-arrow-clockwise"></i> Actualizar datos
       </button>
     </div>
@@ -55,11 +55,21 @@
             <button
               type="button"
               class="btn btn-primary w-100"
-              :disabled="iniciandoProceso || !puedeIniciarProceso"
+              :disabled="iniciandoProceso || reparandoRespaldos || !puedeIniciarProceso"
               @click="iniciarProceso"
             >
               <i class="bi bi-play-circle"></i>
               {{ iniciandoProceso ? 'Procesando lote...' : 'Iniciar vaciado' }}
+            </button>
+
+            <button
+              type="button"
+              class="btn btn-outline-warning w-100 mt-2"
+              :disabled="iniciandoProceso || reparandoRespaldos || totalArchivados === 0"
+              @click="reconstruirRespaldosArchivados"
+            >
+              <i class="bi bi-wrench-adjustable-circle"></i>
+              {{ reparandoRespaldos ? 'Reconstruyendo respaldos...' : 'Reconstruir respaldos archivados' }}
             </button>
 
             <div v-if="mensajeFormulario" class="alert alert-info mt-3 mb-0 py-2">
@@ -267,7 +277,7 @@
 <script>
 import firebase_api from "@/api/ApiFirebase";
 import { cacheManager } from "@/utils/cacheManager";
-import { buildArchivePayload, getEligibleFacturadosByDate } from "@/utils/facturadosArchive";
+import { buildArchivePayload, getEligibleFacturadosByDate, normalizeFacturados } from "@/utils/facturadosArchive";
 import { mapState } from "vuex";
 
 const ARCHIVE_BACKUP_PATH = "/ArchivoPacientesRespaldo";
@@ -294,6 +304,7 @@ export default {
       fechaInicio: defaultRange.fechaInicio,
       fechaFin: defaultRange.fechaFin,
       iniciandoProceso: false,
+      reparandoRespaldos: false,
       mensajeFormulario: "",
       encuestasRaw: {},
       trabajoActual: null,
@@ -448,6 +459,162 @@ export default {
     },
     async actualizarPanel() {
       await this.cargarResumenBase();
+    },
+    async reconstruirRespaldosArchivados() {
+      this.reparandoRespaldos = true;
+      this.mensajeFormulario = "";
+
+      try {
+        const requestedBy = {
+          uid: this.uid || "",
+          nombre: this.userData?.nombre || "",
+          documento: this.userData?.numDocumento || "",
+          cargo: this.userData?.cargo || "",
+        };
+
+        const [archiveResp, facturadosResp, actividadesExtraResp, cupsResp] = await Promise.all([
+          firebase_api.get(`${ARCHIVE_BACKUP_PATH}.json`),
+          firebase_api.get("/Facturados.json"),
+          firebase_api.get("/actividadesExtra.json"),
+          firebase_api.get("/cups.json"),
+        ]);
+
+        const archiveEntries = normalizeFacturados(archiveResp.data || {});
+        const facturadosActuales = facturadosResp.data || {};
+        const actividadesExtraRaw = actividadesExtraResp.data || {};
+        const cupsRaw = cupsResp.data || {};
+
+        if (!archiveEntries.length) {
+          this.mensajeFormulario = "No hay respaldos archivados para reconstruir.";
+          return;
+        }
+
+        const backupPatch = {};
+        const facturadosPatch = {};
+        const errores = [];
+
+        this.trabajoActualId = `repair_${new Date().toISOString().replace(/[:.]/g, "-")}`;
+        this.trabajoActual = {
+          status: "running",
+          requestedAt: new Date().toISOString(),
+          startedAt: new Date().toISOString(),
+          finishedAt: "",
+          processedCount: 0,
+          remainingCount: archiveEntries.length,
+          totalSelected: archiveEntries.length,
+          errorCount: 0,
+          errors: [],
+          currentEncuestaId: "",
+          message: `Reconstruyendo ${archiveEntries.length} respaldo(s) archivado(s).`,
+        };
+
+        for (let index = 0; index < archiveEntries.length; index += 1) {
+          const entry = archiveEntries[index];
+          const encuestaId = String(entry?.idEncuesta || entry?.encuesta?.id || entry?.id || "").trim();
+
+          this.actualizarTrabajoActual({
+            currentEncuestaId: encuestaId,
+            message: `Reconstruyendo ${index + 1} de ${archiveEntries.length}: ${encuestaId || "sin-id"}`,
+          });
+
+          try {
+            if (!encuestaId) {
+              throw new Error("Respaldo sin idEncuesta válido.");
+            }
+
+            const encuesta = {
+              ...((entry && typeof entry.encuesta === "object" && entry.encuesta) || {}),
+              id: encuestaId,
+            };
+
+            const archivedAt = entry?.metadata?.archivedAt || entry?.archivedAt || new Date().toISOString();
+            const { facturadosRows, backupRecord } = buildArchivePayload({
+              encuesta,
+              actividadesRaw: entry?.actividades || {},
+              asignacionesRaw: entry?.asignaciones || {},
+              actividadesExtraRaw,
+              cupsRaw,
+              requestedBy,
+              archivedAt,
+            });
+
+            backupRecord.metadata = {
+              ...(backupRecord.metadata || {}),
+              archivedAt,
+              reconstructedAt: new Date().toISOString(),
+              reconstructedBy: requestedBy,
+            };
+
+            Object.values(facturadosRows).forEach((row) => {
+              row.archivedAt = archivedAt;
+            });
+
+            backupPatch[encuestaId] = backupRecord;
+
+            Object.entries(facturadosActuales)
+              .filter(([key, value]) => !String(key).startsWith("__") && String(value?.idEncuesta || "").trim() === encuestaId)
+              .forEach(([key]) => {
+                facturadosPatch[key] = null;
+              });
+
+            Object.assign(facturadosPatch, facturadosRows);
+
+            this.actualizarTrabajoActual({
+              processedCount: index + 1,
+              remainingCount: archiveEntries.length - (index + 1),
+            });
+          } catch (error) {
+            errores.push({
+              encuestaId: encuestaId || `sin-id-${index + 1}`,
+              message: error?.message || "Error desconocido",
+            });
+
+            this.actualizarTrabajoActual({
+              errorCount: errores.length,
+              errors: [...errores],
+              processedCount: index + 1,
+              remainingCount: archiveEntries.length - (index + 1),
+            });
+          }
+        }
+
+        if (Object.keys(backupPatch).length) {
+          await firebase_api.patch(`${ARCHIVE_BACKUP_PATH}.json`, backupPatch);
+        }
+
+        if (Object.keys(facturadosPatch).length) {
+          await firebase_api.patch("/Facturados.json", facturadosPatch);
+        }
+
+        this.limpiarCachesOperativas();
+        await this.cargarResumenBase();
+
+        this.actualizarTrabajoActual({
+          status: errores.length ? "completed_with_errors" : "completed",
+          finishedAt: new Date().toISOString(),
+          currentEncuestaId: "",
+          errorCount: errores.length,
+          errors: [...errores],
+          message: errores.length
+            ? `Reconstrucción finalizada con ${errores.length} error(es).`
+            : `Se reconstruyeron ${Object.keys(backupPatch).length} respaldo(s) correctamente.`,
+        });
+
+        this.mensajeFormulario = errores.length
+          ? `La reconstrucción terminó con ${errores.length} error(es). Revise el detalle del proceso.`
+          : `Respaldos reconstruidos correctamente: ${Object.keys(backupPatch).length}.`;
+      } catch (error) {
+        console.error("Error reconstruyendo respaldos archivados:", error);
+        this.actualizarTrabajoActual({
+          status: "error",
+          finishedAt: new Date().toISOString(),
+          currentEncuestaId: "",
+          message: error?.message || "No fue posible reconstruir los respaldos archivados.",
+        });
+        this.mensajeFormulario = error?.message || "No fue posible reconstruir los respaldos archivados.";
+      } finally {
+        this.reparandoRespaldos = false;
+      }
     },
     async cargarResumenBase() {
       try {

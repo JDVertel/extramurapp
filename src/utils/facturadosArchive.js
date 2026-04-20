@@ -18,6 +18,35 @@ function mapByKey(data, keyField, fallbackField) {
   }, {});
 }
 
+function hasValue(value) {
+  if (value === false || value === true) return true;
+  if (typeof value === "number") return !Number.isNaN(value);
+  if (Array.isArray(value)) return value.length > 0;
+  if (value && typeof value === "object") return Object.keys(value).length > 0;
+  return String(value ?? "").trim() !== "";
+}
+
+function pickFirstValue(...values) {
+  for (const value of values) {
+    if (hasValue(value)) {
+      return value;
+    }
+  }
+  return "";
+}
+
+function mergeSparseRow(primary = {}, fallback = {}) {
+  const keys = new Set([
+    ...Object.keys(safeObject(fallback)),
+    ...Object.keys(safeObject(primary)),
+  ]);
+
+  return Array.from(keys).reduce((acc, key) => {
+    acc[key] = pickFirstValue(primary[key], fallback[key]);
+    return acc;
+  }, {});
+}
+
 function getTimestampFromValue(value) {
   const raw = String(value ?? "").trim();
   if (!raw) return Number.MAX_SAFE_INTEGER;
@@ -105,13 +134,69 @@ function flattenNestedAssignments(cupsNode) {
   return values.flatMap((value) => Object.values(safeObject(value)).filter(Boolean));
 }
 
-function normalizeAsignaciones(asignacionesNode) {
+function createCupsCatalog(cupsRaw) {
+  return Object.entries(safeObject(cupsRaw)).reduce((acc, [id, item]) => {
+    if (item && typeof item === "object") {
+      acc[String(id)] = {
+        id: String(id),
+        codigo: item.codigo || "",
+        DescripcionCUP: item.DescripcionCUP || item.nombre || "",
+        Grupo: item.Grupo || item.grupo || item.group || "",
+        Homolog: item.Homolog || item.homolog || "",
+      };
+    }
+    return acc;
+  }, {});
+}
+
+function normalizeAsignaciones(asignacionesNode, cupsCatalog = {}) {
   const cupsNode = safeObject(asignacionesNode).cups;
   if (!cupsNode || typeof cupsNode !== "object") {
     return [];
   }
 
-  return flattenNestedAssignments(cupsNode).map((item) => ({ ...item }));
+  const roleFallback = String(
+    asignacionesNode?.key ?? asignacionesNode?.rol ?? ""
+  ).trim();
+  const professionalFallback = String(
+    asignacionesNode?.nombreProf ?? asignacionesNode?.nombrePtof ?? asignacionesNode?.nombre ?? ""
+  ).trim();
+
+  return flattenNestedAssignments(cupsNode).map((item) => {
+    const cupId = String(item?.cupsId || item?.id || item?.Homolog || item?.homolog || "").trim();
+    const cupCatalog = cupsCatalog[cupId] || {};
+
+    return {
+      ...item,
+      id: cupId,
+      cupsId: cupId,
+      key: item?.key || roleFallback,
+      nombreProf: item?.nombreProf || item?.nombrePtof || item?.nombre || professionalFallback,
+      codigo: item?.codigo || cupCatalog?.codigo || cupId,
+      cupsNombre: item?.cupsNombre || item?.DescripcionCUP || cupCatalog?.DescripcionCUP || item?.codigo || cupId,
+      DescripcionCUP: item?.DescripcionCUP || item?.cupsNombre || cupCatalog?.DescripcionCUP || item?.codigo || cupId,
+      Grupo: item?.Grupo || item?.grupo || item?.cupsGrupo || cupCatalog?.Grupo || "",
+      FactNum: item?.FactNum || item?.factura || "",
+      Homolog: item?.Homolog || item?.homolog || cupCatalog?.Homolog || "",
+      fechaFacturacion: item?.fechaFacturacion || item?.fechaFactCUP || "",
+    };
+  });
+}
+
+function createCupsMap(cupsRaw) {
+  return Object.entries(createCupsCatalog(cupsRaw)).reduce((acc, [id, item]) => {
+    if (item && typeof item === "object") {
+      acc[String(id)] = item.DescripcionCUP || item.codigo || String(id);
+    }
+    return acc;
+  }, {});
+}
+
+function decorateReportRows(rows, sourceLabel) {
+  return (Array.isArray(rows) ? rows : []).map((row) => ({
+    ...row,
+    origenDatos: sourceLabel,
+  }));
 }
 
 function buildBaseRow(encuesta) {
@@ -164,16 +249,18 @@ function buildActivityBaseRow(encuesta) {
   };
 }
 
-function buildReportRows(encuesta, actividades, asignaciones, cupsMap) {
+function buildReportRows(encuesta, actividades, asignaciones, cupsMap, sourceLabel = "BD respaldo") {
   const seguimiento = [];
   const actividadesRows = [];
   const baseSeguimiento = buildBaseRow(encuesta);
   const baseActividad = buildActivityBaseRow(encuesta);
+  const encuestaId = String(encuesta.id || encuesta.idEncuesta || "sin-id");
 
   if (!actividades.length) {
     seguimiento.push({
       ...baseSeguimiento,
-      rowKey: `${encuesta.id || encuesta.idEncuesta || "sin-id"}-sin-actividad`,
+      idEncuesta: encuestaId,
+      rowKey: `${encuestaId}-sin-actividad`,
       actividad: "Sin actividades",
       procedimiento: "",
       cupsNombre: "",
@@ -188,10 +275,12 @@ function buildReportRows(encuesta, actividades, asignaciones, cupsMap) {
       rol: "",
       fechaFactCUP: "",
       facturado: "",
+      origenDatos: sourceLabel,
     });
     actividadesRows.push({
       ...baseActividad,
-      rowKey: `${encuesta.id || encuesta.idEncuesta || "sin-id"}-sin-actividad`,
+      idEncuesta: encuestaId,
+      rowKey: `${encuestaId}-sin-actividad`,
       actividad: "Sin actividades",
       profesional: "",
       rol: "",
@@ -205,6 +294,7 @@ function buildReportRows(encuesta, actividades, asignaciones, cupsMap) {
       homolog: "",
       fechaFactCUP: "",
       facturado: "",
+      origenDatos: sourceLabel,
     });
     return { seguimiento, actividades: actividadesRows };
   }
@@ -219,7 +309,8 @@ function buildReportRows(encuesta, actividades, asignaciones, cupsMap) {
     if (!cupsActividad.length) {
       seguimiento.push({
         ...baseSeguimiento,
-        rowKey: `${encuesta.id || encuesta.idEncuesta || "sin-id"}-${idActividad}-sin-asignacion`,
+        idEncuesta: encuestaId,
+        rowKey: `${encuestaId}-${idActividad}-sin-asignacion`,
         actividad: actividad.nombre || "Actividad",
         procedimiento: "Sin asignaciones",
         cupsNombre: "",
@@ -234,10 +325,12 @@ function buildReportRows(encuesta, actividades, asignaciones, cupsMap) {
         rol: "",
         fechaFactCUP: "",
         facturado: "",
+        origenDatos: sourceLabel,
       });
       actividadesRows.push({
         ...baseActividad,
-        rowKey: `${encuesta.id || encuesta.idEncuesta || "sin-id"}-${idActividad}-sin-asignacion`,
+        idEncuesta: encuestaId,
+        rowKey: `${encuestaId}-${idActividad}-sin-asignacion`,
         actividad: actividad.nombre || "Actividad",
         profesional: "",
         rol: "",
@@ -251,6 +344,7 @@ function buildReportRows(encuesta, actividades, asignaciones, cupsMap) {
         homolog: "",
         fechaFactCUP: "",
         facturado: "",
+        origenDatos: sourceLabel,
       });
       return;
     }
@@ -260,7 +354,8 @@ function buildReportRows(encuesta, actividades, asignaciones, cupsMap) {
       const cupsNombre = cupsMap[cupId] || cup?.cupsNombre || cup?.DescripcionCUP || cup?.codigo || "";
       seguimiento.push({
         ...baseSeguimiento,
-        rowKey: `${encuesta.id || encuesta.idEncuesta || "sin-id"}-${idActividad}-${index}`,
+        idEncuesta: encuestaId,
+        rowKey: `${encuestaId}-${idActividad}-${index}`,
         actividad: actividad.nombre || "Actividad",
         procedimiento: cupsNombre,
         cupsNombre,
@@ -275,10 +370,12 @@ function buildReportRows(encuesta, actividades, asignaciones, cupsMap) {
         rol: cup?.key || "",
         fechaFactCUP: cup?.fechaFacturacion || "",
         facturado: cup?.facturado === true ? "Si" : cup?.facturado === false ? "No" : "",
+        origenDatos: sourceLabel,
       });
       actividadesRows.push({
         ...baseActividad,
-        rowKey: `${encuesta.id || encuesta.idEncuesta || "sin-id"}-${idActividad}-${index}`,
+        idEncuesta: encuestaId,
+        rowKey: `${encuestaId}-${idActividad}-${index}`,
         actividad: actividad.nombre || "Actividad",
         profesional: cup?.nombreProf || "",
         rol: cup?.key || "",
@@ -292,6 +389,7 @@ function buildReportRows(encuesta, actividades, asignaciones, cupsMap) {
         homolog: cup?.Homolog || "",
         fechaFactCUP: cup?.fechaFacturacion || "",
         facturado: cup?.facturado === true ? "Si" : cup?.facturado === false ? "No" : "",
+        origenDatos: sourceLabel,
       });
     });
   });
@@ -312,19 +410,18 @@ export function createFacturadosTableRows(encuestaId, rows, archivedAt, requeste
   }, {});
 }
 
-export function buildArchivePayload({ encuesta, actividadesRaw, asignacionesRaw, actividadesExtraRaw, cupsRaw, requestedBy }) {
+export function buildArchivePayload({ encuesta, actividadesRaw, asignacionesRaw, actividadesExtraRaw, cupsRaw, requestedBy, archivedAt: archivedAtInput }) {
   const actividadesExtraMap = mapByKey(actividadesExtraRaw, "key", "id");
-  const cupsMap = Object.entries(safeObject(cupsRaw)).reduce((acc, [id, item]) => {
-    if (item && typeof item === "object") {
-      acc[String(id)] = item.DescripcionCUP || item.nombre || item.codigo || String(id);
-    }
-    return acc;
-  }, {});
+  const cupsCatalog = createCupsCatalog(cupsRaw);
+  const cupsMap = createCupsMap(cupsRaw);
 
-  const actividadesNormalizadas = normalizeActividades(actividadesRaw, actividadesExtraMap);
-  const asignacionesNormalizadas = normalizeAsignaciones(asignacionesRaw);
+  const actividadesNormalizadas = normalizeArchiveActividades({
+    actividades: actividadesRaw,
+    asignaciones: asignacionesRaw,
+  }, actividadesExtraMap);
+  const asignacionesNormalizadas = normalizeAsignaciones(asignacionesRaw, cupsCatalog);
   const reportes = buildReportRows(encuesta, actividadesNormalizadas, asignacionesNormalizadas, cupsMap);
-  const archivedAt = new Date().toISOString();
+  const archivedAt = String(archivedAtInput || "").trim() || new Date().toISOString();
   const facturadosRows = createFacturadosTableRows(encuesta.id, reportes.seguimiento, archivedAt, requestedBy);
   const facturadores = Array.from(new Set(
     asignacionesNormalizadas
@@ -370,10 +467,19 @@ export function normalizeFacturados(raw) {
 export function archiveEntryToEncuesta(entry) {
   const encuesta = safeObject(entry?.encuesta);
   const id = String(entry?.idEncuesta || encuesta?.id || entry?.id || "").trim();
+  const actividades = safeObject(entry?.actividades);
+  const asignaciones = safeObject(entry?.asignaciones);
+  const reportes = safeObject(entry?.reportes);
+  const metadata = safeObject(entry?.metadata);
+
   return {
     ...encuesta,
     id,
     idEncuesta: id,
+    actividades,
+    asignaciones,
+    reportes,
+    archivedAt: metadata?.archivedAt || entry?.archivedAt || "",
     __archived: true,
     __archivo: entry,
   };
@@ -455,46 +561,120 @@ function matchDateRange(tipo, encuesta, fechaInicio, fechaFin) {
   return !!fecha && fecha >= inicio && fecha <= fin;
 }
 
-export function getArchiveRows(archiveRaw, { tipo, fechaInicio, fechaFin, convenio }) {
+async function fetchActividadesExtraMap() {
+  const { data } = await firebase_api.get("/actividadesExtra.json");
+  return mapByKey(data, "key", "id");
+}
+
+function getArchiveReportRowsFromStoredReport(entry, tipo, fallbackRows = []) {
+  const reportes = safeObject(entry?.reportes);
+
+  if (tipo !== "actividades") {
+    const rows = Array.isArray(reportes[tipo]) ? reportes[tipo] : [];
+    return mergeStoredAndFallbackRows(rows, fallbackRows);
+  }
+
+  const actividades = Array.isArray(reportes.actividades) ? reportes.actividades : [];
+  const seguimiento = Array.isArray(reportes.seguimiento) ? reportes.seguimiento : [];
+  const seguimientoByKey = seguimiento.reduce((acc, row) => {
+    const rowKey = String(row?.rowKey || "").trim();
+    if (rowKey) {
+      acc[rowKey] = row;
+    }
+    return acc;
+  }, {});
+
+  const enrichedRows = actividades.map((row) => {
+    const extra = seguimientoByKey[String(row?.rowKey || "").trim()] || {};
+    return {
+      ...row,
+      grupoCUP: row?.grupoCUP || extra?.grupoCUP || "",
+      factura: row?.factura || extra?.factura || "",
+      homolog: row?.homolog || extra?.homolog || "",
+      fechaFactCUP: row?.fechaFactCUP || extra?.fechaFactCUP || "",
+      facturado: row?.facturado || extra?.facturado || "",
+      fechaFacturacion: row?.fechaFacturacion || extra?.fechaFacturacion || "",
+      fechaNac: row?.fechaNac || extra?.fechaNac || "",
+      labVisit: row?.labVisit || extra?.labVisit || "",
+      gestAux: row?.gestAux || extra?.gestAux || "",
+      gestEnfermera: row?.gestEnfermera || extra?.gestEnfermera || "",
+      gestMedica: row?.gestMedica || extra?.gestMedica || "",
+    };
+  });
+
+  return mergeStoredAndFallbackRows(enrichedRows, fallbackRows);
+}
+
+function normalizeArchiveActividades(entry, actividadesExtraMap = {}) {
+  const actividadesNormalizadas = normalizeActividades(entry?.actividades, actividadesExtraMap);
+  if (actividadesNormalizadas.length) {
+    return actividadesNormalizadas;
+  }
+
+  return extractActividadIdsFromAssignmentBranch(entry?.asignaciones).map((idActividad) => ({
+    key: idActividad,
+    nombre: actividadesExtraMap[idActividad] || idActividad || "Actividad",
+  }));
+}
+
+function rebuildArchiveReportRows(entry, tipo, actividadesExtraMap = {}, cupsMap = {}, cupsCatalog = {}) {
+  const encuesta = safeObject(entry?.encuesta);
+  if (!encuesta || !Object.keys(encuesta).length) {
+    return [];
+  }
+
+  const actividadesNormalizadas = normalizeArchiveActividades(entry, actividadesExtraMap);
+  const asignacionesNormalizadas = normalizeAsignaciones(entry?.asignaciones, cupsCatalog);
+  const reportesReconstruidos = buildReportRows(encuesta, actividadesNormalizadas, asignacionesNormalizadas, cupsMap);
+
+  return tipo === "actividades"
+    ? reportesReconstruidos.actividades
+    : reportesReconstruidos.seguimiento;
+}
+
+function mergeStoredAndFallbackRows(storedRows = [], fallbackRows = []) {
+  const merged = [];
+  const fallbackMap = new Map();
+  const seenKeys = new Set();
+
+  fallbackRows.forEach((row, index) => {
+    const key = String(row?.rowKey || `fallback-${index}`);
+    fallbackMap.set(key, row);
+  });
+
+  storedRows.forEach((row, index) => {
+    const key = String(row?.rowKey || `stored-${index}`);
+    seenKeys.add(key);
+    merged.push(mergeSparseRow(row, fallbackMap.get(key) || {}));
+  });
+
+  fallbackRows.forEach((row, index) => {
+    const key = String(row?.rowKey || `fallback-${index}`);
+    if (!seenKeys.has(key)) {
+      merged.push(row);
+    }
+  });
+
+  return merged;
+}
+
+function getArchiveReportRows(entry, tipo, actividadesExtraMap = {}, cupsMap = {}, cupsCatalog = {}) {
+  const rebuiltRows = rebuildArchiveReportRows(entry, tipo, actividadesExtraMap, cupsMap, cupsCatalog);
+  const storedRows = getArchiveReportRowsFromStoredReport(entry, tipo, rebuiltRows);
+  if (storedRows.length) {
+    return decorateReportRows(storedRows, "BD respaldo");
+  }
+
+  return decorateReportRows(rebuiltRows, "BD respaldo");
+}
+
+export function getArchiveRows(archiveRaw, { tipo, fechaInicio, fechaFin, convenio }, actividadesExtraMap = {}, cupsMap = {}, cupsCatalog = {}) {
   return normalizeFacturados(archiveRaw)
     .filter((entry) => {
       const encuesta = safeObject(entry?.encuesta);
       return matchDateRange(tipo, encuesta, fechaInicio, fechaFin) && matchConvenio(encuesta, convenio);
     })
-    .flatMap((entry) => {
-      const reportes = safeObject(entry?.reportes);
-      if (tipo !== "actividades") {
-        return Array.isArray(reportes[tipo]) ? reportes[tipo] : [];
-      }
-
-      const actividades = Array.isArray(reportes.actividades) ? reportes.actividades : [];
-      const seguimiento = Array.isArray(reportes.seguimiento) ? reportes.seguimiento : [];
-      const seguimientoByKey = seguimiento.reduce((acc, row) => {
-        const rowKey = String(row?.rowKey || "").trim();
-        if (rowKey) {
-          acc[rowKey] = row;
-        }
-        return acc;
-      }, {});
-
-      return actividades.map((row) => {
-        const extra = seguimientoByKey[String(row?.rowKey || "").trim()] || {};
-        return {
-          ...row,
-          grupoCUP: row?.grupoCUP || extra?.grupoCUP || "",
-          factura: row?.factura || extra?.factura || "",
-          homolog: row?.homolog || extra?.homolog || "",
-          fechaFactCUP: row?.fechaFactCUP || extra?.fechaFactCUP || "",
-          facturado: row?.facturado || extra?.facturado || "",
-          fechaFacturacion: row?.fechaFacturacion || extra?.fechaFacturacion || "",
-          fechaNac: row?.fechaNac || extra?.fechaNac || "",
-          labVisit: row?.labVisit || extra?.labVisit || "",
-          gestAux: row?.gestAux || extra?.gestAux || "",
-          gestEnfermera: row?.gestEnfermera || extra?.gestEnfermera || "",
-          gestMedica: row?.gestMedica || extra?.gestMedica || "",
-        };
-      });
-    });
+    .flatMap((entry) => getArchiveReportRows(entry, tipo, actividadesExtraMap, cupsMap, cupsCatalog));
 }
 
 export async function fetchFacturadosRaw() {
@@ -542,11 +722,78 @@ async function fetchFacturadosTableRows(filters) {
   });
 }
 
+function buildReportRowDedupKey(row, tipo) {
+  const fechaBase = tipo === "actividades"
+    ? row?.fecha || row?.fechaFacturacion || row?.fechaFactCUP || ""
+    : row?.fechaFacturacion || row?.gestEnfermera || row?.fechaFactCUP || "";
+
+  return [
+    String(tipo || "").trim(),
+    String(row?.idEncuesta || row?.id || "").trim(),
+    String(row?.rowKey || "").trim(),
+    String(row?.documento || "").trim(),
+    String(row?.actividad || "").trim(),
+    String(row?.cupsNombre || row?.procedimiento || "").trim(),
+    String(fechaBase || "").split(" ")[0].trim(),
+  ].join("|");
+}
+
+function dedupeReportRows(rows, tipo) {
+  const uniqueRows = new Map();
+
+  (Array.isArray(rows) ? rows : []).forEach((row, index) => {
+    const key = buildReportRowDedupKey(row, tipo) || `${tipo || "fila"}-${index}`;
+    if (!uniqueRows.has(key)) {
+      uniqueRows.set(key, row);
+    }
+  });
+
+  return Array.from(uniqueRows.values());
+}
+
+async function fetchArchiveSeguimientoRows(filters) {
+  const [archiveRaw, facturadosRows] = await Promise.all([
+    fetchFacturadosRaw(),
+    fetchFacturadosTableRows(filters),
+  ]);
+
+  const [actividadesExtraMap, cupsMap, cupsCatalog] = await Promise.all([
+    fetchActividadesExtraMap(),
+    fetchCupsMap(),
+    fetchCupsCatalog(),
+  ]);
+
+  const backupRows = getArchiveRows(archiveRaw, {
+    ...filters,
+    tipo: "seguimiento",
+  }, actividadesExtraMap, cupsMap, cupsCatalog);
+
+  return dedupeReportRows([
+    ...backupRows,
+    ...decorateReportRows(facturadosRows, "BD respaldo"),
+  ], "seguimiento");
+}
+
+async function fetchCupsMap() {
+  const { data } = await firebase_api.get("/cups.json");
+  return createCupsMap(data);
+}
+
+async function fetchCupsCatalog() {
+  const { data } = await firebase_api.get("/cups.json");
+  return createCupsCatalog(data);
+}
+
 export async function fetchArchiveRows(filters) {
   if (filters?.tipo === "seguimiento") {
-    return fetchFacturadosTableRows(filters);
+    return fetchArchiveSeguimientoRows(filters);
   }
 
-  const raw = await fetchFacturadosRaw();
-  return getArchiveRows(raw, filters);
+  const [raw, actividadesExtraMap, cupsMap, cupsCatalog] = await Promise.all([
+    fetchFacturadosRaw(),
+    fetchActividadesExtraMap(),
+    fetchCupsMap(),
+    fetchCupsCatalog(),
+  ]);
+  return getArchiveRows(raw, filters, actividadesExtraMap, cupsMap, cupsCatalog);
 }

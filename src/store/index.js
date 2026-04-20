@@ -42,6 +42,10 @@ function isStatusClosed(value) {
   return String(value ?? "").trim().toLowerCase() === "true";
 }
 
+function normalizeDateOnly(value) {
+  return String(value ?? "").trim().split(" ")[0];
+}
+
 async function getCachedMappedCollection(cacheKey, path) {
   const cached = cacheManager.get(cacheKey);
   if (cached) return cached;
@@ -877,9 +881,9 @@ export default createStore({
      */
     getAllByPacientesID: async ({ commit }, { tipodoc, numdoc }) => {
       try {
-        const encuestasObj = await getCachedRawCollection("encuestasRaw", "/Encuesta.json");
+        const encuestas = await getMergedEncuestasForReports();
 
-        if (!Object.keys(encuestasObj).length) {
+        if (!encuestas.length) {
           commit("setDatosPaciente", []);
           return [];
         }
@@ -887,23 +891,15 @@ export default createStore({
         const tipodocNormalizado = String(tipodoc ?? "").trim();
         const numdocNormalizado = String(numdoc ?? "").trim();
 
-        // Convertir a array con IDs y buscar por numdoc (y tipodoc cuando se envía)
-        const pacientesEncontrados = [];
-
-        for (const [encuestaId, encuesta] of Object.entries(encuestasObj)) {
+        const pacientesEncontrados = encuestas.filter((encuesta) => {
           const tipodocEncuesta = String(encuesta?.tipodoc ?? "").trim();
           const numdocEncuesta = String(encuesta?.numdoc ?? "").trim();
           const coincideTipodoc = tipodocNormalizado
             ? tipodocEncuesta === tipodocNormalizado
             : true;
 
-          if (coincideTipodoc && numdocEncuesta === numdocNormalizado) {
-            pacientesEncontrados.push({
-              id: encuestaId,
-              ...encuesta,
-            });
-          }
-        }
+          return coincideTipodoc && numdocEncuesta === numdocNormalizado;
+        });
 
         if (pacientesEncontrados.length === 0) {
           commit("setDatosPaciente", []);
@@ -930,13 +926,15 @@ export default createStore({
                 (carac) => carac?.idEncuesta === encuestaId
               );
               const caracterizacion = caracterizacionEncontrada || {};
-              const asignaciones = asignacionesObj[encuestaId] || {};
+              const asignaciones = asignacionesObj[encuestaId] || paciente?.asignaciones || paciente?.__archivo?.asignaciones || {};
+              const actividades = paciente?.actividades || paciente?.__archivo?.actividades || {};
 
               // Crear un nuevo objeto con todas las propiedades para garantizar reactividad
               const pacienteCompleto = {
                 ...paciente,
                 caracterizacion,
-                asignaciones
+                asignaciones,
+                actividades,
               };
               return pacienteCompleto;
             } catch (err) {
@@ -958,9 +956,9 @@ export default createStore({
     getAllByPacientesIDEB: async ({ commit }, { tipodoc, numdoc, convenio }) => {
       console.log("datos que entran EB - tipodoc, numdoc, convenio:", tipodoc, numdoc, convenio);
       try {
-        const data = await getCachedRawCollection("encuestasRaw", "/Encuesta.json");
+        const data = await getMergedEncuestasForReports();
 
-        if (!Object.keys(data).length) {
+        if (!data.length) {
           console.log("No hay encuestas registradas");
           return [];
         }
@@ -969,21 +967,12 @@ export default createStore({
         const numdocNormalizado = String(numdoc ?? "").trim();
         const convenioNormalizado = String(convenio ?? "").trim();
 
-        // Buscar en las encuestas por tipodoc, numdoc y convenio
-        const datospaciente = [];
-
-        for (const [encuestaId, encuesta] of Object.entries(data)) {
-          if (
+        const datospaciente = data.filter(
+          (encuesta) =>
             String(encuesta?.tipodoc ?? "").trim() === tipodocNormalizado &&
             String(encuesta?.numdoc ?? "").trim() === numdocNormalizado &&
             String(encuesta?.convenio ?? "").trim() === convenioNormalizado
-          ) {
-            datospaciente.push({
-              id: encuestaId,
-              ...encuesta,
-            });
-          }
-        }
+        );
 
         commit("setDatosPaciente", datospaciente);
         return datospaciente;
@@ -2551,8 +2540,12 @@ export default createStore({
         const encuestas = await getCachedMappedCollection("encuestas", "/Encuesta.json");
 
         const encuestasFiltradas = encuestas.filter(
-          (encuesta) =>
-            encuesta.fecha >= parametros.finicial && encuesta.fecha <= parametros.ffinal
+          (encuesta) => {
+            const fechaEncuesta = normalizeDateOnly(encuesta.fecha);
+            return !!fechaEncuesta &&
+              fechaEncuesta >= parametros.finicial &&
+              fechaEncuesta <= parametros.ffinal;
+          }
         );
 
         commit("setEncuestasAdmin", encuestasFiltradas);
@@ -2571,10 +2564,13 @@ export default createStore({
         const encuestas = await getCachedMappedCollection("encuestas", "/Encuesta.json");
 
         const encuestasFiltradas = encuestas.filter(
-          (encuesta) =>
-            encuesta.fechagestEnfermera >= parametros.finicial &&
-            encuesta.fechagestEnfermera <= parametros.ffinal &&
-            isStatusClosed(encuesta.status_gest_enfermera)
+          (encuesta) => {
+            const fechaGestionEnfermeria = normalizeDateOnly(encuesta.fechagestEnfermera);
+            return !!fechaGestionEnfermeria &&
+              fechaGestionEnfermeria >= parametros.finicial &&
+              fechaGestionEnfermeria <= parametros.ffinal &&
+              isStatusClosed(encuesta.status_gest_enfermera);
+          }
         );
 
         commit("setEncuestasAdmin", encuestasFiltradas);
@@ -2593,7 +2589,7 @@ export default createStore({
         const encuestas = await getCachedMappedCollection("encuestas", "/Encuesta.json");
 
         const encuestasFiltradas = encuestas.filter((encuesta) => {
-          const fechaEncuesta = encuesta.fecha;
+          const fechaEncuesta = normalizeDateOnly(encuesta.fecha);
           if (!fechaEncuesta) return false;
 
           return (
@@ -2619,12 +2615,15 @@ export default createStore({
         const encuestas = await getCachedMappedCollection("encuestas", "/Encuesta.json");
 
         const encuestasFiltradas = encuestas.filter(
-          (encuesta) =>
-            encuesta.fecha >= parametros.finicial &&
-            encuesta.fecha <= parametros.ffinal &&
-            (encuesta.idEnfermeroAtiende === parametros.idprof ||
-              encuesta.idMedicoAtiende === parametros.idprof ||
-              encuesta.idEncuestador === parametros.idprof)
+          (encuesta) => {
+            const fechaEncuesta = normalizeDateOnly(encuesta.fecha);
+            return !!fechaEncuesta &&
+              fechaEncuesta >= parametros.finicial &&
+              fechaEncuesta <= parametros.ffinal &&
+              (encuesta.idEnfermeroAtiende === parametros.idprof ||
+                encuesta.idMedicoAtiende === parametros.idprof ||
+                encuesta.idEncuestador === parametros.idprof);
+          }
         );
 
         commit("setEncuestasAdmin", encuestasFiltradas);
