@@ -7,8 +7,9 @@
           Traslada pacientes con facturación cerrada a Facturados y libera Encuesta, Actividades y Asignaciones.
         </p>
       </div>
-      <button type="button" class="btn btn-outline-secondary" @click="actualizarPanel" :disabled="iniciandoProceso || reparandoRespaldos">
-        <i class="bi bi-arrow-clockwise"></i> Actualizar datos
+      <button type="button" class="btn btn-outline-secondary" @click="consultarResumenPacientes" :disabled="iniciandoProceso || reparandoRespaldos || restaurandoOriginales || consultandoResumen">
+        <span v-if="consultandoResumen" class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>
+        <i v-else class="bi bi-search"></i> {{ consultandoResumen ? 'Consultando...' : 'Consultar datos' }}
       </button>
     </div>
 
@@ -54,8 +55,33 @@
 
             <button
               type="button"
+              class="btn btn-outline-primary w-100 mb-2"
+              :disabled="consultandoResumen || iniciandoProceso || reparandoRespaldos || restaurandoOriginales || !rangoValido"
+              @click="consultarResumenPacientes"
+            >
+              <span v-if="consultandoResumen" class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>
+              <i v-else class="bi bi-search"></i>
+              {{ consultandoResumen ? 'Consultando pacientes...' : 'Consultar pacientes' }}
+            </button>
+
+            <div class="form-text mb-3" :class="consultandoResumen ? 'text-primary' : 'text-muted'">
+              {{ mensajeEstadoConsulta }}
+            </div>
+
+            <div v-if="consultandoResumen" class="border rounded p-2 mb-3 bg-light-subtle">
+              <div class="d-flex justify-content-between align-items-center small mb-1">
+                <strong>Estado de consulta</strong>
+                <span>Consultando...</span>
+              </div>
+              <div class="progress" role="progressbar" aria-label="Estado de consulta" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100" style="height: 10px;">
+                <div class="progress-bar progress-bar-striped progress-bar-animated" style="width: 100%"></div>
+              </div>
+            </div>
+
+            <button
+              type="button"
               class="btn btn-primary w-100"
-              :disabled="iniciandoProceso || reparandoRespaldos || !puedeIniciarProceso"
+              :disabled="iniciandoProceso || reparandoRespaldos || consultandoResumen || !puedeIniciarProceso"
               @click="iniciarProceso"
             >
               <i class="bi bi-play-circle"></i>
@@ -65,12 +91,44 @@
             <button
               type="button"
               class="btn btn-outline-warning w-100 mt-2"
-              :disabled="iniciandoProceso || reparandoRespaldos || totalArchivados === 0"
+              :disabled="iniciandoProceso || reparandoRespaldos || restaurandoOriginales || totalArchivados === 0"
               @click="reconstruirRespaldosArchivados"
             >
               <i class="bi bi-wrench-adjustable-circle"></i>
               {{ reparandoRespaldos ? 'Reconstruyendo respaldos...' : 'Reconstruir respaldos archivados' }}
             </button>
+
+            <button
+              type="button"
+              class="btn btn-outline-success w-100 mt-2"
+              :disabled="!puedeRestaurarArchivados"
+              @click="restaurarArchivadosATablasOriginales"
+            >
+              <span v-if="restaurandoOriginales" class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>
+              <i v-else class="bi bi-arrow-counterclockwise"></i>
+              {{ restaurandoOriginales ? 'Restaurando tablas originales...' : 'Restaurar archivados a tablas originales' }}
+            </button>
+
+            <div class="form-text mt-2" :class="puedeRestaurarArchivados ? 'text-muted' : 'text-warning'">
+              {{ mensajeEstadoRestauracion }}
+            </div>
+
+            <div class="alert alert-light border small mt-3 mb-0">
+              <div><strong>ArchivoPacientesRespaldo:</strong> {{ totalArchivados }} registros completos por paciente.</div>
+              <div><strong>Facturados:</strong> {{ totalFilasFacturados }} filas planas para consulta e informes.</div>
+              <div class="text-muted mt-1">La restauración a tablas originales usa ArchivoPacientesRespaldo, no el total de filas de Facturados.</div>
+            </div>
+
+            <div v-if="restaurandoOriginales && trabajoActual" class="border rounded p-2 mt-3 bg-light-subtle">
+              <div class="d-flex justify-content-between align-items-center small mb-1">
+                <strong>Progreso de restauración</strong>
+                <span>{{ porcentajeTrabajo }}%</span>
+              </div>
+              <div class="progress" role="progressbar" aria-label="Progreso de restauración" :aria-valuenow="porcentajeTrabajo" aria-valuemin="0" aria-valuemax="100" style="height: 10px;">
+                <div class="progress-bar progress-bar-striped progress-bar-animated" :style="{ width: `${porcentajeTrabajo}%` }"></div>
+              </div>
+              <div class="small text-muted mt-2">{{ trabajoActual.message || 'Preparando restauración...' }}</div>
+            </div>
 
             <div v-if="mensajeFormulario" class="alert alert-info mt-3 mb-0 py-2">
               {{ mensajeFormulario }}
@@ -92,9 +150,9 @@
               </div>
               <div class="col-12 col-md-4">
                 <div class="metric-card">
-                  <div class="metric-label">Archivados en tabla nueva</div>
+                  <div class="metric-label">Respaldos completos restaurables</div>
                   <div class="metric-value">{{ totalArchivados }}</div>
-                  <div class="small text-muted mt-1">Registros disponibles en Facturados</div>
+                  <div class="small text-muted mt-1">Entradas top-level en ArchivoPacientesRespaldo</div>
                 </div>
               </div>
               <div class="col-12 col-md-4">
@@ -152,6 +210,12 @@
                     <div class="metric-value">{{ trabajoActual.errorCount || 0 }}</div>
                   </div>
                 </div>
+                <div class="col-6 col-md-3" v-if="trabajoActual.conflictCount !== undefined">
+                  <div class="metric-card">
+                    <div class="metric-label">Conflictos</div>
+                    <div class="metric-value">{{ trabajoActual.conflictCount || 0 }}</div>
+                  </div>
+                </div>
               </div>
 
               <div class="alert" :class="estadoClaseTrabajo" role="alert">
@@ -171,6 +235,22 @@
                 <ul class="list-group list-group-flush border rounded small">
                   <li v-for="error in trabajoActual.errors" :key="`${error.encuestaId}-${error.message}`" class="list-group-item">
                     <strong>{{ error.encuestaId }}:</strong> {{ error.message }}
+                  </li>
+                </ul>
+              </div>
+
+              <div v-if="Array.isArray(trabajoActual.conflicts) && trabajoActual.conflicts.length" class="mt-3">
+                <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
+                  <h6 class="mb-0">Conflictos detectados</h6>
+                  <button type="button" class="btn btn-sm btn-outline-success" @click="exportarConflictosCsv">
+                    <i class="bi bi-filetype-csv"></i> Exportar conflictos
+                  </button>
+                </div>
+                <ul class="list-group list-group-flush border rounded small">
+                  <li v-for="conflict in trabajoActual.conflicts" :key="`${conflict.encuestaId}-${conflict.type}-${conflict.path}`" class="list-group-item">
+                    <strong>{{ conflict.encuestaId }}:</strong>
+                    {{ conflict.message }}
+                    <span v-if="conflict.path" class="text-muted">({{ conflict.path }})</span>
                   </li>
                 </ul>
               </div>
@@ -196,6 +276,14 @@
 
         <div v-if="!rangoValido" class="alert alert-warning mb-0">
           Defina una fecha inicial y una fecha final válidas para listar pacientes.
+        </div>
+
+        <div v-else-if="!resumenCargado" class="alert alert-secondary mb-0">
+          La lista de pacientes no se consulta automáticamente. Pulse "Consultar pacientes" para cargarla.
+        </div>
+
+        <div v-else-if="filtrosConsultaPendientes" class="alert alert-warning mb-0">
+          El rango cambió después de la última consulta. Pulse "Consultar pacientes" para actualizar la lista.
         </div>
 
         <div v-else-if="!candidatosPreview.length" class="alert alert-light mb-0">
@@ -303,8 +391,13 @@ export default {
       lotePacientes: 50,
       fechaInicio: defaultRange.fechaInicio,
       fechaFin: defaultRange.fechaFin,
+      fechaInicioConsulta: "",
+      fechaFinConsulta: "",
       iniciandoProceso: false,
       reparandoRespaldos: false,
+      restaurandoOriginales: false,
+      consultandoResumen: false,
+      resumenCargado: false,
       mensajeFormulario: "",
       encuestasRaw: {},
       trabajoActual: null,
@@ -320,11 +413,17 @@ export default {
     rangoValido() {
       return !!this.fechaInicio && !!this.fechaFin && this.fechaInicio <= this.fechaFin;
     },
+    filtrosConsultaPendientes() {
+      return this.resumenCargado && (
+        this.fechaInicio !== this.fechaInicioConsulta ||
+        this.fechaFin !== this.fechaFinConsulta
+      );
+    },
     candidatosDisponibles() {
-      if (!this.rangoValido) return [];
+      if (!this.resumenCargado || !this.fechaInicioConsulta || !this.fechaFinConsulta) return [];
       return getEligibleFacturadosByDate(this.encuestasRaw, {
-        fechaInicio: this.fechaInicio,
-        fechaFin: this.fechaFin,
+        fechaInicio: this.fechaInicioConsulta,
+        fechaFin: this.fechaFinConsulta,
       });
     },
     totalCandidatosRango() {
@@ -337,7 +436,48 @@ export default {
       return this.candidatosDisponibles.slice(0, 20);
     },
     puedeIniciarProceso() {
-      return this.rangoValido && Number.isFinite(this.lotePacientes) && Number(this.lotePacientes) > 0 && this.totalCandidatosRango > 0;
+      return this.resumenCargado && !this.filtrosConsultaPendientes && this.rangoValido && Number.isFinite(this.lotePacientes) && Number(this.lotePacientes) > 0 && this.totalCandidatosRango > 0;
+    },
+    puedeRestaurarArchivados() {
+      return !this.iniciandoProceso && !this.reparandoRespaldos && !this.restaurandoOriginales && Number(this.totalArchivados || 0) > 0;
+    },
+    mensajeEstadoRestauracion() {
+      if (this.restaurandoOriginales) {
+        return "La restauración está en curso. Puede seguir el avance en la barra de progreso.";
+      }
+
+      if (this.iniciandoProceso) {
+        return "La restauración está bloqueada mientras hay un vaciado en ejecución.";
+      }
+
+      if (this.reparandoRespaldos) {
+        return "La restauración está bloqueada mientras se reconstruyen respaldos.";
+      }
+
+      if (Number(this.totalArchivados || 0) <= 0) {
+        return "No hay registros en ArchivoPacientesRespaldo disponibles para restaurar.";
+      }
+
+      return `Listo para restaurar ${this.totalArchivados} registro(s) completos desde ArchivoPacientesRespaldo a las tablas originales.`;
+    },
+    mensajeEstadoConsulta() {
+      if (this.consultandoResumen) {
+        return "Consultando pacientes y resumen del archivo. Espere a que termine el proceso.";
+      }
+
+      if (!this.rangoValido) {
+        return "Defina una fecha inicial y final válidas antes de consultar pacientes.";
+      }
+
+      if (this.filtrosConsultaPendientes) {
+        return "Cambió el rango de fechas. Pulse 'Consultar pacientes' para actualizar la lista y los conteos.";
+      }
+
+      if (!this.resumenCargado) {
+        return "La consulta inicial no se ejecuta automáticamente. Use el botón 'Consultar pacientes'.";
+      }
+
+      return `Consulta cargada para el rango ${this.fechaInicioConsulta} a ${this.fechaFinConsulta}. Se detectaron ${this.totalCandidatosRango} paciente(s) elegibles.`;
     },
     porcentajeTrabajo() {
       if (!this.trabajoActual) return 0;
@@ -424,6 +564,324 @@ export default {
       if (Number.isNaN(fecha.getTime())) return value;
       return fecha.toLocaleString("es-CO");
     },
+    escaparCsv(value) {
+      const text = String(value ?? "").replace(/"/g, '""');
+      return `"${text}"`;
+    },
+    exportarConflictosCsv() {
+      const conflicts = Array.isArray(this.trabajoActual?.conflicts) ? this.trabajoActual.conflicts : [];
+      if (!conflicts.length) {
+        this.mensajeFormulario = "No hay conflictos para exportar.";
+        return;
+      }
+
+      const headers = ["encuestaId", "tipo", "ruta", "mensaje"];
+      const rows = conflicts.map((conflict) => ([
+        conflict.encuestaId || "",
+        conflict.type || "",
+        conflict.path || "",
+        conflict.message || "",
+      ].map((value) => this.escaparCsv(value)).join(",")));
+
+      const csv = [headers.join(","), ...rows].join("\n");
+      const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `conflictos_restauracion_${new Date().toISOString().slice(0, 19).replace(/[:T]/g, "-")}.csv`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    },
+    tieneValorReconstruccion(value) {
+      if (value === true || value === false) return true;
+      if (typeof value === "number") return !Number.isNaN(value);
+      if (Array.isArray(value)) return value.length > 0;
+      if (value && typeof value === "object") return Object.keys(value).length > 0;
+      return String(value ?? "").trim() !== "";
+    },
+    mergeEstructuraIncompleta(actual, respaldo) {
+      const actualEsObjeto = actual && typeof actual === "object" && !Array.isArray(actual);
+      const respaldoEsObjeto = respaldo && typeof respaldo === "object" && !Array.isArray(respaldo);
+
+      if (Array.isArray(actual) || Array.isArray(respaldo)) {
+        return this.tieneValorReconstruccion(actual) ? actual : (Array.isArray(respaldo) ? respaldo : actual);
+      }
+
+      if (actualEsObjeto || respaldoEsObjeto) {
+        const actualObj = actualEsObjeto ? actual : {};
+        const respaldoObj = respaldoEsObjeto ? respaldo : {};
+        const keys = new Set([...Object.keys(respaldoObj), ...Object.keys(actualObj)]);
+
+        return Array.from(keys).reduce((acc, key) => {
+          acc[key] = this.mergeEstructuraIncompleta(actualObj[key], respaldoObj[key]);
+          return acc;
+        }, {});
+      }
+
+      return this.tieneValorReconstruccion(actual) ? actual : respaldo;
+    },
+    normalizarClaveReconstruccion(value, fallback = "item") {
+      const normalized = String(value || "")
+        .trim()
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/[^a-z0-9]+/g, "_")
+        .replace(/^_+|_+$/g, "");
+
+      return normalized || fallback;
+    },
+    normalizarFacturadoReconstruccion(value) {
+      if (value === true || value === false) return value;
+      const normalized = String(value ?? "").trim().toLowerCase();
+      if (["si", "sí", "true", "1"].includes(normalized)) return true;
+      if (["no", "false", "0"].includes(normalized)) return false;
+      return "";
+    },
+    esCupHojaReconstruccion(value) {
+      return !!(
+        value &&
+        typeof value === "object" &&
+        ("actividadId" in value ||
+          "idActividad" in value ||
+          "cupsNombre" in value ||
+          "DescripcionCUP" in value ||
+          "codigo" in value ||
+          "FactNum" in value)
+      );
+    },
+    flattenCupsReconstruccion(cupsNode, parentContext = {}) {
+      return Object.entries(cupsNode && typeof cupsNode === "object" ? cupsNode : {}).flatMap(([storageKey, value]) => {
+        if (!value || typeof value !== "object") {
+          return [];
+        }
+
+        if (this.esCupHojaReconstruccion(value)) {
+          return [{
+            storageKey,
+            value: {
+              ...value,
+              key: value?.key || parentContext?.key || "",
+              nombreProf: value?.nombreProf || value?.nombrePtof || value?.nombre || parentContext?.nombreProf || "",
+            },
+          }];
+        }
+
+        const nextContext = {
+          key: parentContext?.key || storageKey || "",
+          nombreProf: parentContext?.nombreProf || value?.nombreProf || value?.nombrePtof || value?.nombre || "",
+        };
+
+        return this.flattenCupsReconstruccion(value, nextContext);
+      });
+    },
+    crearClaveLogicaActividad(actividad = {}) {
+      return [
+        this.normalizarClaveReconstruccion(actividad?.key || ""),
+        this.normalizarClaveReconstruccion(actividad?.nombre || actividad?.descripcion || ""),
+      ].join("|");
+    },
+    crearClaveLogicaCup(cup = {}) {
+      return [
+        this.normalizarClaveReconstruccion(cup?.actividadId || cup?.idActividad || "", "actividad"),
+        this.normalizarClaveReconstruccion(cup?.codigo || cup?.cupsId || cup?.id || cup?.Homolog || cup?.homolog || "", "codigo"),
+        this.normalizarClaveReconstruccion(cup?.cupsNombre || cup?.DescripcionCUP || "", "cups"),
+        this.normalizarClaveReconstruccion(cup?.key || cup?.rol || "", "rol"),
+        this.normalizarClaveReconstruccion(cup?.nombreProf || cup?.nombrePtof || cup?.nombre || "", "profesional"),
+        this.normalizarClaveReconstruccion(cup?.FactNum || cup?.factura || "", "factura"),
+      ].join("|");
+    },
+    fusionarActividadesReconstruidas(actual = {}, reconstruidas = {}) {
+      const actualBase = actual && typeof actual === "object" ? actual : {};
+      const reconstruidasBase = reconstruidas && typeof reconstruidas === "object" ? reconstruidas : {};
+      const actividadesActuales = actualBase?.tipoActividad && typeof actualBase.tipoActividad === "object" ? actualBase.tipoActividad : {};
+      const actividadesReconstruidas = reconstruidasBase?.tipoActividad && typeof reconstruidasBase.tipoActividad === "object" ? reconstruidasBase.tipoActividad : {};
+      const mergedTipoActividad = {};
+      const activityKeyMap = new Map();
+
+      Object.entries(actividadesActuales).forEach(([key, value]) => {
+        const logicalKey = this.crearClaveLogicaActividad({ key, ...(value || {}) });
+        const existingKey = activityKeyMap.get(logicalKey) || key;
+        mergedTipoActividad[existingKey] = this.mergeEstructuraIncompleta(mergedTipoActividad[existingKey], {
+          ...(value || {}),
+          key: existingKey,
+        });
+        activityKeyMap.set(logicalKey, existingKey);
+      });
+
+      Object.entries(actividadesReconstruidas).forEach(([key, value]) => {
+        const logicalKey = this.crearClaveLogicaActividad({ key, ...(value || {}) });
+        const existingKey = activityKeyMap.get(logicalKey) || key;
+        mergedTipoActividad[existingKey] = this.mergeEstructuraIncompleta(mergedTipoActividad[existingKey], {
+          ...(value || {}),
+          key: existingKey,
+        });
+        activityKeyMap.set(logicalKey, existingKey);
+      });
+
+      return this.mergeEstructuraIncompleta(actualBase, {
+        ...reconstruidasBase,
+        tipoActividad: mergedTipoActividad,
+      });
+    },
+    fusionarAsignacionesReconstruidas(actual = {}, reconstruidas = {}) {
+      const actualBase = actual && typeof actual === "object" ? actual : {};
+      const reconstruidasBase = reconstruidas && typeof reconstruidas === "object" ? reconstruidas : {};
+      const actualFlattened = this.flattenCupsReconstruccion(actualBase.cups || {});
+      const reconstruidasFlattened = this.flattenCupsReconstruccion(reconstruidasBase.cups || {});
+      const mergedCups = {};
+      const cupKeyMap = new Map();
+
+      actualFlattened.forEach(({ storageKey, value }) => {
+        const logicalKey = this.crearClaveLogicaCup(value || {});
+        const targetKey = cupKeyMap.get(logicalKey) || storageKey;
+        mergedCups[targetKey] = this.mergeEstructuraIncompleta(mergedCups[targetKey], value);
+        cupKeyMap.set(logicalKey, targetKey);
+      });
+
+      reconstruidasFlattened.forEach(({ storageKey, value }) => {
+        const logicalKey = this.crearClaveLogicaCup(value || {});
+        const targetKey = cupKeyMap.get(logicalKey) || storageKey;
+        mergedCups[targetKey] = this.mergeEstructuraIncompleta(mergedCups[targetKey], value);
+        cupKeyMap.set(logicalKey, targetKey);
+      });
+
+      return this.mergeEstructuraIncompleta(actualBase, {
+        ...reconstruidasBase,
+        cups: mergedCups,
+      });
+    },
+    obtenerIdActividadReconstruccion(row, encuestaId, index) {
+      const explicitId = String(row?.actividadId || row?.idActividad || "").trim();
+      if (explicitId) return explicitId;
+
+      const rowKey = String(row?.rowKey || "").trim();
+      if (rowKey && rowKey.startsWith(`${encuestaId}-`)) {
+        const parts = rowKey.split("-");
+        if (parts[1] && !["sin", "fallback", "stored"].includes(parts[1])) {
+          return parts[1];
+        }
+      }
+
+      return this.normalizarClaveReconstruccion(row?.actividad || "", `actividad_${index + 1}`);
+    },
+    construirFilasReconstruccion(entry, facturadosPorEncuesta = []) {
+      const reportes = entry?.reportes && typeof entry.reportes === "object" ? entry.reportes : {};
+      const seguimiento = Array.isArray(reportes.seguimiento) ? reportes.seguimiento : [];
+      const actividades = Array.isArray(reportes.actividades) ? reportes.actividades : [];
+
+      return [...seguimiento, ...actividades, ...(Array.isArray(facturadosPorEncuesta) ? facturadosPorEncuesta : [])]
+        .filter((row) => row && typeof row === "object");
+    },
+    obtenerEncuestaArchivada(entry) {
+      const encuesta = entry?.encuesta ?? entry?.encuestas ?? entry?.Encuesta ?? entry?.Encuestas;
+      return encuesta && typeof encuesta === "object" ? encuesta : {};
+    },
+    obtenerActividadesArchivadas(entry) {
+      const actividades = entry?.actividades ?? entry?.actividad ?? entry?.Actividades ?? entry?.Actividad;
+      return actividades && typeof actividades === "object" ? actividades : {};
+    },
+    obtenerAsignacionesArchivadas(entry) {
+      const asignaciones = entry?.asignaciones ?? entry?.asignacion ?? entry?.Asignaciones ?? entry?.Asignacion;
+      return asignaciones && typeof asignaciones === "object" ? asignaciones : {};
+    },
+    construirEncuestaReconstruida(entry, filas = []) {
+      const encuesta = this.obtenerEncuestaArchivada(entry);
+      const encuestaId = String(entry?.idEncuesta || encuesta?.id || entry?.id || "").trim();
+      const firstRow = filas[0] || {};
+      const documento = String(firstRow.documento || "");
+      const [tipodoc, ...numdocParts] = documento.split("-");
+      const riesgo = String(firstRow.riesgo || "").trim();
+
+      return this.mergeEstructuraIncompleta(encuesta, {
+        id: encuestaId,
+        idEncuesta: encuestaId,
+        tipodoc: tipodoc || "",
+        numdoc: numdocParts.join("-") || "",
+        nombre1: encuesta?.nombre1 || String(firstRow.paciente || "").trim(),
+        convenio: firstRow.convenio || "",
+        grupo: firstRow.grupo || "",
+        sexo: firstRow.sexo || "",
+        fechaNac: firstRow.fechaNac || "",
+        eps: firstRow.eps || "",
+        regimen: firstRow.regimen || "",
+        direccion: firstRow.direccion || "",
+        barrioVeredacomuna: {
+          barrio: firstRow.barrio || "",
+          comuna: firstRow.comuna || "",
+        },
+        fecha: firstRow.fecha || "",
+        FechaFacturacion: firstRow.fechaFacturacion || "",
+        requiereRemision: firstRow.remision || "",
+        poblacionRiesgo: riesgo ? riesgo.split(",").map((item) => item.trim()).filter(Boolean) : [],
+      });
+    },
+    construirActividadesReconstruidas(entry, filas = []) {
+      const actividadesActuales = this.obtenerActividadesArchivadas(entry);
+      const encuesta = this.obtenerEncuestaArchivada(entry);
+      const encuestaId = String(entry?.idEncuesta || encuesta?.id || entry?.id || "").trim();
+      const tipoActividad = {};
+
+      filas.forEach((row, index) => {
+        const nombreActividad = String(row?.actividad || "").trim();
+        if (!nombreActividad || nombreActividad === "Sin actividades") return;
+
+        const actividadId = this.obtenerIdActividadReconstruccion(row, encuestaId, index);
+        tipoActividad[actividadId] = this.mergeEstructuraIncompleta(tipoActividad[actividadId], {
+          key: actividadId,
+          nombre: nombreActividad,
+          descripcion: nombreActividad,
+        });
+      });
+
+      return this.mergeEstructuraIncompleta(actividadesActuales, { tipoActividad });
+    },
+    construirAsignacionesReconstruidas(entry, filas = []) {
+      const asignacionesActuales = this.obtenerAsignacionesArchivadas(entry);
+      const encuesta = this.obtenerEncuestaArchivada(entry);
+      const encuestaId = String(entry?.idEncuesta || encuesta?.id || entry?.id || "").trim();
+      const convenio = encuesta?.convenio || "";
+      const cups = {};
+
+      filas.forEach((row, index) => {
+        const cupsNombre = String(row?.cupsNombre || row?.procedimiento || row?.descripcionCUP || "").trim();
+        const actividad = String(row?.actividad || "").trim();
+        if (!actividad || actividad === "Sin actividades" || !cupsNombre || cupsNombre === "Sin asignaciones") {
+          return;
+        }
+
+        const actividadId = this.obtenerIdActividadReconstruccion(row, encuestaId, index);
+        const cupKey = `rebuild_${String(index).padStart(4, "0")}`;
+        const cupId = String(row?.codigo || row?.homolog || this.normalizarClaveReconstruccion(cupsNombre, `cup_${index + 1}`));
+
+        cups[cupKey] = {
+          id: cupId,
+          cupsId: cupId,
+          actividadId,
+          key: row?.rol || "",
+          nombreProf: row?.profesional || "",
+          codigo: row?.codigo || cupId,
+          cupsNombre,
+          DescripcionCUP: row?.descripcionCUP || cupsNombre,
+          cantidad: row?.cantidad ?? "",
+          detalle: row?.detalle || "",
+          Grupo: row?.grupoCUP || "",
+          FactNum: row?.factura || "",
+          Homolog: row?.homolog || "",
+          fechaFacturacion: row?.fechaFactCUP || row?.fechaFacturacion || "",
+          facturado: this.normalizarFacturadoReconstruccion(row?.facturado),
+          convenio: row?.convenio || convenio,
+        };
+      });
+
+      return this.mergeEstructuraIncompleta(asignacionesActuales, {
+        idEncuesta: encuestaId,
+        convenio,
+        cups,
+      });
+    },
     nombrePaciente(encuesta) {
       return `${encuesta?.nombre1 || ""} ${encuesta?.nombre2 || ""} ${encuesta?.apellido1 || ""} ${encuesta?.apellido2 || ""}`
         .replace(/\s+/g, " ")
@@ -458,7 +916,27 @@ export default {
       this.trabajoActualId = "";
     },
     async actualizarPanel() {
-      await this.cargarResumenBase();
+      await this.consultarResumenPacientes();
+    },
+    async consultarResumenPacientes() {
+      if (!this.rangoValido || this.consultandoResumen) {
+        return;
+      }
+
+      this.consultandoResumen = true;
+      this.mensajeFormulario = "";
+
+      try {
+        await this.cargarResumenBase();
+        this.fechaInicioConsulta = this.fechaInicio;
+        this.fechaFinConsulta = this.fechaFin;
+        this.resumenCargado = true;
+      } catch (error) {
+        this.resumenCargado = false;
+        this.mensajeFormulario = error?.message || "No fue posible consultar los pacientes.";
+      } finally {
+        this.consultandoResumen = false;
+      }
     },
     async reconstruirRespaldosArchivados() {
       this.reparandoRespaldos = true;
@@ -587,7 +1065,7 @@ export default {
         }
 
         this.limpiarCachesOperativas();
-        await this.cargarResumenBase();
+        await this.consultarResumenPacientes();
 
         this.actualizarTrabajoActual({
           status: errores.length ? "completed_with_errors" : "completed",
@@ -614,6 +1092,190 @@ export default {
         this.mensajeFormulario = error?.message || "No fue posible reconstruir los respaldos archivados.";
       } finally {
         this.reparandoRespaldos = false;
+      }
+    },
+    async restaurarArchivadosATablasOriginales() {
+      this.restaurandoOriginales = true;
+      this.mensajeFormulario = "";
+
+      try {
+        const [{ data: archiveData }, { data: facturadosData }] = await Promise.all([
+          firebase_api.get(`${ARCHIVE_BACKUP_PATH}.json`),
+          firebase_api.get("/Facturados.json"),
+        ]);
+        const archiveEntries = normalizeFacturados(archiveData || {});
+        const facturadosPorEncuesta = Object.entries(facturadosData || {})
+          .filter(([key]) => !String(key).startsWith("__"))
+          .reduce((acc, [, value]) => {
+            const encuestaId = String(value?.idEncuesta || "").trim();
+            if (!encuestaId) return acc;
+            if (!acc[encuestaId]) {
+              acc[encuestaId] = [];
+            }
+            acc[encuestaId].push(value || {});
+            return acc;
+          }, {});
+
+        if (!archiveEntries.length) {
+          this.mensajeFormulario = "No hay respaldos archivados para restaurar.";
+          return;
+        }
+
+        this.trabajoActualId = `restore_${new Date().toISOString().replace(/[:.]/g, "-")}`;
+        this.trabajoActual = {
+          status: "running",
+          requestedAt: new Date().toISOString(),
+          startedAt: new Date().toISOString(),
+          finishedAt: "",
+          processedCount: 0,
+          remainingCount: archiveEntries.length,
+          totalSelected: archiveEntries.length,
+          errorCount: 0,
+          conflictCount: 0,
+          conflicts: [],
+          errors: [],
+          currentEncuestaId: "",
+          message: `Restaurando ${archiveEntries.length} respaldo(s) a tablas originales.`,
+        };
+
+        const errores = [];
+        const conflictos = [];
+        const restaurados = [];
+
+        for (let index = 0; index < archiveEntries.length; index += 1) {
+          const entry = archiveEntries[index];
+          const encuestaId = String(entry?.idEncuesta || entry?.encuesta?.id || entry?.id || "").trim();
+
+          this.actualizarTrabajoActual({
+            currentEncuestaId: encuestaId,
+            message: `Restaurando ${index + 1} de ${archiveEntries.length}: ${encuestaId || "sin-id"}`,
+          });
+
+          try {
+            if (!encuestaId) {
+              throw new Error("Respaldo sin idEncuesta válido.");
+            }
+
+            const filasReconstruccion = this.construirFilasReconstruccion(entry, facturadosPorEncuesta[encuestaId] || []);
+            const encuestaReconstruida = this.construirEncuestaReconstruida(entry, filasReconstruccion);
+            const actividadesReconstruidas = this.construirActividadesReconstruidas(entry, filasReconstruccion);
+            const asignacionesReconstruidas = this.construirAsignacionesReconstruidas(entry, filasReconstruccion);
+
+            if (!encuestaReconstruida || !this.tieneValorReconstruccion(encuestaReconstruida)) {
+              throw new Error("El respaldo no contiene datos de encuesta.");
+            }
+
+            const [encuestaActualResp, actividadesActualResp, asignacionesActualResp] = await Promise.all([
+              firebase_api.get(`/Encuesta/${encuestaId}.json`),
+              firebase_api.get(`/Actividades/${encuestaId}.json`),
+              firebase_api.get(`/Asignaciones/${encuestaId}.json`),
+            ]);
+
+            const conflictosActuales = [];
+
+            if (encuestaActualResp.data && typeof encuestaActualResp.data === "object") {
+              conflictosActuales.push({
+                encuestaId,
+                type: "encuesta-existente",
+                path: `/Encuesta/${encuestaId}`,
+                message: "Ya existía un registro en Encuesta; se completó la información faltante desde el archivo.",
+              });
+            }
+
+            if (actividadesActualResp.data && typeof actividadesActualResp.data === "object") {
+              conflictosActuales.push({
+                encuestaId,
+                type: "actividades-existentes",
+                path: `/Actividades/${encuestaId}`,
+                message: "Ya existían actividades en la tabla original; se completó la información faltante desde el archivo.",
+              });
+            }
+
+            if (asignacionesActualResp.data && typeof asignacionesActualResp.data === "object") {
+              conflictosActuales.push({
+                encuestaId,
+                type: "asignaciones-existentes",
+                path: `/Asignaciones/${encuestaId}`,
+                message: "Ya existían asignaciones en la tabla original; se completó la información faltante desde el archivo.",
+              });
+            }
+
+            if (conflictosActuales.length) {
+              conflictos.push(...conflictosActuales);
+            }
+
+            const encuesta = this.mergeEstructuraIncompleta(encuestaActualResp.data || {}, encuestaReconstruida);
+            const actividades = this.fusionarActividadesReconstruidas(actividadesActualResp.data || {}, actividadesReconstruidas);
+            const asignaciones = this.fusionarAsignacionesReconstruidas(asignacionesActualResp.data || {}, asignacionesReconstruidas);
+
+            const requests = [
+              firebase_api.put(`/Encuesta/${encuestaId}.json`, encuesta),
+            ];
+
+            if (this.tieneValorReconstruccion(actividades)) {
+              requests.push(firebase_api.put(`/Actividades/${encuestaId}.json`, actividades));
+            }
+
+            if (this.tieneValorReconstruccion(asignaciones)) {
+              requests.push(firebase_api.put(`/Asignaciones/${encuestaId}.json`, asignaciones));
+            }
+
+            await Promise.all(requests);
+            restaurados.push(encuestaId);
+
+            this.actualizarTrabajoActual({
+              processedCount: index + 1,
+              remainingCount: archiveEntries.length - (index + 1),
+              conflictCount: conflictos.length,
+              conflicts: [...conflictos],
+            });
+          } catch (error) {
+            errores.push({
+              encuestaId: encuestaId || `sin-id-${index + 1}`,
+              message: error?.message || "Error desconocido",
+            });
+
+            this.actualizarTrabajoActual({
+              errorCount: errores.length,
+              errors: [...errores],
+              processedCount: index + 1,
+              remainingCount: archiveEntries.length - (index + 1),
+              conflictCount: conflictos.length,
+              conflicts: [...conflictos],
+            });
+          }
+        }
+
+        this.limpiarCachesOperativas();
+        await this.consultarResumenPacientes();
+
+        this.actualizarTrabajoActual({
+          status: errores.length || conflictos.length ? "completed_with_errors" : "completed",
+          finishedAt: new Date().toISOString(),
+          currentEncuestaId: "",
+          errorCount: errores.length,
+          conflictCount: conflictos.length,
+          conflicts: [...conflictos],
+          errors: [...errores],
+          message: errores.length || conflictos.length
+            ? `Restauración finalizada con ${errores.length} error(es) y ${conflictos.length} conflicto(s).`
+            : `Se restauraron ${restaurados.length} respaldo(s) a tablas originales.`,
+        });
+
+        this.mensajeFormulario = errores.length || conflictos.length
+          ? `La restauración terminó con ${errores.length} error(es) y ${conflictos.length} conflicto(s). Revise el panel de proceso.`
+          : `Restauración completada. Registros restaurados: ${restaurados.length}. El archivo se conserva intacto.`;
+      } catch (error) {
+        console.error("Error restaurando archivados a tablas originales:", error);
+        this.actualizarTrabajoActual({
+          status: "error",
+          finishedAt: new Date().toISOString(),
+          currentEncuestaId: "",
+          message: error?.message || "No fue posible restaurar los archivados a tablas originales.",
+        });
+        this.mensajeFormulario = error?.message || "No fue posible restaurar los archivados a tablas originales.";
+      } finally {
+        this.restaurandoOriginales = false;
       }
     },
     async cargarResumenBase() {
@@ -663,7 +1325,7 @@ export default {
       this.mensajeFormulario = "";
 
       try {
-        await this.cargarResumenBase();
+        await this.consultarResumenPacientes();
 
         const seleccionados = this.candidatosDisponibles.slice(0, Number(this.lotePacientes));
         if (!seleccionados.length) {
@@ -800,7 +1462,6 @@ export default {
     await this.migrarNodosLegados();
     await this.limpiarHistorialProcesos();
     await this.asegurarNodosArchivo();
-    await this.cargarResumenBase();
   },
 };
 </script>

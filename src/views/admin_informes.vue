@@ -24,7 +24,7 @@
                     <i class="bi bi-database-fill-gear"></i> Ir a Archivo de facturación
                 </button>
             </div>
-            <div v-if="tieneDatosTabla" class="mb-3">
+            <div v-if="tieneDatosTablaOInforme6" class="mb-3">
                 <button type="button" class="btn btn-primary" @click="parametrizarNuevoInforme">
                     <i class="bi bi-sliders"></i> Parametrizar nuevo informe
                 </button>
@@ -40,27 +40,30 @@
                         <option value="1">Seguimiento</option>
                         <option value="2">Actividades</option>
                         <option value="3">Pendientes enfermería</option>
+                        <option value="4">Sin datos de facturación</option>
+                        <option value="5">Sin cierre de facturación (facturación)</option>
+                        <option value="6">Facturación CUPS (por facturado en asignaciones)</option>
                     </select>
                     <br>
 
                 </div>
 
-                <div class="col-6 col-md-2" v-if="tipoinforme == '1' || tipoinforme == '2' || tipoinforme == '3'">
+                <div class="col-6 col-md-2" v-if="tipoinforme == '1' || tipoinforme == '2' || tipoinforme == '3' || tipoinforme == '4' || tipoinforme == '5' || tipoinforme == '6'">
                     <label for="fechaInicio" class="form-label">Fecha de Inicio</label>
                     <input type="date" id="fechaInicio" class="form-control" v-model="fechaInicio" required />
                 </div>
-                <div class="col-6 col-md-2" v-if="tipoinforme == '1' || tipoinforme == '2' || tipoinforme == '3'">
+                <div class="col-6 col-md-2" v-if="tipoinforme == '1' || tipoinforme == '2' || tipoinforme == '3' || tipoinforme == '4' || tipoinforme == '5' || tipoinforme == '6'">
                     <label for="fechaFin" class="form-label">Fecha de Fin</label>
                     <input type="date" id="fechaFin" class="form-control" v-model="fechaFin" required />
                 </div>
-                <div class="col-12 col-md-3" v-if="tipoinforme == '1' || tipoinforme == '2' || tipoinforme == '3'">
+                <div class="col-12 col-md-3" v-if="tipoinforme == '1' || tipoinforme == '2' || tipoinforme == '3' || tipoinforme == '4' || tipoinforme == '5' || tipoinforme == '6'">
                     <label for="convenioInforme" class="form-label">Convenio</label>
                     <select id="convenioInforme" class="form-select" v-model="convenioInforme">
                         <option value="">Todos</option>
                         <option v-for="conv in conveniosDisponibles" :key="conv" :value="conv">{{ conv }}</option>
                     </select>
                 </div>
-                <div class="col-12 col-md-2 mt-3" v-if="tipoinforme == '1' || tipoinforme == '2' || tipoinforme == '3'">
+                <div class="col-12 col-md-2 mt-3" v-if="tipoinforme == '1' || tipoinforme == '2' || tipoinforme == '3' || tipoinforme == '4' || tipoinforme == '5' || tipoinforme == '6'">
                     <button type="button" class="btn btn-warning  mt-3" @click="generarInforme()" :disabled="cargandoInforme">
                         <i class="bi bi-clipboard2-data h6"></i> Generar Informe
                     </button>
@@ -87,6 +90,9 @@
                 fechas seleccionadas</p>
             <p v-if="mostrarFormulario && !tieneDatosTabla && tipoinforme == '2'">*Todas las encuestas registradas entre las fechas seleccionadas, con sus actividades y datos del paciente</p>
             <p v-if="mostrarFormulario && !tieneDatosTabla && tipoinforme == '3'">*Pacientes registrados en el rango seleccionado que siguen pendientes de cierre por enfermería, con resumen por enfermero asignado</p>
+            <p v-if="mostrarFormulario && !tieneDatosTabla && tipoinforme == '4'">*Pacientes registrados en Encuesta que no tienen datos de facturación. Si no selecciona fechas, consulta todas las encuestas.</p>
+            <p v-if="mostrarFormulario && !tieneDatosTabla && tipoinforme == '5'">*Pacientes registrados en el rango (fecha de registro) que aún no tienen cierre de facturación por el área de facturación. Una fila por CUPS. «Fact. parcial» es Sí si ya hay al menos un CUPS con número de factura asignado.</p>
+            <p v-if="mostrarFormulario && !tieneDatosTablaOInforme6 && tipoinforme == '6'">*Pacientes registrados en el rango (fecha de registro) con CUPS en asignaciones. Facturado: todos los CUPS con <code>facturado = true</code>. No facturado: al menos un CUPS con <code>facturado = false</code> o sin marcar. Dos listados y contadores de pacientes en cada grupo.</p>
 
         </div>
         <br>
@@ -97,7 +103,15 @@
                     class="badge bg-secondary">
                     {{ parametro }}
                 </span>
-                <span v-if="tieneDatosTabla" class="badge bg-info text-dark">
+                <template v-if="mostrarResumenPendientesFacturaInforme6">
+                    <span class="badge bg-info text-dark">
+                        Facturados: {{ filasMuestraTabla.length }} / {{ filasFiltradasOrdenadas.length }} filas
+                    </span>
+                    <span class="badge bg-info text-dark">
+                        No facturados: {{ filasMuestraTablaNoFact.length }} / {{ filasFiltradasOrdenadasNoFact.length }} filas
+                    </span>
+                </template>
+                <span v-else-if="tieneDatosTabla" class="badge bg-info text-dark">
                     Mostrando {{ filasMuestraTabla.length }} de {{ filasFiltradasOrdenadas.length }} filas
                 </span>
             </div>
@@ -148,30 +162,42 @@
                 </div>
             </div>
 
-            <button v-if="tieneDatosTabla" class="btn btn-outline-success mb-2" @click="exportarExcelFiltrado">
-                <i class="bi bi-file-earmark-excel"></i> Exportar Excel
-            </button>
-            <div v-if="tieneDatosTabla">
-                <div class="top-scrollbar" ref="topScrollbar" @scroll="onTopScroll">
-                    <div class="top-scrollbar-content" :style="{ width: `${anchoTabla}px` }"></div>
+            <template v-if="mostrarResumenPendientesFacturaInforme6">
+                <div class="row g-2 mb-3">
+                    <div class="col-12 col-md-6">
+                        <div class="alert alert-success mb-0">
+                            <div class="fw-semibold">Pacientes facturados (todos los CUPS con facturado = true)</div>
+                            <div class="fs-4">{{ conteoPacientesFacturadosInforme6 }}</div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-6">
+                        <div class="alert alert-warning mb-0">
+                            <div class="fw-semibold">Pacientes no facturados (con CUPS pendientes)</div>
+                            <div class="fs-4">{{ conteoPacientesNoFacturadosInforme6 }}</div>
+                        </div>
+                    </div>
                 </div>
-                <div class="table-responsive tabla-wrapper mb-4" ref="tablaHtml" @scroll="onTableScroll">
 
-                    <table class="table table-bordered table-striped table-sm align-middle mb-4">
+                <h6 class="mb-2">Listado — pacientes facturados</h6>
+                <button type="button" class="btn btn-outline-success mb-2 me-2" @click="exportarExcelFiltrado">
+                    <i class="bi bi-file-earmark-excel"></i> Exportar facturados
+                </button>
+                <div class="table-responsive tabla-wrapper mb-4" ref="tablaHtml" @scroll="onTableScroll">
+                    <table class="table table-bordered table-striped table-sm align-middle mb-0">
                         <thead class="table-light">
                             <tr>
-                                <th v-for="col in columnasTabla" :key="`head-${col.key}`" class="sticky-head sort-head"
+                                <th v-for="col in columnasTabla" :key="`fac-head-${col.key}`" class="sticky-head sort-head"
                                     @click="ordenarPor(col.key)">
                                     {{ col.label }}
                                     <span v-if="sortKey === col.key">{{ sortDirection === 'asc' ? '▲' : '▼' }}</span>
                                 </th>
                             </tr>
                             <tr>
-                                <th v-for="col in columnasTabla" :key="`filter-${col.key}`" class="sticky-filter">
+                                <th v-for="col in columnasTabla" :key="`fac-filter-${col.key}`" class="sticky-filter">
                                     <select v-model="filtros[col.key]" class="form-select form-select-sm" @click.stop>
                                         <option value="">Todos</option>
                                         <option v-for="opcion in opcionesFiltroPorColumna[col.key] || []"
-                                            :key="`${col.key}-${opcion}`" :value="opcion">
+                                            :key="`fac-${col.key}-${opcion}`" :value="opcion">
                                             {{ opcion }}
                                         </option>
                                     </select>
@@ -179,17 +205,94 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <tr v-for="(fila, idx) in filasMuestraTabla" :key="fila.rowKey || idx">
-                                <td v-for="col in columnasTabla" :key="`${fila.rowKey || idx}-${col.key}`">{{
+                            <tr v-for="(fila, idx) in filasMuestraTabla" :key="fila.rowKey || `fac-${idx}`">
+                                <td v-for="col in columnasTabla" :key="`fac-${fila.rowKey || idx}-${col.key}`">{{
                                     fila[col.key] }}</td>
                             </tr>
                         </tbody>
                     </table>
                 </div>
-            </div>
-            <div v-else class="alert alert-secondary">
-                No hay datos cargados para el informe.
-            </div>
+
+                <h6 class="mb-2 mt-4">Listado — pacientes no facturados</h6>
+                <button type="button" class="btn btn-outline-success mb-2" @click="exportarExcelNoFacturados">
+                    <i class="bi bi-file-earmark-excel"></i> Exportar no facturados
+                </button>
+                <div class="table-responsive tabla-wrapper mb-4" ref="tablaHtmlNoFact">
+                    <table class="table table-bordered table-striped table-sm align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th v-for="col in columnasTablaNoFacturados" :key="`nf-head-${col.key}`"
+                                    class="sticky-head sort-head" @click="ordenarPorNoFact(col.key)">
+                                    {{ col.label }}
+                                    <span v-if="sortKeyNoFact === col.key">{{ sortDirectionNoFact === 'asc' ? '▲' : '▼' }}</span>
+                                </th>
+                            </tr>
+                            <tr>
+                                <th v-for="col in columnasTablaNoFacturados" :key="`nf-filter-${col.key}`" class="sticky-filter">
+                                    <select v-model="filtrosNoFact[col.key]" class="form-select form-select-sm" @click.stop>
+                                        <option value="">Todos</option>
+                                        <option v-for="opcion in opcionesFiltroPorColumnaNoFact[col.key] || []"
+                                            :key="`nf-${col.key}-${opcion}`" :value="opcion">
+                                            {{ opcion }}
+                                        </option>
+                                    </select>
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="(fila, idx) in filasMuestraTablaNoFact" :key="fila.rowKey || `nf-${idx}`">
+                                <td v-for="col in columnasTablaNoFacturados" :key="`nf-${fila.rowKey || idx}-${col.key}`">{{
+                                    fila[col.key] }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </template>
+
+            <template v-else>
+                <button v-if="tieneDatosTabla" class="btn btn-outline-success mb-2" @click="exportarExcelFiltrado">
+                    <i class="bi bi-file-earmark-excel"></i> Exportar Excel
+                </button>
+                <div v-if="tieneDatosTabla">
+                    <div class="top-scrollbar" ref="topScrollbar" @scroll="onTopScroll">
+                        <div class="top-scrollbar-content" :style="{ width: `${anchoTabla}px` }"></div>
+                    </div>
+                    <div class="table-responsive tabla-wrapper mb-4" ref="tablaHtml" @scroll="onTableScroll">
+
+                        <table class="table table-bordered table-striped table-sm align-middle mb-4">
+                            <thead class="table-light">
+                                <tr>
+                                    <th v-for="col in columnasTabla" :key="`head-${col.key}`" class="sticky-head sort-head"
+                                        @click="ordenarPor(col.key)">
+                                        {{ col.label }}
+                                        <span v-if="sortKey === col.key">{{ sortDirection === 'asc' ? '▲' : '▼' }}</span>
+                                    </th>
+                                </tr>
+                                <tr>
+                                    <th v-for="col in columnasTabla" :key="`filter-${col.key}`" class="sticky-filter">
+                                        <select v-model="filtros[col.key]" class="form-select form-select-sm" @click.stop>
+                                            <option value="">Todos</option>
+                                            <option v-for="opcion in opcionesFiltroPorColumna[col.key] || []"
+                                                :key="`${col.key}-${opcion}`" :value="opcion">
+                                                {{ opcion }}
+                                            </option>
+                                        </select>
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr v-for="(fila, idx) in filasMuestraTabla" :key="fila.rowKey || idx">
+                                    <td v-for="col in columnasTabla" :key="`${fila.rowKey || idx}-${col.key}`">{{
+                                        fila[col.key] }}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div v-else class="alert alert-secondary">
+                    No hay datos cargados para el informe.
+                </div>
+            </template>
         </div>
 
     </div>
@@ -302,7 +405,7 @@
 <script>
 import firebase_api from "@/api/ApiFirebase.js";
 import { cacheManager } from "@/utils/cacheManager";
-import { fetchArchiveRows, getAssignmentBranch, extractActividadIdsFromAssignmentBranch } from "@/utils/facturadosArchive";
+import { getAssignmentBranch, extractActividadIdsFromAssignmentBranch } from "@/utils/facturadosArchive";
 import {
     mapState,
     mapActions
@@ -315,6 +418,7 @@ const COLUMNAS_INFORME = [
     { key: "paciente", label: "Paciente" },
     { key: "sexo", label: "Sexo" },
     { key: "documento", label: "Documento" },
+    { key: "telefono", label: "Teléfono" },
     { key: "fechaNac", label: "Fecha Nac." },
     { key: "eps", label: "EPS" },
     { key: "regimen", label: "Régimen" },
@@ -351,6 +455,7 @@ const COLUMNAS_ACTIVIDADES = [
     { key: "paciente", label: "Paciente" },
     { key: "sexo", label: "Sexo" },
     { key: "documento", label: "Documento" },
+    { key: "telefono", label: "Teléfono" },
     { key: "fechaNac", label: "Fecha Nac." },
     { key: "eps", label: "EPS" },
     { key: "regimen", label: "Régimen" },
@@ -387,6 +492,7 @@ const COLUMNAS_PENDIENTES_ENFERMERIA = [
     { key: "paciente", label: "Paciente" },
     { key: "sexo", label: "Sexo" },
     { key: "documento", label: "Documento" },
+    { key: "telefono", label: "Teléfono" },
     { key: "eps", label: "EPS" },
     { key: "riesgo", label: "Población Riesgo" },
     { key: "direccion", label: "Dirección" },
@@ -400,10 +506,139 @@ const COLUMNAS_PENDIENTES_ENFERMERIA = [
     { key: "remision", label: "Remisión" },
 ];
 
+const COLUMNAS_SIN_FACTURACION = [
+    { key: "convenio", label: "Convenio" },
+    { key: "origenDatos", label: "Origen BD" },
+    { key: "grupo", label: "Grupo" },
+    { key: "fecha", label: "Fecha registro" },
+    { key: "nombre1", label: "Nombre 1" },
+    { key: "nombre2", label: "Nombre 2" },
+    { key: "apellido1", label: "Apellido 1" },
+    { key: "apellido2", label: "Apellido 2" },
+    { key: "sexo", label: "Sexo" },
+    { key: "tipodoc", label: "Tipo documento" },
+    { key: "numdoc", label: "Documento" },
+    { key: "telefono", label: "Teléfono" },
+    { key: "fechaNac", label: "Fecha Nac." },
+    { key: "eps", label: "EPS" },
+    { key: "regimen", label: "Régimen" },
+    { key: "direccion", label: "Dirección" },
+    { key: "barrio", label: "Barrio" },
+    { key: "comuna", label: "Comuna" },
+    { key: "labVisit", label: "lab/visit" },
+    { key: "gestAux", label: "Gest. Aux" },
+    { key: "gestEnfermera", label: "Gest. Enfermera" },
+    { key: "gestMedica", label: "Gest. Médica" },
+    { key: "gestFacturacion", label: "Gest. Facturación" },
+    { key: "fechaFacturacion", label: "Fecha Facturación" },
+    { key: "remision", label: "Remisión" },
+];
+
+const COLUMNAS_SIN_CIERRE_FACTURACION = [
+    { key: "convenio", label: "Convenio" },
+    { key: "origenDatos", label: "Origen BD" },
+    { key: "grupo", label: "Grupo" },
+    { key: "fecha", label: "Fecha" },
+    { key: "paciente", label: "Paciente" },
+    { key: "sexo", label: "Sexo" },
+    { key: "documento", label: "Documento" },
+    { key: "telefono", label: "Teléfono" },
+    { key: "fechaNac", label: "Fecha Nac." },
+    { key: "eps", label: "EPS" },
+    { key: "regimen", label: "Régimen" },
+    { key: "direccion", label: "Dirección" },
+    { key: "barrio", label: "Barrio" },
+    { key: "comuna", label: "Comuna" },
+    { key: "labVisit", label: "lab/visit" },
+    { key: "gestAux", label: "Gest. Aux" },
+    { key: "gestEnfermera", label: "Gest. Enfermera" },
+    { key: "gestMedica", label: "Gest. Médica" },
+    { key: "fechaFacturacion", label: "Fecha cierre fact." },
+    { key: "incompleta", label: "Incompleta" },
+    { key: "riesgo", label: "Población Riesgo" },
+    { key: "remision", label: "Remisión" },
+    { key: "actividad", label: "Actividad" },
+    { key: "profesional", label: "Profesional CUPS" },
+    { key: "facturador", label: "Facturador" },
+    { key: "rol", label: "Rol" },
+    { key: "cupsNombre", label: "CUPS Nombre" },
+    { key: "codigo", label: "Código" },
+    { key: "descripcionCUP", label: "Descripción CUP" },
+    { key: "cantidad", label: "Cantidad" },
+    { key: "detalle", label: "Detalle" },
+    { key: "grupoCUP", label: "Grupo CUP" },
+    { key: "factura", label: "Factura" },
+    { key: "homolog", label: "Homolog" },
+    { key: "fechaFactCUP", label: "Fecha Fact. CUP" },
+    { key: "facturado", label: "Facturado" },
+];
+
+const COLUMNAS_FACTURACION_COMPLETA = [
+    { key: "convenio", label: "Convenio" },
+    { key: "origenDatos", label: "Origen BD" },
+    { key: "grupo", label: "Grupo" },
+    { key: "fecha", label: "Fecha registro" },
+    { key: "paciente", label: "Paciente" },
+    { key: "sexo", label: "Sexo" },
+    { key: "documento", label: "Documento" },
+    { key: "telefono", label: "Teléfono" },
+    { key: "fechaNac", label: "Fecha Nac." },
+    { key: "eps", label: "EPS" },
+    { key: "regimen", label: "Régimen" },
+    { key: "direccion", label: "Dirección" },
+    { key: "barrio", label: "Barrio" },
+    { key: "comuna", label: "Comuna" },
+    { key: "labVisit", label: "lab/visit" },
+    { key: "gestAux", label: "Gest. Aux" },
+    { key: "gestEnfermera", label: "Gest. Enfermera" },
+    { key: "gestMedica", label: "Gest. Médica" },
+    { key: "fechaFacturacion", label: "Fecha cierre fact." },
+    { key: "remision", label: "Remisión" },
+    { key: "sumaCantidadCupsFacturados", label: "Σ Cant. CUPS facturados" },
+];
+
+const COLUMNAS_PACIENTES_NO_FACTURADOS_INFORME6 = [
+    { key: "convenio", label: "Convenio" },
+    { key: "origenDatos", label: "Origen BD" },
+    { key: "grupo", label: "Grupo" },
+    { key: "fecha", label: "Fecha registro" },
+    { key: "paciente", label: "Paciente" },
+    { key: "sexo", label: "Sexo" },
+    { key: "documento", label: "Documento" },
+    { key: "telefono", label: "Teléfono" },
+    { key: "fechaNac", label: "Fecha Nac." },
+    { key: "eps", label: "EPS" },
+    { key: "regimen", label: "Régimen" },
+    { key: "direccion", label: "Dirección" },
+    { key: "barrio", label: "Barrio" },
+    { key: "comuna", label: "Comuna" },
+    { key: "labVisit", label: "lab/visit" },
+    { key: "gestAux", label: "Gest. Aux" },
+    { key: "gestEnfermera", label: "Gest. Enfermera" },
+    { key: "gestMedica", label: "Gest. Médica" },
+    { key: "fechaFacturacion", label: "Fecha cierre fact." },
+    { key: "remision", label: "Remisión" },
+    { key: "cupsPendientesPorFacturar", label: "CUPS por facturar (pendientes)" },
+];
+
 const crearFiltrosIniciales = (columnas) => columnas.reduce((acc, col) => {
     acc[col.key] = "";
     return acc;
 }, {});
+
+function buildFallbackRowDate(tipo, row = {}) {
+    const fechaBase = tipo === "2" || tipo === "5" || tipo === "6"
+        ? row?.fecha || row?.fechaFacturacion || row?.fechaFactCUP || ""
+        : row?.fechaFacturacion || row?.gestEnfermera || row?.fechaFactCUP || row?.fecha || "";
+
+    return String(fechaBase || "").split(" ")[0].trim();
+}
+
+function getFuenteInformeLabel(fuente) {
+    return fuente === "archivo" ? "Archivo" : "BD principal";
+}
+
+const TIPO_CONSULTA_INFORME_FACTURACION_COMPLETA = "Facturación completa (CUPS)";
 
 export default {
     data() {
@@ -412,6 +647,7 @@ export default {
             fechaFin: "",
             tipoinforme: "",
             convenioInforme: "",
+            fuenteInforme: "bd",
             conveniosDisponibles: ["Extramural", "E Basicos"],
             progresoInforme: 0,
             mensajeProgreso: "Preparando consulta...",
@@ -427,9 +663,13 @@ export default {
             cupsCatalogo: {},
             cupsCatalogoPorCodigo: {},
             columnasTabla: COLUMNAS_INFORME,
+            columnasTablaNoFacturados: [],
             filtros: { ...crearFiltrosIniciales(COLUMNAS_INFORME) },
+            filtrosNoFact: {},
             sortKey: "",
             sortDirection: "asc",
+            sortKeyNoFact: "",
+            sortDirectionNoFact: "asc",
             anchoTabla: 0,
             sincronizandoScroll: false,
             consultaActual: {
@@ -438,6 +678,7 @@ export default {
                 ffinal: "",
                 profesional: "",
                 convenio: "",
+                fuente: "",
             },
         };
     },
@@ -513,7 +754,165 @@ export default {
         obtenerColumnasPorTipo(tipo) {
             if (tipo === "2") return COLUMNAS_ACTIVIDADES;
             if (tipo === "3") return COLUMNAS_PENDIENTES_ENFERMERIA;
+            if (tipo === "4") return COLUMNAS_SIN_FACTURACION;
+            if (tipo === "5") return COLUMNAS_SIN_CIERRE_FACTURACION;
+            if (tipo === "6") return COLUMNAS_FACTURACION_COMPLETA;
             return COLUMNAS_INFORME;
+        },
+
+        esCierreFacturacionEncuesta(paciente = {}) {
+            if (paciente.status_facturacion === true) return true;
+            return String(paciente.status_facturacion ?? "").trim().toLowerCase() === "true";
+        },
+
+        obtenerNombrePorDocumento(documento) {
+            const doc = String(documento || "").trim();
+            if (!doc) return "";
+            const registro = this.enfermerosMap[doc];
+            return registro?.nombre || doc;
+        },
+
+        pacienteTieneAlgunCupConFactura(paciente = {}) {
+            const actividades = Array.isArray(paciente.seguimientoActividades) ? paciente.seguimientoActividades : [];
+            for (const actividad of actividades) {
+                const asignaciones = Array.isArray(actividad.asignaciones) ? actividad.asignaciones : [];
+                for (const asig of asignaciones) {
+                    const n = this.normalizarAsignacionInforme(asig, actividad);
+                    if (String(n.factura || "").trim()) {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        },
+
+        estaCupFacturadoTrue(asigRaw = {}) {
+            if (asigRaw?.facturado === true) return true;
+            const f = String(asigRaw?.facturado ?? "").trim().toLowerCase();
+            return ["true", "si", "sí", "1"].includes(f);
+        },
+
+        cupFaltaPorFacturar(asigRaw = {}) {
+            return !this.estaCupFacturadoTrue(asigRaw);
+        },
+
+        obtenerAsignacionesPlanasPaciente(paciente = {}) {
+            const asignacionesRaw = [];
+            const actividades = Array.isArray(paciente.seguimientoActividades) ? paciente.seguimientoActividades : [];
+            for (const actividad of actividades) {
+                const asignaciones = Array.isArray(actividad.asignaciones) ? actividad.asignaciones : [];
+                for (const asig of asignaciones) {
+                    asignacionesRaw.push(asig);
+                }
+            }
+            return asignacionesRaw;
+        },
+
+        parseCantidadCupsInforme(valor) {
+            const s = String(valor ?? "").trim().replace(",", ".");
+            if (!s) return 0;
+            const n = Number(s);
+            return Number.isFinite(n) ? n : 0;
+        },
+
+        construirFilasFacturacionCompleta() {
+            const filas = [];
+            const encuestas = Array.isArray(this.encuestasInforme) ? this.encuestasInforme : [];
+
+            for (const paciente of encuestas) {
+                const asignacionesRaw = this.obtenerAsignacionesPlanasPaciente(paciente);
+
+                if (!asignacionesRaw.length) {
+                    continue;
+                }
+
+                let sumaCantidad = 0;
+                let hayPendiente = false;
+
+                for (const asig of asignacionesRaw) {
+                    if (this.cupFaltaPorFacturar(asig)) {
+                        hayPendiente = true;
+                        break;
+                    }
+                    sumaCantidad += this.parseCantidadCupsInforme(asig?.cantidad);
+                }
+
+                if (hayPendiente) {
+                    continue;
+                }
+
+                filas.push({
+                    rowKey: `${paciente.id || paciente.numdoc || "sin-id"}-fact-completa`,
+                    convenio: paciente.convenio || "",
+                    origenDatos: paciente?.__archived ? "BD respaldo" : "BD principal",
+                    grupo: paciente.grupo || "",
+                    fecha: paciente.fecha || "",
+                    paciente: `${paciente.nombre1 || ""} ${paciente.apellido1 || ""} ${paciente.apellido2 || ""}`.trim(),
+                    sexo: paciente.sexo || "",
+                    documento: `${paciente.tipodoc || ""}-${paciente.numdoc || ""}`,
+                    telefono: paciente.telefono || "",
+                    fechaNac: paciente.fechaNac || "",
+                    eps: paciente.eps || "",
+                    regimen: paciente.regimen || "",
+                    direccion: paciente.direccion || "",
+                    barrio: paciente.barrioVeredacomuna?.barrio || "",
+                    comuna: paciente.barrioVeredacomuna?.comuna || "",
+                    labVisit: `${paciente.Agenda_tomademuestras?.cita_tomamuestras ? 'Sí' : 'No'}/${paciente.Agenda_Visitamedica?.cita_visitamedica ? 'Sí' : 'No'}`,
+                    gestAux: paciente.status_gest_aux ? paciente.fechagestAuxiliar : "No",
+                    gestEnfermera: paciente.status_gest_enfermera ? paciente.fechagestEnfermera : "No",
+                    gestMedica: paciente.status_gest_medica ? paciente.fechagestMedica : "No",
+                    fechaFacturacion: this.formatearFechaLatina(paciente.FechaFacturacion) || String(paciente.FechaFacturacion || "").trim() || "",
+                    remision: paciente.requiereRemision || "",
+                    sumaCantidadCupsFacturados: sumaCantidad,
+                });
+            }
+
+            return filas;
+        },
+
+        construirFilasInforme6NoFacturados() {
+            const filas = [];
+            const encuestas = Array.isArray(this.encuestasInforme) ? this.encuestasInforme : [];
+
+            for (const paciente of encuestas) {
+                const asignacionesRaw = this.obtenerAsignacionesPlanasPaciente(paciente);
+
+                if (!asignacionesRaw.length) {
+                    continue;
+                }
+
+                const cupsPendientesPorFacturar = asignacionesRaw.filter((asig) => this.cupFaltaPorFacturar(asig)).length;
+                if (!cupsPendientesPorFacturar) {
+                    continue;
+                }
+
+                filas.push({
+                    rowKey: `${paciente.id || paciente.numdoc || "sin-id"}-no-fact-cups`,
+                    convenio: paciente.convenio || "",
+                    origenDatos: paciente?.__archived ? "BD respaldo" : "BD principal",
+                    grupo: paciente.grupo || "",
+                    fecha: paciente.fecha || "",
+                    paciente: `${paciente.nombre1 || ""} ${paciente.apellido1 || ""} ${paciente.apellido2 || ""}`.trim(),
+                    sexo: paciente.sexo || "",
+                    documento: `${paciente.tipodoc || ""}-${paciente.numdoc || ""}`,
+                    telefono: paciente.telefono || "",
+                    fechaNac: paciente.fechaNac || "",
+                    eps: paciente.eps || "",
+                    regimen: paciente.regimen || "",
+                    direccion: paciente.direccion || "",
+                    barrio: paciente.barrioVeredacomuna?.barrio || "",
+                    comuna: paciente.barrioVeredacomuna?.comuna || "",
+                    labVisit: `${paciente.Agenda_tomademuestras?.cita_tomamuestras ? 'Sí' : 'No'}/${paciente.Agenda_Visitamedica?.cita_visitamedica ? 'Sí' : 'No'}`,
+                    gestAux: paciente.status_gest_aux ? paciente.fechagestAuxiliar : "No",
+                    gestEnfermera: paciente.status_gest_enfermera ? paciente.fechagestEnfermera : "No",
+                    gestMedica: paciente.status_gest_medica ? paciente.fechagestMedica : "No",
+                    fechaFacturacion: this.formatearFechaLatina(paciente.FechaFacturacion) || String(paciente.FechaFacturacion || "").trim() || "",
+                    remision: paciente.requiereRemision || "",
+                    cupsPendientesPorFacturar,
+                });
+            }
+
+            return filas;
         },
 
         esGestionEnfermeriaCerrada(valor) {
@@ -539,6 +938,10 @@ export default {
 
         normalizarConvenio(valor) {
             return String(valor || "").trim().toLowerCase();
+        },
+
+        usaFuenteArchivo() {
+            return false;
         },
 
         filtrarEncuestasPorConvenio(encuestas = []) {
@@ -579,6 +982,7 @@ export default {
                     paciente: `${paciente.nombre1 || ""} ${paciente.apellido1 || ""} ${paciente.apellido2 || ""}`.trim(),
                     sexo: paciente.sexo || "",
                     documento: `${paciente.tipodoc || ""}-${paciente.numdoc || ""}`,
+                    telefono: paciente.telefono || "",
                     fechaNac: paciente.fechaNac || "",
                     eps: paciente.eps || "",
                     regimen: paciente.regimen || "",
@@ -690,6 +1094,7 @@ export default {
                     paciente: `${paciente.nombre1 || ""} ${paciente.apellido1 || ""} ${paciente.apellido2 || ""}`.trim(),
                     sexo: paciente.sexo || "",
                     documento: `${paciente.tipodoc || ""}-${paciente.numdoc || ""}`,
+                    telefono: paciente.telefono || "",
                     fechaNac: paciente.fechaNac || "",
                     eps: paciente.eps || "",
                     regimen: paciente.regimen || "",
@@ -783,6 +1188,123 @@ export default {
             return filas;
         },
 
+        construirFilasSinCierreFacturacion() {
+            const filas = [];
+            const encuestas = Array.isArray(this.encuestasInforme) ? this.encuestasInforme : [];
+
+            for (const paciente of encuestas) {
+                if (this.esCierreFacturacionEncuesta(paciente)) {
+                    continue;
+                }
+
+                const incompleta = this.pacienteTieneAlgunCupConFactura(paciente) ? "Sí" : "No";
+
+                const base = {
+                    convenio: paciente.convenio || "",
+                    origenDatos: "BD principal",
+                    grupo: paciente.grupo || "",
+                    fecha: paciente.fecha || "",
+                    paciente: `${paciente.nombre1 || ""} ${paciente.apellido1 || ""} ${paciente.apellido2 || ""}`.trim(),
+                    sexo: paciente.sexo || "",
+                    documento: `${paciente.tipodoc || ""}-${paciente.numdoc || ""}`,
+                    telefono: paciente.telefono || "",
+                    fechaNac: paciente.fechaNac || "",
+                    eps: paciente.eps || "",
+                    regimen: paciente.regimen || "",
+                    direccion: paciente.direccion || "",
+                    barrio: paciente.barrioVeredacomuna?.barrio || "",
+                    comuna: paciente.barrioVeredacomuna?.comuna || "",
+                    labVisit: `${paciente.Agenda_tomademuestras?.cita_tomamuestras ? 'Sí' : 'No'}/${paciente.Agenda_Visitamedica?.cita_visitamedica ? 'Sí' : 'No'}`,
+                    gestAux: paciente.status_gest_aux ? paciente.fechagestAuxiliar : "No",
+                    gestEnfermera: paciente.status_gest_enfermera ? paciente.fechagestEnfermera : "No",
+                    gestMedica: paciente.status_gest_medica ? paciente.fechagestMedica : "No",
+                    fechaFacturacion: this.formatearFechaLatina(paciente.FechaFacturacion) || "No",
+                    incompleta,
+                    riesgo: paciente.poblacionRiesgo || "",
+                    remision: paciente.requiereRemision || "",
+                };
+
+                const actividades = Array.isArray(paciente.seguimientoActividades) ? paciente.seguimientoActividades : [];
+
+                if (!actividades.length) {
+                    filas.push({
+                        ...base,
+                        rowKey: `${paciente.id}-sin-actividad`,
+                        actividad: "Sin actividades",
+                        profesional: "",
+                        facturador: "",
+                        rol: "",
+                        cupsNombre: "",
+                        codigo: "",
+                        descripcionCUP: "",
+                        cantidad: "",
+                        detalle: "",
+                        grupoCUP: "",
+                        factura: "",
+                        homolog: "",
+                        fechaFactCUP: "",
+                        facturado: "",
+                        origenDatos: base.origenDatos,
+                    });
+                    continue;
+                }
+
+                for (const actividad of actividades) {
+                    const asignaciones = Array.isArray(actividad.asignaciones) ? actividad.asignaciones : [];
+
+                    if (!asignaciones.length) {
+                        filas.push({
+                            ...base,
+                            rowKey: `${paciente.id}-${actividad.key}-sin-asignacion`,
+                            actividad: actividad.nombre || "Actividad",
+                            profesional: "",
+                            facturador: "",
+                            rol: "",
+                            cupsNombre: "",
+                            codigo: "",
+                            descripcionCUP: "",
+                            cantidad: "",
+                            detalle: "",
+                            grupoCUP: "",
+                            factura: "",
+                            homolog: "",
+                            fechaFactCUP: "",
+                            facturado: "",
+                            origenDatos: base.origenDatos,
+                        });
+                        continue;
+                    }
+
+                    for (let i = 0; i < asignaciones.length; i++) {
+                        const asig = asignaciones[i];
+                        const asignacion = this.normalizarAsignacionInforme(asig, actividad);
+
+                        filas.push({
+                            ...base,
+                            rowKey: `${paciente.id}-${actividad.key}-${i}`,
+                            actividad: actividad.nombre || "Actividad",
+                            profesional: asignacion.profesional,
+                            facturador: this.obtenerNombrePorDocumento(asignacion.factProfDoc),
+                            rol: asignacion.rol,
+                            cupsNombre: asignacion.cupsNombre,
+                            codigo: asignacion.codigo,
+                            descripcionCUP: asignacion.descripcionCUP,
+                            cantidad: asignacion.cantidad,
+                            detalle: asignacion.detalle,
+                            grupoCUP: asignacion.grupoCUP,
+                            factura: asignacion.factura,
+                            homolog: asignacion.homolog,
+                            fechaFactCUP: asignacion.fechaFactCUP,
+                            facturado: asignacion.facturado,
+                            origenDatos: base.origenDatos,
+                        });
+                    }
+                }
+            }
+
+            return filas;
+        },
+
         construirFilasPendientesEnfermeria() {
             const resumenPorEnfermero = this.resumenPendientesPorDocumento;
 
@@ -802,6 +1324,7 @@ export default {
                     paciente: `${paciente.nombre1 || ""} ${paciente.apellido1 || ""} ${paciente.apellido2 || ""}`.trim(),
                     sexo: paciente.sexo || "",
                     documento: `${paciente.tipodoc || ""}-${paciente.numdoc || ""}`,
+                    telefono: paciente.telefono || "",
                     eps: paciente.eps || "",
                     riesgo: paciente.poblacionRiesgo || "",
                     direccion: paciente.direccion || "",
@@ -814,6 +1337,129 @@ export default {
                         ? paciente.fechagestEnfermera || "Sí"
                         : "No",
                     gestMedica: paciente.status_gest_medica ? paciente.fechagestMedica : "No",
+                    remision: paciente.requiereRemision || "",
+                };
+            });
+        },
+
+        valorIndicaDatoFacturacion(valor) {
+            if (valor === true) return true;
+            if (valor === false || valor === null || valor === undefined) return false;
+            if (typeof valor === "number") return !Number.isNaN(valor) && valor !== 0;
+            if (Array.isArray(valor)) return valor.some((item) => this.valorIndicaDatoFacturacion(item));
+            if (valor && typeof valor === "object") return Object.values(valor).some((item) => this.valorIndicaDatoFacturacion(item));
+
+            const normalizado = String(valor).trim().toLowerCase();
+            return normalizado !== "" &&
+                !["false", "no", "n/a", "na", "null", "undefined", "0"].includes(normalizado);
+        },
+
+        normalizarClaveFacturacion(clave) {
+            return String(clave || "")
+                .normalize("NFD")
+                .replace(/[\u0300-\u036f]/g, "")
+                .toLowerCase()
+                .replace(/[\s_-]+/g, "");
+        },
+
+        esClaveFacturacionEncuesta(clave) {
+            const normalizada = this.normalizarClaveFacturacion(clave);
+            return normalizada.includes("fact");
+        },
+
+        tieneDatosFacturacionEnEncuesta(nodo, visitados = new Set()) {
+            if (!nodo || typeof nodo !== "object" || visitados.has(nodo)) {
+                return false;
+            }
+
+            visitados.add(nodo);
+
+            return Object.entries(nodo).some(([clave, valor]) => {
+                if (this.esClaveFacturacionEncuesta(clave) && this.valorIndicaDatoFacturacion(valor)) {
+                    return true;
+                }
+
+                return valor && typeof valor === "object"
+                    ? this.tieneDatosFacturacionEnEncuesta(valor, visitados)
+                    : false;
+            });
+        },
+
+        tieneDatosFacturacionPaciente(paciente = {}) {
+            return this.tieneDatosFacturacionEnEncuesta(paciente);
+        },
+
+        obtenerClavePacienteEncuesta(paciente = {}) {
+            const documento = String(paciente.numdoc || "")
+                .trim()
+                .replace(/[^\dA-Za-z]/g, "")
+                .toLowerCase();
+            if (documento) {
+                return documento;
+            }
+
+            const nombreCompleto = [
+                paciente.nombre1,
+                paciente.nombre2,
+                paciente.apellido1,
+                paciente.apellido2,
+                paciente.fechaNac,
+            ].map((valor) => String(valor || "").trim().toLowerCase()).filter(Boolean).join("|");
+
+            return nombreCompleto || String(paciente.idEncuesta || paciente.id || "").trim();
+        },
+
+        obtenerPacientesEncuestaSinFacturacion(encuestas = []) {
+            const pacientesPorClave = new Map();
+
+            for (const paciente of Array.isArray(encuestas) ? encuestas : []) {
+                const clavePaciente = this.obtenerClavePacienteEncuesta(paciente);
+                const claveUnica = clavePaciente || `sin-documento-${pacientesPorClave.size}`;
+                const grupo = pacientesPorClave.get(claveUnica) || {
+                    paciente,
+                    tieneFacturacion: false,
+                };
+
+                if (this.tieneDatosFacturacionPaciente(paciente)) {
+                    grupo.tieneFacturacion = true;
+                }
+
+                pacientesPorClave.set(claveUnica, grupo);
+            }
+
+            return Array.from(pacientesPorClave.values())
+                .filter((grupo) => !grupo.tieneFacturacion)
+                .map((grupo) => grupo.paciente);
+        },
+
+        construirFilasSinFacturacion() {
+            return (Array.isArray(this.encuestasInforme) ? this.encuestasInforme : []).map((paciente) => {
+                return {
+                    rowKey: `${paciente.id || paciente.numdoc || "sin-id"}-sin-facturacion`,
+                    convenio: paciente.convenio || "",
+                    origenDatos: "BD principal",
+                    grupo: paciente.grupo || "",
+                    fecha: paciente.fecha || "",
+                    nombre1: paciente.nombre1 || "",
+                    nombre2: paciente.nombre2 || "",
+                    apellido1: paciente.apellido1 || "",
+                    apellido2: paciente.apellido2 || "",
+                    sexo: paciente.sexo || "",
+                    tipodoc: paciente.tipodoc || "",
+                    numdoc: paciente.numdoc || "",
+                    telefono: paciente.telefono || "",
+                    fechaNac: paciente.fechaNac || "",
+                    eps: paciente.eps || "",
+                    regimen: paciente.regimen || "",
+                    direccion: paciente.direccion || "",
+                    barrio: paciente.barrioVeredacomuna?.barrio || "",
+                    comuna: paciente.barrioVeredacomuna?.comuna || "",
+                    labVisit: `${paciente.Agenda_tomademuestras?.cita_tomamuestras ? 'Sí' : 'No'}/${paciente.Agenda_Visitamedica?.cita_visitamedica ? 'Sí' : 'No'}`,
+                    gestAux: paciente.status_gest_aux ? paciente.fechagestAuxiliar : "No",
+                    gestEnfermera: paciente.status_gest_enfermera ? paciente.fechagestEnfermera : "No",
+                    gestMedica: paciente.status_gest_medica ? paciente.fechagestMedica : "No",
+                    gestFacturacion: "No",
+                    fechaFacturacion: "No",
                     remision: paciente.requiereRemision || "",
                 };
             });
@@ -846,6 +1492,48 @@ export default {
                 }
             }
             return "";
+        },
+
+        construirClaveFilaInforme(row = {}) {
+            return [
+                String(this.tipoinforme || "").trim(),
+                String(row?.rowKey || "").trim(),
+                String(row?.idEncuesta || row?.id || "").trim(),
+                String(row?.documento || "").trim(),
+                String(row?.actividad || "").trim(),
+                String(row?.cupsNombre || row?.procedimiento || "").trim(),
+                buildFallbackRowDate(this.tipoinforme, row),
+            ].join("|");
+        },
+
+        fusionarFilasInforme(principal = {}, respaldo = {}) {
+            const keys = new Set([
+                ...Object.keys(respaldo || {}),
+                ...Object.keys(principal || {}),
+            ]);
+
+            return Array.from(keys).reduce((acc, key) => {
+                acc[key] = this.seleccionarPrimerValor(principal[key], respaldo[key]);
+                return acc;
+            }, {});
+        },
+
+        consolidarFilasInforme(filas = []) {
+            const consolidadas = new Map();
+
+            (Array.isArray(filas) ? filas : []).forEach((fila, index) => {
+                const key = this.construirClaveFilaInforme(fila) || `${this.tipoinforme || "fila"}-${index}`;
+                const existente = consolidadas.get(key);
+
+                if (!existente) {
+                    consolidadas.set(key, fila);
+                    return;
+                }
+
+                consolidadas.set(key, this.fusionarFilasInforme(existente, fila));
+            });
+
+            return Array.from(consolidadas.values());
         },
 
         obtenerRegistroCup(cupId, codigo = "") {
@@ -881,7 +1569,7 @@ export default {
             return {
                 cupId,
                 actividadId: this.seleccionarPrimerValor(asig?.actividadId, asig?.idActividad, actividad?.key),
-                profesional: this.seleccionarPrimerValor(asig?.nombreProf, asig?.nombrePtof, asig?.nombre),
+                profesional: this.seleccionarPrimerValor(asig?.nombreProf, asig?.nombrePtof, asig?.nombre, cupCatalogo?.profesional),
                 rol: this.seleccionarPrimerValor(asig?.key, asig?.rol, actividad?.key),
                 cupsNombre,
                 codigo: this.seleccionarPrimerValor(asig?.codigo, cupCatalogo?.codigo, cupId),
@@ -893,26 +1581,29 @@ export default {
                 homolog: this.seleccionarPrimerValor(asig?.Homolog, asig?.homolog),
                 fechaFactCUP: this.seleccionarPrimerValor(asig?.fechaFacturacion, asig?.fechaFactCUP),
                 facturado: this.formatearFacturadoInforme(asig?.facturado),
+                factProfDoc: this.seleccionarPrimerValor(asig?.FactProf, asig?.factProf),
             };
         },
 
-        construirHtmlExportacion(filas = this.filasFiltradasOrdenadas) {
-            const headers = this.columnasTabla.map((col) => col.label);
+        construirHtmlExportacion(filas = this.filasFiltradasOrdenadas, columnas = null) {
+            const cols = Array.isArray(columnas) && columnas.length ? columnas : this.columnasTabla;
+            const headers = cols.map((col) => col.label);
             const thead = `<thead><tr>${headers.map((h) => `<th>${this.escaparHtml(h)}</th>`).join("")}</tr></thead>`;
             const tbody = `<tbody>${filas.map((f) => `
                 <tr>
-                    ${this.columnasTabla.map((col) => `<td>${this.escaparHtml(f[col.key])}</td>`).join("")}
+                    ${cols.map((col) => `<td>${this.escaparHtml(f[col.key])}</td>`).join("")}
                 </tr>`).join("")}</tbody>`;
 
             return `<table border="1">${thead}${tbody}</table>`;
         },
 
-        construirTextoExportacion(filas = this.filasFiltradasOrdenadas) {
-            const headers = this.columnasTabla.map((col) => col.label);
+        construirTextoExportacion(filas = this.filasFiltradasOrdenadas, columnas = null) {
+            const cols = Array.isArray(columnas) && columnas.length ? columnas : this.columnasTabla;
+            const headers = cols.map((col) => col.label);
             const lineas = [headers.join("\t")];
 
             for (const f of filas) {
-                lineas.push(this.columnasTabla
+                lineas.push(cols
                     .map((col) => String(f[col.key] ?? "").replace(/\t/g, " ").replace(/\n/g, " "))
                     .join("\t"));
             }
@@ -929,18 +1620,39 @@ export default {
             this.sortDirection = "asc";
         },
 
+        ordenarPorNoFact(key) {
+            if (this.sortKeyNoFact === key) {
+                this.sortDirectionNoFact = this.sortDirectionNoFact === "asc" ? "desc" : "asc";
+                return;
+            }
+            this.sortKeyNoFact = key;
+            this.sortDirectionNoFact = "asc";
+        },
+
         construirNombreArchivoInforme() {
             const tipo = this.tipoinforme === "2"
                 ? "actividades"
-                : (this.tipoinforme === "3" ? "pendientes_enfermeria" : "seguimiento");
+                : (this.tipoinforme === "3"
+                    ? "pendientes_enfermeria"
+                    : (this.tipoinforme === "4"
+                        ? "sin_datos_facturacion"
+                        : (this.tipoinforme === "5"
+                            ? "sin_cierre_facturacion"
+                            : (this.tipoinforme === "6" ? "facturacion_completa" : "seguimiento"))));
             const fechaInicio = this.fechaInicio || "sin_fecha_inicio";
             const fechaFin = this.fechaFin || "sin_fecha_fin";
             return `informe_${tipo}_${fechaInicio}_a_${fechaFin}.xls`;
         },
 
+        construirNombreArchivoInformeNoFacturados() {
+            const fechaInicio = this.fechaInicio || "sin_fecha_inicio";
+            const fechaFin = this.fechaFin || "sin_fecha_fin";
+            return `informe_no_facturados_${fechaInicio}_a_${fechaFin}.xls`;
+        },
+
         exportarExcelFiltrado() {
             const filas = this.filasFiltradasOrdenadas;
-            const html = this.construirHtmlExportacion(filas);
+            const html = this.construirHtmlExportacion(filas, this.columnasTabla);
             const blob = new Blob([`<html><head><meta charset="UTF-8"></head><body>${html}</body></html>`], {
                 type: "application/vnd.ms-excel;charset=utf-8;"
             });
@@ -949,6 +1661,24 @@ export default {
             const link = document.createElement("a");
             link.href = url;
             link.download = this.construirNombreArchivoInforme();
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+        },
+
+        exportarExcelNoFacturados() {
+            const filas = this.filasFiltradasOrdenadasNoFact;
+            const columnas = this.columnasTablaNoFacturados;
+            const html = this.construirHtmlExportacion(filas, columnas);
+            const blob = new Blob([`<html><head><meta charset="UTF-8"></head><body>${html}</body></html>`], {
+                type: "application/vnd.ms-excel;charset=utf-8;"
+            });
+
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.href = url;
+            link.download = this.construirNombreArchivoInformeNoFacturados();
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
@@ -1066,46 +1796,60 @@ export default {
                 }));
         },
 
+        esCupHojaInforme(value) {
+            return !!(
+                value &&
+                typeof value === "object" &&
+                ("actividadId" in value ||
+                    "idActividad" in value ||
+                    "DescripcionCUP" in value ||
+                    "cupsNombre" in value ||
+                    "codigo" in value ||
+                    "FactNum" in value ||
+                    "FactProf" in value)
+            );
+        },
+
+        flattenCupsInforme(cupsNode, parentContext = {}) {
+            return Object.entries(cupsNode && typeof cupsNode === "object" ? cupsNode : {}).flatMap(([storageKey, value]) => {
+                if (!value || typeof value !== "object") {
+                    return [];
+                }
+
+                if (this.esCupHojaInforme(value)) {
+                    return [{
+                        ...value,
+                        _storageKey: storageKey,
+                        key: value?.key || value?.rol || parentContext?.key || "",
+                        nombreProf: value?.nombreProf || value?.nombrePtof || value?.nombre || parentContext?.nombreProf || "",
+                    }];
+                }
+
+                const nextContext = {
+                    key: value?.key || value?.rol || parentContext?.key || storageKey || "",
+                    nombreProf: value?.nombreProf || value?.nombrePtof || value?.nombre || parentContext?.nombreProf || "",
+                };
+
+                return this.flattenCupsInforme(value, nextContext);
+            });
+        },
+
         normalizarCupsAsignaciones(asignacionEncuesta) {
             if (!asignacionEncuesta || !asignacionEncuesta.cups) return [];
 
-            const roleFallback = String(
-                asignacionEncuesta?.key ?? asignacionEncuesta?.rol ?? ""
-            ).trim();
-            const professionalFallback = String(
-                asignacionEncuesta?.nombreProf ?? asignacionEncuesta?.nombrePtof ?? asignacionEncuesta?.nombre ?? ""
-            ).trim();
-
-            const completarMetadatos = (cup) => ({
-                ...cup,
-                key: cup?.key || roleFallback,
-                nombreProf: cup?.nombreProf || cup?.nombrePtof || cup?.nombre || professionalFallback,
-            });
-
             if (Array.isArray(asignacionEncuesta.cups)) {
-                return asignacionEncuesta.cups.filter(Boolean).map(completarMetadatos);
+                return asignacionEncuesta.cups.filter(Boolean).map((cup) => ({
+                    ...cup,
+                    key: cup?.key || cup?.rol || asignacionEncuesta?.key || asignacionEncuesta?.rol || "",
+                    nombreProf: cup?.nombreProf || cup?.nombrePtof || cup?.nombre || asignacionEncuesta?.nombreProf || asignacionEncuesta?.nombrePtof || asignacionEncuesta?.nombre || "",
+                }));
             }
 
             if (typeof asignacionEncuesta.cups === "object") {
-                const cupsValores = Object.values(asignacionEncuesta.cups).filter(Boolean);
-
-                const esEstructuraAnidada = cupsValores.some(
-                    (valor) =>
-                        valor &&
-                        typeof valor === "object" &&
-                        !("actividadId" in valor) &&
-                        !("idActividad" in valor) &&
-                        !("DescripcionCUP" in valor) &&
-                        !("codigo" in valor)
-                );
-
-                if (esEstructuraAnidada) {
-                    return cupsValores.flatMap((cupsPorActividad) =>
-                        Object.values(cupsPorActividad || {}).filter(Boolean).map(completarMetadatos)
-                    );
-                }
-
-                return cupsValores.map(completarMetadatos);
+                return this.flattenCupsInforme(asignacionEncuesta.cups, {
+                    key: asignacionEncuesta?.key || asignacionEncuesta?.rol || "",
+                    nombreProf: asignacionEncuesta?.nombreProf || asignacionEncuesta?.nombrePtof || asignacionEncuesta?.nombre || "",
+                });
             }
 
             return [];
@@ -1217,6 +1961,16 @@ export default {
                 return;
             }
 
+            if (this.tipoinforme === "4") {
+                this.encuestasInforme = this.obtenerPacientesEncuestaSinFacturacion(encuestas);
+                return;
+            }
+
+            if (this.usaFuenteArchivo()) {
+                this.encuestasInforme = [];
+                return;
+            }
+
             try {
                 const {
                     actividadesGlobal,
@@ -1247,6 +2001,7 @@ export default {
                             DescripcionCUP: item.DescripcionCUP || item.nombre || "",
                             Grupo: item.Grupo || item.grupo || item.group || "",
                             Homolog: item.Homolog || item.homolog || "",
+                            profesional: item.profesional || "",
                         };
                     }
                     return acc;
@@ -1261,7 +2016,7 @@ export default {
                 }, {});
 
                 this.encuestasInforme = encuestas.map((paciente) => {
-                    return {
+                    const pacienteConActividades = {
                         ...paciente,
                         seguimientoActividades: this.construirSeguimientoActividadesPaciente(
                             paciente,
@@ -1269,6 +2024,8 @@ export default {
                             asignacionesGlobal
                         ),
                     };
+
+                    return pacienteConActividades;
                 });
             } catch (error) {
                 console.error("Error cargando actividades/asignaciones para informe:", error);
@@ -1279,39 +2036,28 @@ export default {
             }
         },
         async cargarFilasArchivadas() {
-            if (!this.fechaInicio || !this.fechaFin) {
-                this.filasArchivadasSeguimiento = [];
-                this.filasArchivadasActividades = [];
-                return;
-            }
-
-            if (this.tipoinforme === "3") {
-                this.filasArchivadasSeguimiento = [];
-                this.filasArchivadasActividades = [];
-                return;
-            }
-
-            try {
-                const filas = await fetchArchiveRows({
-                    tipo: this.tipoinforme === "2" ? "actividades" : "seguimiento",
-                    fechaInicio: this.fechaInicio,
-                    fechaFin: this.fechaFin,
-                    convenio: this.convenioInforme,
-                });
-
-                if (this.tipoinforme === "2") {
-                    this.filasArchivadasActividades = filas;
-                    this.filasArchivadasSeguimiento = [];
-                } else {
-                    this.filasArchivadasSeguimiento = filas;
-                    this.filasArchivadasActividades = [];
-                }
-            } catch (error) {
-                console.error("Error cargando filas archivadas:", error);
-                this.filasArchivadasSeguimiento = [];
-                this.filasArchivadasActividades = [];
-            }
+            this.filasArchivadasSeguimiento = [];
+            this.filasArchivadasActividades = [];
         },
+
+        async cargarTodasEncuestasAdmin() {
+            const cached = cacheManager.get("encuestas");
+            if (Array.isArray(cached)) {
+                this.$store.commit('setEncuestasAdmin', cached);
+                return cached;
+            }
+
+            const { data } = await firebase_api.get("/Encuesta.json");
+            const encuestas = Object.entries(data || {}).map(([id, value]) => ({
+                id,
+                ...(value || {}),
+            }));
+
+            cacheManager.set("encuestas", encuestas);
+            this.$store.commit('setEncuestasAdmin', encuestas);
+            return encuestas;
+        },
+
         /*  */
         ...mapActions(["GetRegistersbyRangeCerrados", "GetRegistersbyRangeGeneral", "GetRegistersbyRangePendientesEnfermeria", "consultarUsuariosFirestore"]),
 
@@ -1323,12 +2069,24 @@ export default {
             try {
                 this.columnasTabla = this.obtenerColumnasPorTipo(this.tipoinforme);
                 this.filtros = { ...crearFiltrosIniciales(this.columnasTabla) };
+                if (this.tipoinforme === "6") {
+                    this.columnasTablaNoFacturados = [...COLUMNAS_PACIENTES_NO_FACTURADOS_INFORME6];
+                    this.filtrosNoFact = { ...crearFiltrosIniciales(this.columnasTablaNoFacturados) };
+                    this.sortKeyNoFact = "";
+                    this.sortDirectionNoFact = "asc";
+                } else {
+                    this.columnasTablaNoFacturados = [];
+                    this.filtrosNoFact = {};
+                    this.sortKeyNoFact = "";
+                    this.sortDirectionNoFact = "asc";
+                }
                 this.actualizarProgreso(15, "Consultando registros...");
 
                 if (this.fechaInicio && this.fechaFin && this.tipoinforme == "1") {
                     let parametros = {
                         finicial: this.fechaInicio,
-                        ffinal: this.fechaFin
+                        ffinal: this.fechaFin,
+                        fuente: "bd",
                     };
                     await this.GetRegistersbyRangeCerrados(parametros);
                     consultaUsada = {
@@ -1337,11 +2095,13 @@ export default {
                         ffinal: parametros.ffinal,
                         profesional: "",
                         convenio: this.convenioInforme || "Todos",
+                        fuente: getFuenteInformeLabel("bd"),
                     };
                 } else if (this.fechaInicio && this.fechaFin && this.tipoinforme == "2") {
                     let parametros = {
                         finicial: this.fechaInicio,
-                        ffinal: this.fechaFin
+                        ffinal: this.fechaFin,
+                        fuente: "bd",
                     };
                     await this.GetRegistersbyRangeGeneral(parametros);
                     consultaUsada = {
@@ -1350,11 +2110,13 @@ export default {
                         ffinal: parametros.ffinal,
                         profesional: "",
                         convenio: this.convenioInforme || "Todos",
+                        fuente: getFuenteInformeLabel("bd"),
                     };
                 } else if (this.fechaInicio && this.fechaFin && this.tipoinforme == "3") {
                     let parametros = {
                         finicial: this.fechaInicio,
-                        ffinal: this.fechaFin
+                        ffinal: this.fechaFin,
+                        fuente: "bd",
                     };
                     await this.GetRegistersbyRangePendientesEnfermeria(parametros);
                     consultaUsada = {
@@ -1363,6 +2125,66 @@ export default {
                         ffinal: parametros.ffinal,
                         profesional: "",
                         convenio: this.convenioInforme || "Todos",
+                        fuente: getFuenteInformeLabel("bd"),
+                    };
+                } else if (this.fechaInicio && this.fechaFin && this.tipoinforme == "5") {
+                    let parametros = {
+                        finicial: this.fechaInicio,
+                        ffinal: this.fechaFin,
+                        fuente: "bd",
+                    };
+                    await this.GetRegistersbyRangeGeneral(parametros);
+                    consultaUsada = {
+                        tipo: "Sin cierre de facturación",
+                        finicial: parametros.finicial,
+                        ffinal: parametros.ffinal,
+                        profesional: "",
+                        convenio: this.convenioInforme || "Todos",
+                        fuente: getFuenteInformeLabel("bd"),
+                    };
+                } else if (this.fechaInicio && this.fechaFin && this.tipoinforme == "6") {
+                    let parametros = {
+                        finicial: this.fechaInicio,
+                        ffinal: this.fechaFin,
+                        fuente: "bd",
+                    };
+                    await this.GetRegistersbyRangeGeneral(parametros);
+                    consultaUsada = {
+                        tipo: TIPO_CONSULTA_INFORME_FACTURACION_COMPLETA,
+                        finicial: parametros.finicial,
+                        ffinal: parametros.ffinal,
+                        profesional: "",
+                        convenio: this.convenioInforme || "Todos",
+                        fuente: getFuenteInformeLabel("bd"),
+                    };
+                } else if (this.tipoinforme == "4") {
+                    if ((this.fechaInicio && !this.fechaFin) || (!this.fechaInicio && this.fechaFin)) {
+                        this.$toast.error("Debe seleccionar ambas fechas o dejarlas vacías para consultar todas las encuestas");
+                        this.actualizarProgreso(0, "Preparando consulta...");
+                        this.cargandoInforme = false;
+                        return;
+                    }
+
+                    const tieneRango = this.fechaInicio && this.fechaFin;
+                    let parametros = {
+                        finicial: this.fechaInicio,
+                        ffinal: this.fechaFin,
+                        fuente: "bd",
+                    };
+
+                    if (tieneRango) {
+                        await this.GetRegistersbyRangeGeneral(parametros);
+                    } else {
+                        await this.cargarTodasEncuestasAdmin();
+                    }
+
+                    consultaUsada = {
+                        tipo: "Sin datos de facturación",
+                        finicial: tieneRango ? parametros.finicial : "",
+                        ffinal: tieneRango ? parametros.ffinal : "",
+                        profesional: "",
+                        convenio: this.convenioInforme || "Todos",
+                        fuente: getFuenteInformeLabel("bd"),
                     };
                 } else {
                     this.$toast.error("Debe seleccionar tipo de informe y rango de fechas");
@@ -1372,7 +2194,7 @@ export default {
                 }
 
                 this.actualizarProgreso(55, "Procesando actividades y asignaciones...");
-                if (this.tipoinforme === "3") {
+                if (this.tipoinforme === "3" || this.tipoinforme === "5") {
                     await this.cargarMapaEnfermeros();
                 }
                 await this.actualizarDatosSeguimientoInforme();
@@ -1381,7 +2203,11 @@ export default {
                     this.consultaActual = consultaUsada;
                 }
                 this.$toast && this.$toast.success ? this.$toast.success('✅ Informe generado exitosamente') : alert('✅ Informe generado exitosamente');
-                this.mostrarFormulario = this.filasInformeTabla.length === 0;
+                if (this.tipoinforme === "6") {
+                    this.mostrarFormulario = !this.tieneDatosTabla;
+                } else {
+                    this.mostrarFormulario = this.filasInformeTabla.length === 0;
+                }
                 this.actualizarProgreso(80, "Renderizando tabla...");
                 await this.$nextTick();
                 this.actualizarAnchoTabla();
@@ -1408,6 +2234,7 @@ export default {
             this.fechaInicio = "";
             this.fechaFin = "";
             this.convenioInforme = "";
+            this.fuenteInforme = "bd";
             this.progresoInforme = 0;
             this.mensajeProgreso = "Preparando consulta...";
             this.encuestasInforme = [];
@@ -1415,6 +2242,10 @@ export default {
             this.filasArchivadasActividades = [];
             this.columnasTabla = this.obtenerColumnasPorTipo(this.tipoinforme);
             this.filtros = { ...crearFiltrosIniciales(this.columnasTabla) };
+            this.columnasTablaNoFacturados = [];
+            this.filtrosNoFact = {};
+            this.sortKeyNoFact = "";
+            this.sortDirectionNoFact = "asc";
             this.sortKey = "";
             this.sortDirection = "asc";
             this.anchoTabla = 0;
@@ -1424,6 +2255,7 @@ export default {
                 ffinal: "",
                 profesional: "",
                 convenio: "",
+                fuente: "",
             };
         },
 
@@ -1436,7 +2268,7 @@ export default {
     computed: {
         ...mapState(["userData", "EncuestasAdmin"]),
         columnasTipoSeleccionado() {
-            if (!["1", "2", "3"].includes(this.tipoinforme)) {
+            if (!["1", "2", "3", "4", "5", "6"].includes(this.tipoinforme)) {
                 return [];
             }
             return this.obtenerColumnasPorTipo(this.tipoinforme);
@@ -1444,12 +2276,20 @@ export default {
         nombreTipoInformeSeleccionado() {
             if (this.tipoinforme === "2") return "de Actividades";
             if (this.tipoinforme === "3") return "de Pendientes de Enfermería";
+            if (this.tipoinforme === "4") return "sin Datos de Facturación";
+            if (this.tipoinforme === "5") return "sin Cierre de Facturación";
+            if (this.tipoinforme === "6") return "Facturación completa (CUPS)";
             if (this.tipoinforme === "1") return "de Seguimiento";
             return "";
         },
         tituloListado() {
             if (this.tipoinforme === "2") return "Listado de actividades";
             if (this.tipoinforme === "3") return "Listado de pacientes pendientes por enfermería";
+            if (this.tipoinforme === "4") return "Listado de pacientes sin datos de facturación";
+            if (this.tipoinforme === "5") return "Listado de pacientes sin cierre de facturación (con detalle por CUPS)";
+            if (this.tipoinforme === "6") {
+                return "Facturación por CUPS (facturado en asignaciones)";
+            }
             return "Listado de Pacientes finalizados";
         },
         filasFiltradasOrdenadas() {
@@ -1485,6 +2325,44 @@ export default {
 
             return filas;
         },
+        filasFiltradasOrdenadasNoFact() {
+            const cols = this.columnasTablaNoFacturados;
+            if (!Array.isArray(cols) || !cols.length) {
+                return [];
+            }
+
+            let filas = [...this.filasInformeTablaNoFacturados];
+
+            filas = filas.filter((fila) => cols.every((col) => {
+                const filtro = String(this.filtrosNoFact[col.key] || "").trim();
+                if (!filtro) return true;
+                const valor = String(fila[col.key] ?? "").trim();
+                return valor === filtro;
+            }));
+
+            if (this.sortKeyNoFact) {
+                const direction = this.sortDirectionNoFact === "asc" ? 1 : -1;
+                const key = this.sortKeyNoFact;
+                filas.sort((a, b) => {
+                    const va = String(a[key] ?? "").toLowerCase();
+                    const vb = String(b[key] ?? "").toLowerCase();
+
+                    const na = Number(va);
+                    const nb = Number(vb);
+                    const ambosNumericos = !Number.isNaN(na) && !Number.isNaN(nb) && va !== "" && vb !== "";
+
+                    if (ambosNumericos) {
+                        return (na - nb) * direction;
+                    }
+
+                    if (va < vb) return -1 * direction;
+                    if (va > vb) return 1 * direction;
+                    return 0;
+                });
+            }
+
+            return filas;
+        },
         opcionesFiltroPorColumna() {
             const opciones = {};
             for (const col of this.columnasTabla) {
@@ -1497,20 +2375,70 @@ export default {
             }
             return opciones;
         },
+        opcionesFiltroPorColumnaNoFact() {
+            const cols = this.columnasTablaNoFacturados;
+            if (!Array.isArray(cols) || !cols.length) {
+                return {};
+            }
+
+            const opciones = {};
+            for (const col of cols) {
+                const unicos = new Set(
+                    this.filasInformeTablaNoFacturados
+                        .map((fila) => String(fila[col.key] ?? "").trim())
+                        .filter((valor) => valor !== "")
+                );
+                opciones[col.key] = Array.from(unicos).sort((a, b) => a.localeCompare(b, 'es', { sensitivity: 'base' }));
+            }
+            return opciones;
+        },
         filasInformeTabla() {
             const filasVivas = this.tipoinforme === "2"
                 ? this.construirFilasActividades()
-                : (this.tipoinforme === "3" ? this.construirFilasPendientesEnfermeria() : this.construirFilasExportacion());
-            const filasArchivadas = this.tipoinforme === "2"
+                : (this.tipoinforme === "5"
+                    ? this.construirFilasSinCierreFacturacion()
+                    : (this.tipoinforme === "6"
+                        ? this.construirFilasFacturacionCompleta()
+                        : (this.tipoinforme === "3"
+                            ? this.construirFilasPendientesEnfermeria()
+                            : (this.tipoinforme === "4" ? this.construirFilasSinFacturacion() : this.construirFilasExportacion()))));
+            const filasArchivadas = this.tipoinforme === "2" || this.tipoinforme === "5" || this.tipoinforme === "6"
                 ? this.filasArchivadasActividades
                 : this.filasArchivadasSeguimiento;
-            return [...filasVivas, ...(Array.isArray(filasArchivadas) ? filasArchivadas : [])];
+            const filasFuente = this.usaFuenteArchivo()
+                ? (this.tipoinforme === "3" ? filasVivas : (Array.isArray(filasArchivadas) ? filasArchivadas : []))
+                : filasVivas;
+            return this.consolidarFilasInforme(filasFuente);
+        },
+        filasInformeTablaNoFacturados() {
+            if (this.tipoinforme !== "6") {
+                return [];
+            }
+
+            const filasVivas = this.construirFilasInforme6NoFacturados();
+            const filasArchivadas = this.filasArchivadasActividades;
+            const filasFuente = this.usaFuenteArchivo()
+                ? (Array.isArray(filasArchivadas) ? filasArchivadas : [])
+                : filasVivas;
+            return this.consolidarFilasInforme(filasFuente);
         },
         tieneDatosTabla() {
+            if (this.mostrarResumenPendientesFacturaInforme6) {
+                const hayCohort = (Array.isArray(this.encuestasInforme) ? this.encuestasInforme.length : 0) > 0;
+                return hayCohort
+                    || this.filasInformeTabla.length > 0
+                    || this.filasInformeTablaNoFacturados.length > 0;
+            }
             return this.filasInformeTabla.length > 0;
+        },
+        tieneDatosTablaOInforme6() {
+            return this.tieneDatosTabla || this.mostrarResumenPendientesFacturaInforme6;
         },
         filasMuestraTabla() {
             return this.filasFiltradasOrdenadas.slice(0, 10);
+        },
+        filasMuestraTablaNoFact() {
+            return this.filasFiltradasOrdenadasNoFact.slice(0, 10);
         },
         parametrosConsultaEtiquetas() {
             const etiquetas = [];
@@ -1519,6 +2447,7 @@ export default {
                 etiquetas.push(`Rango: ${this.consultaActual.finicial} a ${this.consultaActual.ffinal}`);
             }
             if (this.consultaActual.convenio) etiquetas.push(`Convenio: ${this.consultaActual.convenio}`);
+            if (this.consultaActual.fuente) etiquetas.push(`Fuente: ${this.consultaActual.fuente}`);
             if (this.consultaActual.profesional) etiquetas.push(`Profesional: ${this.consultaActual.profesional}`);
             return etiquetas;
         },
@@ -1562,9 +2491,28 @@ export default {
                 .length;
         },
 
+        mostrarResumenPendientesFacturaInforme6() {
+            return this.tipoinforme === "6"
+                && this.consultaActual.tipo === TIPO_CONSULTA_INFORME_FACTURACION_COMPLETA;
+        },
+
+        conteoPacientesFacturadosInforme6() {
+            if (!this.mostrarResumenPendientesFacturaInforme6) {
+                return 0;
+            }
+            return this.filasInformeTabla.length;
+        },
+
+        conteoPacientesNoFacturadosInforme6() {
+            if (!this.mostrarResumenPendientesFacturaInforme6) {
+                return 0;
+            }
+            return this.filasInformeTablaNoFacturados.length;
+        },
+
     },
     watch: {
-        tieneDatosTabla(nuevoValor) {
+        tieneDatosTablaOInforme6(nuevoValor) {
             if (nuevoValor) {
                 this.mostrarFormulario = false;
             }

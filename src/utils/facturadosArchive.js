@@ -116,22 +116,40 @@ function normalizeActividades(actividadesNode, actividadesExtraMap) {
     });
 }
 
-function flattenNestedAssignments(cupsNode) {
-  const values = Object.values(safeObject(cupsNode)).filter(Boolean);
-  const nested = values.some((value) =>
+function isLeafAssignment(value) {
+  return !!(
     value &&
     typeof value === "object" &&
-    !("actividadId" in value) &&
-    !("idActividad" in value) &&
-    !("DescripcionCUP" in value) &&
-    !("codigo" in value)
+    ("actividadId" in value ||
+      "idActividad" in value ||
+      "DescripcionCUP" in value ||
+      "codigo" in value ||
+      "cupsId" in value ||
+      "FactNum" in value)
   );
+}
 
-  if (!nested) {
-    return values;
-  }
+function flattenNestedAssignments(cupsNode, parentContext = {}) {
+  return Object.entries(safeObject(cupsNode)).flatMap(([groupKey, value]) => {
+    if (!value || typeof value !== "object") {
+      return [];
+    }
 
-  return values.flatMap((value) => Object.values(safeObject(value)).filter(Boolean));
+    if (isLeafAssignment(value)) {
+      return [{
+        ...value,
+        key: value?.key || parentContext?.key || groupKey || "",
+        nombreProf: value?.nombreProf || value?.nombrePtof || value?.nombre || parentContext?.nombreProf || "",
+      }];
+    }
+
+    const nextContext = {
+      key: parentContext?.key || groupKey || "",
+      nombreProf: parentContext?.nombreProf || value?.nombreProf || value?.nombrePtof || value?.nombre || "",
+    };
+
+    return flattenNestedAssignments(value, nextContext);
+  });
 }
 
 function createCupsCatalog(cupsRaw) {
@@ -162,7 +180,10 @@ function normalizeAsignaciones(asignacionesNode, cupsCatalog = {}) {
     asignacionesNode?.nombreProf ?? asignacionesNode?.nombrePtof ?? asignacionesNode?.nombre ?? ""
   ).trim();
 
-  return flattenNestedAssignments(cupsNode).map((item) => {
+  return flattenNestedAssignments(cupsNode, {
+    key: roleFallback,
+    nombreProf: professionalFallback,
+  }).map((item) => {
     const cupId = String(item?.cupsId || item?.id || item?.Homolog || item?.homolog || "").trim();
     const cupCatalog = cupsCatalog[cupId] || {};
 

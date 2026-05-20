@@ -5,7 +5,7 @@ import firebase_api from "@/api/ApiFirebase.js";
 import persistedState from "./persistedstate";
 import { createStore } from "vuex";
 import { cacheManager } from "@/utils/cacheManager";
-import { mergeEncuestasWithArchive } from "@/utils/facturadosArchive";
+import { mergeEncuestasWithArchive, normalizeFacturados, archiveEntryToEncuesta } from "@/utils/facturadosArchive";
 import {
   getFirestore,
   doc,
@@ -73,6 +73,19 @@ async function getMergedEncuestasForReports() {
   ]);
 
   return mergeEncuestasWithArchive(encuestas, facturados);
+}
+
+async function getArchiveEncuestasForReports() {
+  const facturados = await getCachedRawCollection("facturadosRaw", "/ArchivoPacientesRespaldo.json");
+  return normalizeFacturados(facturados).map((entry) => archiveEntryToEncuesta(entry));
+}
+
+async function getEncuestasForReportSource(source = "bd") {
+  if (source === "archivo") {
+    return getArchiveEncuestasForReports();
+  }
+
+  return getCachedMappedCollection("encuestas", "/Encuesta.json");
 }
 
 // ============================================================================
@@ -2537,7 +2550,7 @@ export default createStore({
      */
     GetRegistersbyRangeGeneral: async ({ commit }, parametros) => {
       try {
-        const encuestas = await getCachedMappedCollection("encuestas", "/Encuesta.json");
+        const encuestas = await getEncuestasForReportSource("bd");
 
         const encuestasFiltradas = encuestas.filter(
           (encuesta) => {
@@ -2561,7 +2574,7 @@ export default createStore({
      */
     GetRegistersbyRangeCerrados: async ({ commit }, parametros) => {
       try {
-        const encuestas = await getCachedMappedCollection("encuestas", "/Encuesta.json");
+        const encuestas = await getEncuestasForReportSource("bd");
 
         const encuestasFiltradas = encuestas.filter(
           (encuesta) => {
@@ -2586,7 +2599,7 @@ export default createStore({
      */
     GetRegistersbyRangePendientesEnfermeria: async ({ commit }, parametros) => {
       try {
-        const encuestas = await getCachedMappedCollection("encuestas", "/Encuesta.json");
+        const encuestas = await getEncuestasForReportSource("bd");
 
         const encuestasFiltradas = encuestas.filter((encuesta) => {
           const fechaEncuesta = normalizeDateOnly(encuesta.fecha);
